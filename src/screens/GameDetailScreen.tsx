@@ -14,27 +14,38 @@ import {
   ChevronLeft,
   ChevronRight,
   RefreshCw,
-  HardDrive
+  HardDrive,
+  ShoppingCart,
+  Star,
+  Package,
+  CheckCircle
 } from 'lucide-react';
 
 export const GameDetailScreen: React.FC = () => {
   const { 
     selectedGameId, 
     games, 
-    navigate, 
+    goBack, 
     launchGame, 
     stopGame, 
     runningGameId, 
+    launchingGameId,
     startDownload, 
-    toggleFavorite 
+    toggleFavorite,
+    purchaseGame,
+    currentUser,
+    settings,
+    navigate
   } = useStore();
 
   const game = games.find((g) => g.id === selectedGameId) || games[0];
   const [selectedMediaIndex, setSelectedMediaIndex] = useState(0);
-  const [activeTab, setActiveTab] = useState<'overview' | 'patchNotes' | 'specs'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'specs' | 'dlc' | 'patchNotes'>('overview');
 
-  const isRunning = runningGameId === game.id;
+  const isOwned = currentUser.ownedGameIds.includes(game.id);
   const isInstalled = game.installed;
+  const isRunning = runningGameId === game.id;
+  const isLaunching = launchingGameId === game.id;
   const isDownloading = game.status === 'DOWNLOADING';
 
   const mediaList = [game.heroBanner, ...game.screenshots];
@@ -47,13 +58,17 @@ export const GameDetailScreen: React.FC = () => {
     setSelectedMediaIndex((prev) => (prev - 1 + mediaList.length) % mediaList.length);
   };
 
+  const effectivePrice = typeof game.price === 'number'
+    ? (game.discountPercent ? +(game.price * (1 - game.discountPercent / 100)).toFixed(2) : game.price)
+    : game.price;
+
   const renderActionHub = () => {
     if (isRunning) {
       return (
-        <div className="flex items-center space-x-3">
-          <div className="flex items-center space-x-2 px-6 py-3.5 bg-tactical-green/10 border border-tactical-green/50 text-tactical-green font-mono font-bold text-xs uppercase tracking-wider rounded">
+        <div className="flex items-center space-x-3 w-full">
+          <div className="flex-1 flex items-center justify-center space-x-2 px-5 py-3.5 bg-tactical-green/15 border border-tactical-green text-tactical-green font-mono font-bold text-xs uppercase tracking-wider rounded">
             <span className="w-2.5 h-2.5 rounded-full bg-tactical-green animate-ping" />
-            <span>RUNNING // ACTIVE SESSION</span>
+            <span>RUNNING ACTIVE</span>
           </div>
           <button
             onClick={() => stopGame(game.id)}
@@ -66,11 +81,23 @@ export const GameDetailScreen: React.FC = () => {
       );
     }
 
+    if (isLaunching) {
+      return (
+        <button
+          disabled
+          className="w-full flex items-center justify-center space-x-3 px-6 py-3.5 bg-amber-500/20 border border-amber-500 text-amber-300 font-mono font-bold text-xs uppercase tracking-wider rounded animate-pulse"
+        >
+          <RefreshCw className="w-4 h-4 animate-spin text-amber-400" />
+          <span>INITIALIZING RUNNER...</span>
+        </button>
+      );
+    }
+
     if (isDownloading) {
       return (
         <button
           onClick={() => navigate('downloads')}
-          className="flex items-center space-x-3 px-8 py-3.5 bg-tech-elevated hover:bg-border-stroke border border-primary-accent text-primary-accent font-mono font-bold text-xs uppercase tracking-wider rounded transition-all"
+          className="w-full flex items-center justify-center space-x-3 px-6 py-3.5 bg-tech-elevated hover:bg-border-stroke border border-primary-accent text-primary-accent font-mono font-bold text-xs uppercase tracking-wider rounded transition-all"
         >
           <RefreshCw className="w-4 h-4 animate-spin" />
           <span>DOWNLOADING // VIEW QUEUE</span>
@@ -78,25 +105,37 @@ export const GameDetailScreen: React.FC = () => {
       );
     }
 
-    if (isInstalled) {
+    if (isOwned) {
+      if (isInstalled) {
+        return (
+          <button
+            onClick={() => launchGame(game.id)}
+            className="w-full flex items-center justify-center space-x-3 px-8 py-3.5 bg-primary-accent hover:bg-orange-600 active:bg-orange-700 text-gunmetal-slate font-mono font-extrabold text-sm uppercase tracking-widest rounded shadow-ember-glow hover:scale-[1.01] active:scale-[0.99] transition-all"
+          >
+            <Play className="w-4 h-4 fill-current" />
+            <span>IN LIBRARY // PLAY NOW</span>
+          </button>
+        );
+      }
       return (
         <button
-          onClick={() => launchGame(game.id)}
-          className="flex items-center space-x-3 px-10 py-3.5 bg-primary-accent hover:bg-orange-600 active:bg-orange-700 text-gunmetal-slate font-mono font-extrabold text-sm uppercase tracking-widest rounded shadow-ember-glow hover:scale-[1.02] active:scale-[0.98] transition-all"
+          onClick={() => startDownload(game.id)}
+          className="w-full flex items-center justify-center space-x-3 px-8 py-3.5 bg-primary-accent hover:bg-orange-600 active:bg-orange-700 text-gunmetal-slate font-mono font-extrabold text-xs uppercase tracking-wider rounded shadow-ember-glow transition-all"
         >
-          <Play className="w-4 h-4 fill-current" />
-          <span>PLAY NOW</span>
+          <Download className="w-4 h-4" />
+          <span>IN LIBRARY // INSTALL [{game.installSizeGb} GB]</span>
         </button>
       );
     }
 
+    // Unowned -> Purchase
     return (
       <button
-        onClick={() => startDownload(game.id)}
-        className="flex items-center space-x-3 px-8 py-3.5 bg-primary-accent hover:bg-orange-600 active:bg-orange-700 text-gunmetal-slate font-mono font-extrabold text-xs uppercase tracking-wider rounded shadow-ember-glow transition-all"
+        onClick={() => purchaseGame(game.id)}
+        className="w-full flex items-center justify-center space-x-3 px-8 py-3.5 bg-primary-accent hover:bg-orange-600 active:bg-orange-700 text-gunmetal-slate font-mono font-extrabold text-xs uppercase tracking-wider rounded shadow-ember-glow transition-all"
       >
-        <Download className="w-4 h-4" />
-        <span>INSTALL [{game.installSizeGb} GB]</span>
+        <ShoppingCart className="w-4 h-4" />
+        <span>PURCHASE // {typeof effectivePrice === 'number' ? `$${effectivePrice.toFixed(2)}` : effectivePrice}</span>
       </button>
     );
   };
@@ -106,11 +145,11 @@ export const GameDetailScreen: React.FC = () => {
       {/* Top Back Navigation Bar */}
       <div className="flex items-center justify-between">
         <button
-          onClick={() => navigate('store')}
+          onClick={goBack}
           className="flex items-center space-x-2 text-xs font-mono text-slate-400 hover:text-primary-accent transition-colors"
         >
           <ArrowLeft className="w-3.5 h-3.5" />
-          <span>RETURN TO STORE CATALOG</span>
+          <span>&larr; BACK</span>
         </button>
 
         <div className="flex items-center space-x-2">
@@ -126,18 +165,18 @@ export const GameDetailScreen: React.FC = () => {
             <Heart className={`w-4 h-4 ${game.isFavorite ? 'fill-current' : ''}`} />
           </button>
           <button
-            onClick={() => alert(`Share link for ${game.title} copied to clipboard.`)}
+            onClick={() => alert(`Mission link for ${game.title} copied.`)}
             className="p-2 bg-tech-surface border border-border-stroke hover:border-slate-500 rounded text-slate-400 hover:text-white transition-colors"
-            title="Share Game"
+            title="Share"
           >
             <Share2 className="w-4 h-4" />
           </button>
         </div>
       </div>
 
-      {/* Main Grid: Media Gallery (Left 2 cols) & Purchase / Meta Hub (Right 1 col) */}
+      {/* Main Grid: Media Gallery (Left 2 cols) & Action Hub (Right 1 col) */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Left Column: Interactive Screenshot & Media Carousel */}
+        {/* Left Column: Interactive Screenshot & Media Switcher */}
         <div className="lg:col-span-2 space-y-3">
           <div className="relative aspect-video rounded-lg overflow-hidden border border-border-stroke bg-tech-surface shadow-2xl">
             <img
@@ -167,7 +206,7 @@ export const GameDetailScreen: React.FC = () => {
           </div>
 
           {/* Thumbnail Track */}
-          <div className="grid grid-cols-5 gap-2">
+          <div className="grid grid-cols-4 md:grid-cols-5 gap-2">
             {mediaList.map((imgUrl, index) => (
               <button
                 key={index}
@@ -184,7 +223,7 @@ export const GameDetailScreen: React.FC = () => {
           </div>
         </div>
 
-        {/* Right Column: Game Metadata & Stateful CTA Hub */}
+        {/* Right Column: Game Metadata & Action Hub */}
         <div className="bg-tech-surface border border-border-stroke rounded-lg p-5 flex flex-col justify-between space-y-4">
           <div className="space-y-3">
             <div className="flex items-center space-x-2">
@@ -199,9 +238,19 @@ export const GameDetailScreen: React.FC = () => {
             <h1 className="text-2xl font-mono font-extrabold text-white leading-tight">
               {game.title}
             </h1>
-            <p className="text-xs text-slate-300 font-sans leading-relaxed">
+            <p className="text-xs text-slate-400 font-sans leading-relaxed">
               {game.tagline}
             </p>
+
+            {/* Rating Breakdown */}
+            <div className="p-2.5 bg-void-black border border-border-stroke rounded flex items-center justify-between text-xs font-mono">
+              <span className="text-slate-400 flex items-center gap-1">
+                <Star className="w-3.5 h-3.5 text-secondary-tech fill-current" /> RATING:
+              </span>
+              <span className="text-secondary-tech font-bold">
+                {game.ratingBreakdown.positivePercent}% Positive ({game.ratingBreakdown.totalReviews.toLocaleString()} reviews)
+              </span>
+            </div>
 
             <div className="pt-2 border-t border-border-stroke space-y-2 text-xs font-mono">
               <div className="flex justify-between text-slate-400">
@@ -225,7 +274,7 @@ export const GameDetailScreen: React.FC = () => {
             </div>
 
             <div className="pt-2 border-t border-border-stroke">
-              <span className="text-[10px] font-mono text-slate-400 uppercase block mb-1.5">
+              <span className="text-[10px] font-mono text-slate-500 uppercase block mb-1.5">
                 CLASSIFICATION TAGS
               </span>
               <div className="flex flex-wrap gap-1.5">
@@ -241,12 +290,22 @@ export const GameDetailScreen: React.FC = () => {
             </div>
           </div>
 
-          {/* Action Button & Price */}
+          {/* Action Hub */}
           <div className="pt-4 border-t border-border-stroke space-y-3">
             <div className="flex items-baseline justify-between">
-              <span className="text-xs font-mono text-slate-400">STORE LICENSE</span>
+              <span className="text-xs font-mono text-slate-400">
+                {isOwned ? 'LICENSE STATUS' : 'STORE PRICE'}
+              </span>
               <span className="text-lg font-mono font-bold text-white">
-                {typeof game.price === 'number' ? `$${game.price.toFixed(2)} USD` : game.price}
+                {isOwned ? (
+                  <span className="text-tactical-green flex items-center gap-1">
+                    <CheckCircle className="w-4 h-4" /> OWNED
+                  </span>
+                ) : typeof effectivePrice === 'number' ? (
+                  `$${effectivePrice.toFixed(2)} USD`
+                ) : (
+                  effectivePrice
+                )}
               </span>
             </div>
             {renderActionHub()}
@@ -254,7 +313,7 @@ export const GameDetailScreen: React.FC = () => {
         </div>
       </div>
 
-      {/* Tabs Matrix: Overview, Patch Notes, Hardware Specs */}
+      {/* Tabs Matrix: Overview, Hardware Specs Comparison, DLC Add-ons, Patch Notes */}
       <div className="space-y-4">
         <div className="flex border-b border-border-stroke space-x-6 text-xs font-mono tracking-wider">
           <button
@@ -265,7 +324,29 @@ export const GameDetailScreen: React.FC = () => {
                 : 'text-slate-400 hover:text-slate-200'
             }`}
           >
-            TACTICAL DOSSIER
+            SYNOPSIS & MISSION
+          </button>
+          <button
+            onClick={() => setActiveTab('specs')}
+            className={`pb-2.5 transition-colors flex items-center gap-1.5 ${
+              activeTab === 'specs'
+                ? 'border-b-2 border-primary-accent text-primary-accent font-bold'
+                : 'text-slate-400 hover:text-slate-200'
+            }`}
+          >
+            <Cpu className="w-3.5 h-3.5" />
+            SYSTEM REQUIREMENTS
+          </button>
+          <button
+            onClick={() => setActiveTab('dlc')}
+            className={`pb-2.5 transition-colors flex items-center gap-1.5 ${
+              activeTab === 'dlc'
+                ? 'border-b-2 border-primary-accent text-primary-accent font-bold'
+                : 'text-slate-400 hover:text-slate-200'
+            }`}
+          >
+            <Package className="w-3.5 h-3.5" />
+            DLC & EXPANSIONS ({game.dlcs.length})
           </button>
           <button
             onClick={() => setActiveTab('patchNotes')}
@@ -278,33 +359,110 @@ export const GameDetailScreen: React.FC = () => {
             <FileText className="w-3.5 h-3.5" />
             PATCH TELEMETRY
           </button>
-          <button
-            onClick={() => setActiveTab('specs')}
-            className={`pb-2.5 transition-colors flex items-center gap-1.5 ${
-              activeTab === 'specs'
-                ? 'border-b-2 border-primary-accent text-primary-accent font-bold'
-                : 'text-slate-400 hover:text-slate-200'
-            }`}
-          >
-            <Cpu className="w-3.5 h-3.5" />
-            HARDWARE SPECIFICATIONS
-          </button>
         </div>
 
         {/* Tab Body */}
         <div className="bg-tech-surface border border-border-stroke rounded-lg p-5">
           {activeTab === 'overview' && (
             <div className="space-y-4 text-xs font-sans text-slate-300 leading-relaxed">
-              <p>{game.description}</p>
-              <div className="p-3 bg-void-black border border-border-stroke rounded font-mono text-[11px] text-slate-300 flex items-start gap-2">
-                <Terminal className="w-4 h-4 text-primary-accent shrink-0 mt-0.5" />
-                <div>
-                  <span className="text-primary-accent font-bold">STANDALONE DESKTOP INTEGRATION:</span>
-                  <p className="text-slate-400 mt-0.5">
-                    Clicking "PLAY NOW" runs the native process pipeline directly invoking <code className="text-slate-200">{game.id}.exe --auth-token "&lt;JWT&gt;" --player-name "Spectre_07"</code>. In-game login screens are completely bypassed into GameLobby.
-                  </p>
+              <p className="text-sm leading-relaxed text-slate-200">{game.description}</p>
+              
+              {settings.devTelemetryMode && (
+                <div className="p-3 bg-void-black border border-border-stroke rounded font-mono text-[11px] text-slate-300 flex items-start gap-2">
+                  <Terminal className="w-4 h-4 text-primary-accent shrink-0 mt-0.5" />
+                  <div>
+                    <span className="text-primary-accent font-bold">DEV TELEMETRY:</span>
+                    <p className="text-slate-400 mt-0.5">
+                      Process Vector: <code className="text-slate-200">{game.id}.exe --auth-token "&lt;JWT&gt;" --player-name "{currentUser.callsign}" --user-id "{currentUser.id}"</code>
+                    </p>
+                  </div>
                 </div>
-              </div>
+              )}
+            </div>
+          )}
+
+          {activeTab === 'specs' && (
+            <div className="overflow-x-auto">
+              <table className="w-full text-left font-mono text-xs border border-border-stroke rounded overflow-hidden">
+                <thead className="bg-void-black border-b border-border-stroke text-slate-400 text-[10px] uppercase">
+                  <tr>
+                    <th className="p-3">Component</th>
+                    <th className="p-3 text-slate-200">Minimum Requirements</th>
+                    <th className="p-3 text-primary-accent">Recommended (Target 60+ FPS)</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border-stroke/60 text-slate-300 font-sans text-xs">
+                  <tr>
+                    <td className="p-3 font-mono font-bold text-slate-400">OS</td>
+                    <td className="p-3">{game.systemRequirements.minimum.os}</td>
+                    <td className="p-3 text-slate-100">{game.systemRequirements.recommended.os}</td>
+                  </tr>
+                  <tr>
+                    <td className="p-3 font-mono font-bold text-slate-400">Processor</td>
+                    <td className="p-3">{game.systemRequirements.minimum.processor}</td>
+                    <td className="p-3 text-slate-100">{game.systemRequirements.recommended.processor}</td>
+                  </tr>
+                  <tr>
+                    <td className="p-3 font-mono font-bold text-slate-400">Memory</td>
+                    <td className="p-3">{game.systemRequirements.minimum.memory}</td>
+                    <td className="p-3 text-slate-100">{game.systemRequirements.recommended.memory}</td>
+                  </tr>
+                  <tr>
+                    <td className="p-3 font-mono font-bold text-slate-400">Graphics</td>
+                    <td className="p-3">{game.systemRequirements.minimum.graphics}</td>
+                    <td className="p-3 text-slate-100">{game.systemRequirements.recommended.graphics}</td>
+                  </tr>
+                  <tr>
+                    <td className="p-3 font-mono font-bold text-slate-400">Storage</td>
+                    <td className="p-3">{game.systemRequirements.minimum.storage}</td>
+                    <td className="p-3 text-slate-100">{game.systemRequirements.recommended.storage}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          )}
+
+          {activeTab === 'dlc' && (
+            <div className="space-y-3">
+              {game.dlcs.length === 0 ? (
+                <div className="p-6 text-center font-sans text-xs text-slate-400">
+                  No additional DLC or expansion modules currently published for this title.
+                </div>
+              ) : (
+                game.dlcs.map((dlc) => (
+                  <div
+                    key={dlc.id}
+                    className="p-3.5 bg-void-black border border-border-stroke rounded-lg flex items-center justify-between"
+                  >
+                    <div>
+                      <h4 className="font-mono text-xs font-bold text-slate-200">
+                        {dlc.title}
+                      </h4>
+                      <p className="font-sans text-xs text-slate-400 mt-0.5">
+                        {dlc.description}
+                      </p>
+                    </div>
+
+                    <div className="flex items-center space-x-3 shrink-0 ml-4">
+                      <span className="font-mono text-xs font-bold text-white">
+                        ${dlc.price.toFixed(2)}
+                      </span>
+                      {dlc.owned ? (
+                        <span className="px-3 py-1 bg-tactical-green/15 text-tactical-green border border-tactical-green/40 rounded text-[10px] font-mono font-bold">
+                          ACQUIRED
+                        </span>
+                      ) : (
+                        <button
+                          onClick={() => alert(`DLC purchase flow simulated.`)}
+                          className="px-3 py-1 bg-primary-accent hover:bg-orange-600 text-gunmetal-slate font-mono font-bold text-[10px] uppercase rounded"
+                        >
+                          BUY DLC
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                ))
+              )}
             </div>
           )}
 
@@ -318,38 +476,13 @@ export const GameDetailScreen: React.FC = () => {
                     </span>
                     <span className="text-slate-400">{pn.date}</span>
                   </div>
-                  <ul className="list-disc list-inside text-xs text-slate-300 space-y-1 pl-2">
+                  <ul className="list-disc list-inside text-xs font-sans text-slate-300 space-y-1 pl-2">
                     {pn.notes.map((n, i) => (
                       <li key={i}>{n}</li>
                     ))}
                   </ul>
                 </div>
               ))}
-            </div>
-          )}
-
-          {activeTab === 'specs' && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs font-mono">
-              <div className="p-3 bg-void-black border border-border-stroke rounded">
-                <span className="text-slate-400 block text-[10px]">OPERATING SYSTEM</span>
-                <span className="text-slate-100">{game.systemRequirements.os}</span>
-              </div>
-              <div className="p-3 bg-void-black border border-border-stroke rounded">
-                <span className="text-slate-400 block text-[10px]">PROCESSOR</span>
-                <span className="text-slate-100">{game.systemRequirements.processor}</span>
-              </div>
-              <div className="p-3 bg-void-black border border-border-stroke rounded">
-                <span className="text-slate-400 block text-[10px]">SYSTEM MEMORY</span>
-                <span className="text-slate-100">{game.systemRequirements.memory}</span>
-              </div>
-              <div className="p-3 bg-void-black border border-border-stroke rounded">
-                <span className="text-slate-400 block text-[10px]">GRAPHICS CARD</span>
-                <span className="text-slate-100">{game.systemRequirements.graphics}</span>
-              </div>
-              <div className="md:col-span-2 p-3 bg-void-black border border-border-stroke rounded">
-                <span className="text-slate-400 block text-[10px]">STORAGE FOOTPRINT</span>
-                <span className="text-slate-100">{game.systemRequirements.storage}</span>
-              </div>
             </div>
           )}
         </div>

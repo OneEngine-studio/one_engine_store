@@ -3,6 +3,9 @@ import { StoreProvider, useStore } from './store/useStore';
 import { WindowFrame } from './components/WindowFrame';
 import { Sidebar } from './components/Sidebar';
 import { AuthModal } from './components/AuthModal';
+import { CommandPalette } from './components/CommandPalette';
+import { ToastContainer } from './components/ToastContainer';
+import { ArticleReaderModal } from './components/ArticleReaderModal';
 import { StoreScreen } from './screens/StoreScreen';
 import { GameDetailScreen } from './screens/GameDetailScreen';
 import { LibraryScreen } from './screens/LibraryScreen';
@@ -39,7 +42,7 @@ const MainViewport: React.FC = () => {
 
       {/* Main Client Shell */}
       <div className="flex-1 flex overflow-hidden">
-        {/* Left Navigation Rail */}
+        {/* Left Navigation Rail & Persistent Mini-Monitor */}
         <Sidebar />
 
         {/* Dynamic Center Screen Viewport */}
@@ -48,8 +51,11 @@ const MainViewport: React.FC = () => {
         </main>
       </div>
 
-      {/* Security Credential Switcher Modal */}
+      {/* Modals & Overlays */}
       <AuthModal />
+      <CommandPalette />
+      <ArticleReaderModal />
+      <ToastContainer />
     </div>
   );
 };

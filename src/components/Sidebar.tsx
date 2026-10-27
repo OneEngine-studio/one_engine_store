@@ -6,9 +6,9 @@ import {
   Download, 
   Radio, 
   Settings, 
-  Shield, 
   Activity,
-  CreditCard
+  ArrowRight,
+  HardDrive
 } from 'lucide-react';
 import { NavigationTab } from '../types/store';
 
@@ -17,12 +17,11 @@ export const Sidebar: React.FC = () => {
     activeTab, 
     navigate, 
     downloads, 
-    currentUser, 
-    openAuthModal,
     runningGameId,
     games 
   } = useStore();
 
+  const activeDownload = downloads.find((d) => d.status === 'DOWNLOADING');
   const activeDownloadCount = downloads.filter((d) => d.status === 'DOWNLOADING').length;
   const runningGame = games.find((g) => g.id === runningGameId);
 
@@ -40,7 +39,7 @@ export const Sidebar: React.FC = () => {
   ];
 
   return (
-    <aside className="w-64 bg-gunmetal-slate border-r border-border-stroke flex flex-col justify-between select-none shrink-0 z-40">
+    <aside className="w-64 bg-gunmetal-slate border-r border-border-stroke flex flex-col justify-between select-none shrink-0 z-30">
       {/* Top Section: Brand Identity & Nav Rail */}
       <div className="flex flex-col">
         {/* Brand Emblem */}
@@ -60,15 +59,18 @@ export const Sidebar: React.FC = () => {
           </div>
         </div>
 
-        {/* In-Game Active Banner if playing */}
+        {/* In-Game Active Pill if playing */}
         {runningGame && (
-          <div className="mx-3 mt-3 p-2.5 bg-tactical-green/10 border border-tactical-green/40 rounded flex items-center space-x-2 animate-pulse-subtle">
+          <div 
+            onClick={() => navigate('library')}
+            className="mx-3 mt-3 p-2.5 bg-tactical-green/10 border border-tactical-green/40 hover:border-tactical-green rounded flex items-center space-x-2 cursor-pointer transition-colors"
+          >
             <Activity className="w-3.5 h-3.5 text-tactical-green shrink-0 animate-spin" />
-            <div className="flex flex-col overflow-hidden text-left">
-              <span className="text-[10px] font-mono text-tactical-green font-bold uppercase tracking-wider">
-                CURRENTLY EXECUTING
+            <div className="flex flex-col overflow-hidden text-left flex-1">
+              <span className="text-[9px] font-mono text-tactical-green font-bold uppercase tracking-wider">
+                EXECUTING // CLICK TO INSPECT
               </span>
-              <span className="text-xs font-mono text-slate-200 truncate">
+              <span className="text-xs font-mono text-slate-100 truncate">
                 {runningGame.title}
               </span>
             </div>
@@ -107,57 +109,62 @@ export const Sidebar: React.FC = () => {
         </nav>
       </div>
 
-      {/* Bottom Profile Summary Card */}
+      {/* Bottom Section: Persistent Active Download Mini-Monitor */}
       <div className="p-3 border-t border-border-stroke bg-tech-surface/30">
-        <div className="bg-tech-surface border border-border-stroke rounded p-3 space-y-2.5">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-2.5">
-              <div className="relative">
-                <img
-                  src={currentUser.avatarUrl}
-                  alt={currentUser.callsign}
-                  className="w-8 h-8 rounded border border-primary-accent/70 object-cover"
+        {activeDownload ? (
+          <div
+            onClick={() => navigate('downloads')}
+            className="bg-tech-surface hover:bg-tech-elevated border border-primary-accent/50 hover:border-primary-accent rounded-lg p-3 space-y-2 cursor-pointer transition-all shadow-sm group"
+          >
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] font-mono font-bold text-primary-accent uppercase tracking-wider flex items-center gap-1.5">
+                <Download className="w-3 h-3 animate-bounce" /> ACTIVE DOWNLOAD
+              </span>
+              <span className="text-[10px] font-mono text-secondary-tech font-bold">
+                {activeDownload.speedMbps.toFixed(1)} MB/s
+              </span>
+            </div>
+
+            <div className="text-xs font-mono font-bold text-slate-100 truncate">
+              {activeDownload.title}
+            </div>
+
+            {/* Mini Progress Bar */}
+            <div className="space-y-1">
+              <div className="w-full h-1.5 bg-void-black rounded-full overflow-hidden border border-border-stroke">
+                <div
+                  className="h-full bg-gradient-to-r from-primary-accent to-secondary-tech transition-all duration-300"
+                  style={{ width: `${activeDownload.progress}%` }}
                 />
-                <span className={`absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border border-tech-surface ${
-                  currentUser.status === 'ONLINE' ? 'bg-tactical-green' : 'bg-primary-accent'
-                }`} />
               </div>
-              <div className="flex flex-col text-left">
-                <span className="text-xs font-mono font-bold text-slate-100 flex items-center gap-1">
-                  {currentUser.callsign}
-                  <Shield className="w-3 h-3 text-secondary-tech" />
-                </span>
-                <span className="text-[10px] font-mono text-slate-400">
-                  LVL {currentUser.level} // {currentUser.rank}
+              <div className="flex items-center justify-between text-[10px] font-mono text-slate-400">
+                <span>{activeDownload.progress}%</span>
+                <span className="flex items-center gap-0.5 text-primary-accent group-hover:underline">
+                  <span>QUEUE</span>
+                  <ArrowRight className="w-2.5 h-2.5" />
                 </span>
               </div>
             </div>
-
-            <button
-              onClick={() => navigate('settings')}
-              className="text-slate-400 hover:text-primary-accent p-1 transition-colors"
-              title="Settings"
-            >
-              <Settings className="w-3.5 h-3.5" />
-            </button>
           </div>
-
-          <div className="pt-2 border-t border-border-stroke/60 flex items-center justify-between text-[11px] font-mono">
-            <span className="text-slate-400 flex items-center gap-1">
-              <CreditCard className="w-3 h-3 text-primary-accent" /> WALLET
-            </span>
-            <span className="text-slate-200 font-bold">
-              ${currentUser.walletBalance.toFixed(2)}
-            </span>
-          </div>
-
-          <button
-            onClick={openAuthModal}
-            className="w-full py-1 text-center bg-tech-elevated hover:bg-border-stroke border border-border-stroke rounded text-[10px] font-mono text-slate-300 hover:text-white transition-colors"
+        ) : (
+          <div 
+            onClick={() => navigate('downloads')}
+            className="bg-tech-surface border border-border-stroke rounded-lg p-3 text-left space-y-1 cursor-pointer hover:border-slate-500 transition-colors"
           >
-            SWITCH OPERATIVE PRESET
-          </button>
-        </div>
+            <div className="flex items-center justify-between text-[10px] font-mono text-slate-400">
+              <span className="flex items-center gap-1">
+                <HardDrive className="w-3 h-3 text-secondary-tech" /> STORAGE ALLOCATION
+              </span>
+              <span className="text-tactical-green">IDLE</span>
+            </div>
+            <span className="text-xs font-mono font-bold text-slate-300 block">
+              100% SYNCHRONIZED
+            </span>
+            <span className="text-[10px] font-sans text-slate-500 block">
+              Click to view transfer logs & throttle controls
+            </span>
+          </div>
+        )}
       </div>
     </aside>
   );

@@ -3,7 +3,7 @@ import { useStore } from '../store/useStore';
 import { Shield, X, UserCheck, Terminal, Award, Zap } from 'lucide-react';
 
 export const AuthModal: React.FC = () => {
-  const { isAuthModalOpen, closeAuthModal, switchUserPreset, currentUser } = useStore();
+  const { isAuthModalOpen, closeAuthModal, switchUserPreset, currentUser, settings } = useStore();
 
   if (!isAuthModalOpen) return null;
 
@@ -18,10 +18,10 @@ export const AuthModal: React.FC = () => {
             </div>
             <div>
               <h2 className="font-mono text-sm font-bold tracking-widest text-slate-100 uppercase">
-                SECURITY CREDENTIAL MANAGER
+                SWITCH ACCOUNT
               </h2>
               <span className="text-[10px] font-mono text-slate-400">
-                ACTIVE PROFILE: {currentUser.callsign} ({currentUser.role})
+                CURRENT OPERATIVE: {currentUser.callsign} // ${currentUser.walletBalance.toFixed(2)}
               </span>
             </div>
           </div>
@@ -33,9 +33,9 @@ export const AuthModal: React.FC = () => {
           </button>
         </div>
 
-        {/* Tactical Explanation */}
-        <p className="text-xs text-slate-300 font-sans my-4 leading-relaxed">
-          Select an operative profile preset to instantly simulate authentication states, permissions, and session tokens without external network overhead.
+        {/* Description */}
+        <p className="text-xs text-slate-400 font-sans my-4 leading-relaxed">
+          Switch between operator accounts to test individual library ownership, wallet balances, and competitive states.
         </p>
 
         {/* Quick Presets */}
@@ -43,7 +43,7 @@ export const AuthModal: React.FC = () => {
           {/* Preset 1: Developer */}
           <button
             onClick={() => switchUserPreset('DEVELOPER')}
-            className={`w-full p-3.5 rounded border text-left flex items-start space-x-3.5 transition-all ${
+            className={`w-full p-3.5 rounded-lg border text-left flex items-start space-x-3.5 transition-all ${
               currentUser.callsign === 'Spectre_07'
                 ? 'bg-tech-surface border-primary-accent shadow-ember-glow'
                 : 'bg-tech-surface/50 border-border-stroke hover:border-slate-500 hover:bg-tech-surface'
@@ -57,12 +57,12 @@ export const AuthModal: React.FC = () => {
                 <span className="text-xs font-mono font-bold text-slate-100">
                   DEVELOPER / ARCHITECT [Spectre_07]
                 </span>
-                <span className="text-[10px] font-mono bg-primary-accent/20 text-primary-accent border border-primary-accent/40 px-1.5 py-0.5 rounded">
-                  FULL UNLOCK
+                <span className="text-[10px] font-mono bg-primary-accent/20 text-primary-accent border border-primary-accent/40 px-1.5 py-0.5 rounded font-bold">
+                  $149.50
                 </span>
               </div>
-              <p className="text-[11px] text-slate-400 font-sans mt-0.5">
-                Full library access, developer telemetry tools, active debug permissions, and $148.50 store balance.
+              <p className="text-[11px] text-slate-400 font-sans mt-1">
+                Full 4-game library unlocked, developer tools enabled, and $149.50 store wallet credit.
               </p>
             </div>
           </button>
@@ -70,7 +70,7 @@ export const AuthModal: React.FC = () => {
           {/* Preset 2: Competitive Player */}
           <button
             onClick={() => switchUserPreset('COMPETITIVE')}
-            className={`w-full p-3.5 rounded border text-left flex items-start space-x-3.5 transition-all ${
+            className={`w-full p-3.5 rounded-lg border text-left flex items-start space-x-3.5 transition-all ${
               currentUser.callsign === 'Valkyrie_9'
                 ? 'bg-tech-surface border-secondary-tech shadow-cyan-glow'
                 : 'bg-tech-surface/50 border-border-stroke hover:border-slate-500 hover:bg-tech-surface'
@@ -84,12 +84,12 @@ export const AuthModal: React.FC = () => {
                 <span className="text-xs font-mono font-bold text-slate-100">
                   COMPETITIVE OPERATOR [Valkyrie_9]
                 </span>
-                <span className="text-[10px] font-mono bg-secondary-tech/20 text-secondary-tech border border-secondary-tech/40 px-1.5 py-0.5 rounded">
-                  IN-GAME STATE
+                <span className="text-[10px] font-mono bg-secondary-tech/20 text-secondary-tech border border-secondary-tech/40 px-1.5 py-0.5 rounded font-bold">
+                  $42.00
                 </span>
               </div>
-              <p className="text-[11px] text-slate-400 font-sans mt-0.5">
-                Simulates an active match in Railbound, rank level 42, and competitive telemetry logs.
+              <p className="text-[11px] text-slate-400 font-sans mt-1">
+                2 tactical titles owned (Railbound & Cyber Siege), competitive rank level 42, and $42.00 wallet credit.
               </p>
             </div>
           </button>
@@ -97,13 +97,13 @@ export const AuthModal: React.FC = () => {
           {/* Preset 3: Guest Operative */}
           <button
             onClick={() => switchUserPreset('GUEST')}
-            className={`w-full p-3.5 rounded border text-left flex items-start space-x-3.5 transition-all ${
+            className={`w-full p-3.5 rounded-lg border text-left flex items-start space-x-3.5 transition-all ${
               currentUser.callsign === 'Ghost_Operative'
-                ? 'bg-tech-surface border-tactical-muted'
+                ? 'bg-tech-surface border-slate-300'
                 : 'bg-tech-surface/50 border-border-stroke hover:border-slate-500 hover:bg-tech-surface'
             }`}
           >
-            <div className="w-9 h-9 rounded bg-void-black border border-tactical-muted flex items-center justify-center text-slate-400 shrink-0">
+            <div className="w-9 h-9 rounded bg-void-black border border-slate-500 flex items-center justify-center text-slate-400 shrink-0">
               <UserCheck className="w-5 h-5" />
             </div>
             <div className="flex-1">
@@ -111,12 +111,12 @@ export const AuthModal: React.FC = () => {
                 <span className="text-xs font-mono font-bold text-slate-100">
                   RECON GUEST [Ghost_Operative]
                 </span>
-                <span className="text-[10px] font-mono bg-border-stroke text-slate-300 px-1.5 py-0.5 rounded">
-                  FRESH CLIENT
+                <span className="text-[10px] font-mono bg-border-stroke text-slate-300 px-1.5 py-0.5 rounded font-bold">
+                  $0.00
                 </span>
               </div>
-              <p className="text-[11px] text-slate-400 font-sans mt-0.5">
-                Simulates a freshly installed client state with zero games installed and onboarding prompts.
+              <p className="text-[11px] text-slate-400 font-sans mt-1">
+                Clean state with zero owned titles to test store purchases, empty library onboarding, and downloads.
               </p>
             </div>
           </button>
@@ -124,9 +124,13 @@ export const AuthModal: React.FC = () => {
 
         {/* Footer */}
         <div className="mt-5 pt-3 border-t border-border-stroke flex items-center justify-between text-xs font-mono text-slate-400">
-          <span className="flex items-center gap-1.5 text-tactical-green">
-            <Zap className="w-3.5 h-3.5 text-tactical-green" /> IN-MEMORY LOCAL DATA
-          </span>
+          <div>
+            {settings.devTelemetryMode && (
+              <span className="flex items-center gap-1.5 text-tactical-green">
+                <Zap className="w-3.5 h-3.5 text-tactical-green" /> IN-MEMORY LOCAL DATA
+              </span>
+            )}
+          </div>
           <button
             onClick={closeAuthModal}
             className="px-4 py-1.5 bg-tech-elevated hover:bg-border-stroke text-slate-200 rounded text-xs transition-colors"
