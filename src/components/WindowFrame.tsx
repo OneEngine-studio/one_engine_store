@@ -31,9 +31,11 @@ export const WindowFrame: React.FC = () => {
       {/* Left: Brand Glyph & Breadcrumb Navigation */}
       <div className="flex items-center space-x-3 pointer-events-none">
         <div className="flex items-center space-x-2">
-          <div className="w-5 h-5 bg-primary-accent/15 border border-primary-accent rounded-sm flex items-center justify-center">
-            <div className="w-2 h-2 bg-primary-accent rotate-45" />
-          </div>
+          <img 
+            src="/images/logo.png" 
+            alt="OneEngine" 
+            className="w-5 h-5 object-contain rounded"
+          />
           <span className="font-mono text-xs font-bold tracking-widest text-slate-100 uppercase">
             ONE<span className="text-primary-accent">ENGINE</span>
           </span>

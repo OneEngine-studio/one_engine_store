@@ -43,12 +43,13 @@ export const Sidebar: React.FC = () => {
     <aside className="w-64 bg-gunmetal-slate border-r border-border-stroke flex flex-col justify-between select-none shrink-0 z-40">
       {/* Top Section: Brand Identity & Nav Rail */}
       <div className="flex flex-col">
-        {/* Hexagon Brand Emblem */}
+        {/* Brand Emblem */}
         <div className="p-4 border-b border-border-stroke/70 flex items-center space-x-3">
-          <div className="relative w-8 h-8 rounded bg-void-black border border-primary-accent flex items-center justify-center shadow-ember-glow">
-            <div className="w-3.5 h-3.5 bg-primary-accent rotate-45 transform" />
-            <span className="absolute -bottom-1 -right-1 w-2 h-2 bg-secondary-tech rounded-full" />
-          </div>
+          <img
+            src="/images/logo.png"
+            alt="OneEngine Studio"
+            className="w-8 h-8 rounded object-contain border border-primary-accent/60 bg-void-black p-0.5 shadow-ember-glow"
+          />
           <div className="flex flex-col text-left">
             <span className="font-mono text-sm font-extrabold tracking-widest text-slate-100 uppercase">
               ONE<span className="text-primary-accent">ENGINE</span>
