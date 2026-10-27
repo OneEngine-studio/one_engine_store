@@ -4,7 +4,8 @@
 
 @font-face {
   font-family: 'KnightWarrior';
-  src: url('/fonts/KnightWarrior-w16n8.otf') format('opentype');
+  src: url('./fonts/KnightWarrior-w16n8.otf') format('opentype'),
+       url('/fonts/KnightWarrior-w16n8.otf') format('opentype');
   font-weight: normal;
   font-style: normal;
   font-display: swap;
@@ -14,10 +15,12 @@
   * {
     box-sizing: border-box;
   }
+  body, button, input, select, textarea, h1, h2, h3, h4, h5, h6, p, span, a, div {
+    font-family: 'KnightWarrior', 'Rajdhani', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  }
   body {
     background-color: #090B0E;
     color: #E2E8F0;
-    font-family: 'KnightWarrior', 'Rajdhani', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     user-select: none;
     overflow: hidden;
     letter-spacing: 0.05em;

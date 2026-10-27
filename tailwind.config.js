@@ -20,8 +20,8 @@ export default {
       },
       fontFamily: {
         warrior: ['"KnightWarrior"', 'sans-serif'],
-        sans: ['"KnightWarrior"', '"Rajdhani"', 'Inter', 'system-ui', 'sans-serif'],
-        mono: ['"JetBrains Mono"', 'Menlo', 'Consolas', 'monospace'],
+        sans: ['"KnightWarrior"', '"Rajdhani"', 'Inter', 'sans-serif'],
+        mono: ['"KnightWarrior"', '"JetBrains Mono"', 'Menlo', 'monospace'],
       },
       boxShadow: {
         'ember-glow': '0 0 20px rgba(255, 122, 0, 0.25)',
