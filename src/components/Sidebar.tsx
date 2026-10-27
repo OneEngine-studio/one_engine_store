@@ -120,7 +120,7 @@ export const Sidebar: React.FC = () => {
               <span className="text-[10px] font-mono font-bold text-primary-accent uppercase tracking-wider flex items-center gap-1.5">
                 <Download className="w-3 h-3 animate-bounce" /> ACTIVE DOWNLOAD
               </span>
-              <span className="text-[10px] font-mono text-secondary-tech font-bold">
+              <span className="text-[10px] font-mono text-secondary-tech font-bold tabular-nums">
                 {activeDownload.speedMbps.toFixed(1)} MB/s
               </span>
             </div>
@@ -137,7 +137,7 @@ export const Sidebar: React.FC = () => {
                   style={{ width: `${activeDownload.progress}%` }}
                 />
               </div>
-              <div className="flex items-center justify-between text-[10px] font-mono text-slate-400">
+              <div className="flex items-center justify-between text-[10px] font-mono text-slate-400 tabular-nums">
                 <span>{activeDownload.progress}%</span>
                 <span className="flex items-center gap-0.5 text-primary-accent group-hover:underline">
                   <span>QUEUE</span>

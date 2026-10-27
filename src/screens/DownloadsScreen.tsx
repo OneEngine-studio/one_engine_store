@@ -121,12 +121,12 @@ export const DownloadsScreen: React.FC = () => {
               <path d={pathD} fill="url(#speedGradient)" />
               <path d={lineD} fill="none" stroke="#FF7A00" strokeWidth="2" />
             </svg>
-            <div className="absolute top-2 left-2 text-[10px] font-mono text-slate-400">
+            <div className="absolute top-2 left-2 text-[10px] font-mono text-slate-400 tabular-nums">
               NETWORK: <span className="text-secondary-tech font-bold">{currentSpeed.toFixed(1)} MB/s</span> // DISK USAGE: <span className="text-tactical-green font-bold">{diskSpeed.toFixed(1)} MB/s</span>
             </div>
           </div>
 
-          <div className="grid grid-cols-3 gap-2 text-center text-xs font-mono pt-2 border-t border-border-stroke">
+          <div className="grid grid-cols-3 gap-2 text-center text-xs font-mono pt-2 border-t border-border-stroke tabular-nums">
             <div className="p-2 bg-void-black rounded border border-border-stroke/40">
               <span className="text-[10px] text-slate-400 uppercase block">NETWORK RATE</span>
               <span className="text-slate-100 font-bold">{currentSpeed} MB/s</span>

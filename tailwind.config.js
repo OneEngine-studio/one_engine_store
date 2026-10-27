@@ -22,6 +22,11 @@ export default {
         mono: ['"JetBrains Mono"', 'Menlo', 'Consolas', 'monospace'],
         sans: ['"Rajdhani"', 'Inter', 'system-ui', 'sans-serif'],
       },
+      spacing: {
+        '84': '21rem',
+        '88': '22rem',
+        '92': '23rem',
+      },
       boxShadow: {
         'ember-glow': '0 0 20px rgba(255, 122, 0, 0.25)',
         'cyan-glow': '0 0 20px rgba(0, 229, 255, 0.25)',

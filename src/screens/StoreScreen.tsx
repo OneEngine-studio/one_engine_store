@@ -38,7 +38,7 @@ export const StoreScreen: React.FC = () => {
       <div
         key={game.id}
         onClick={() => navigate('game-detail', game.id)}
-        className="group relative bg-tech-surface border border-border-stroke hover:border-primary-accent/80 rounded-lg overflow-hidden cursor-pointer transition-all duration-200 hover:-translate-y-1 hover:shadow-ember-glow flex flex-col justify-between"
+        className="group relative bg-tech-surface border border-border-stroke border-t-white/10 hover:border-primary-accent/80 hover:border-t-primary-accent/50 rounded-lg overflow-hidden cursor-pointer transition-all duration-150 hover:-translate-y-1 hover:shadow-ember-glow flex flex-col justify-between"
       >
         {/* Card Thumbnail */}
         <div className="relative aspect-[16/9] w-full overflow-hidden bg-void-black">

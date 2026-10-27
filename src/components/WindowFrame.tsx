@@ -121,7 +121,7 @@ export const WindowFrame: React.FC = () => {
       >
         {/* Live Running Status Pill */}
         {runningGame && (
-          <div className="hidden lg:flex items-center space-x-1.5 px-2 py-0.5 rounded bg-tactical-green/15 border border-tactical-green/40 text-tactical-green text-[10px] font-mono">
+          <div className="hidden lg:flex items-center space-x-1.5 px-2 py-0.5 rounded bg-tactical-green/15 border border-tactical-green/40 text-tactical-green text-[10px] font-mono tabular-nums">
             <span className="w-1.5 h-1.5 rounded-full bg-tactical-green animate-ping" />
             <span>IN-GAME: {runningGame.title.split(':')[0]}</span>
             <span className="text-slate-300">({formatTimer(sessionElapsedSeconds)})</span>
@@ -129,7 +129,7 @@ export const WindowFrame: React.FC = () => {
         )}
 
         {/* User Wallet Pill */}
-        <div className="hidden md:flex items-center space-x-1.5 px-2.5 py-1 bg-tech-surface border border-border-stroke rounded text-xs font-mono">
+        <div className="hidden md:flex items-center space-x-1.5 px-2.5 py-1 bg-tech-surface border border-border-stroke rounded text-xs font-mono tabular-nums">
           <CreditCard className="w-3 h-3 text-primary-accent" />
           <span className="text-slate-400 text-[10px]">WALLET:</span>
           <span className="text-slate-100 font-bold">${currentUser.walletBalance.toFixed(2)}</span>

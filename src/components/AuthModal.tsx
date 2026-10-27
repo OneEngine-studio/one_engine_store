@@ -8,8 +8,8 @@ export const AuthModal: React.FC = () => {
   if (!isAuthModalOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-void-black/85 backdrop-blur-sm p-4 select-none">
-      <div className="w-full max-w-lg bg-gunmetal-slate border border-border-stroke rounded-lg shadow-2xl p-6 relative tactical-cut-sm">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-void-black/85 backdrop-blur-md p-4 select-none">
+      <div className="w-full max-w-lg bg-gunmetal-slate border border-white/10 border-t-white/20 rounded-lg shadow-2xl p-6 relative tactical-cut-sm transition-all duration-150">
         {/* Header */}
         <div className="flex items-center justify-between pb-4 border-b border-border-stroke">
           <div className="flex items-center space-x-2.5">

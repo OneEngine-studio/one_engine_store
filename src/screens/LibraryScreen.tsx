@@ -181,10 +181,10 @@ export const LibraryScreen: React.FC = () => {
                     key={game.id}
                     onClick={() => setSelectedGameId(game.id)}
                     onDoubleClick={() => navigate('game-detail', game.id)}
-                    className={`relative rounded-lg overflow-hidden border cursor-pointer transition-all ${
+                    className={`relative rounded-lg overflow-hidden border border-t-white/10 cursor-pointer transition-all duration-150 ${
                       isSelected
                         ? 'border-primary-accent shadow-ember-glow scale-[1.01] bg-tech-surface'
-                        : 'border-border-stroke bg-tech-surface/60 hover:border-slate-500'
+                        : 'border-border-stroke bg-tech-surface/60 hover:border-slate-500 hover:border-t-white/20'
                     }`}
                   >
                     <div className="aspect-[16/10] w-full overflow-hidden relative">

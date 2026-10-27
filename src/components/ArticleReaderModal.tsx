@@ -16,11 +16,11 @@ export const ArticleReaderModal: React.FC = () => {
 
   return (
     <div 
-      className="fixed inset-0 z-50 flex items-center justify-center bg-void-black/85 backdrop-blur-sm p-4 select-none"
+      className="fixed inset-0 z-[60] flex items-center justify-center bg-void-black/85 backdrop-blur-md p-4 select-none"
       onClick={closeArticle}
     >
       <div 
-        className="w-full max-w-3xl max-h-[90vh] bg-gunmetal-slate border border-border-stroke rounded-xl shadow-2xl flex flex-col overflow-hidden tactical-cut-sm"
+        className="w-full max-w-3xl max-h-[90vh] bg-gunmetal-slate border border-white/10 border-t-white/20 rounded-xl shadow-2xl flex flex-col overflow-hidden tactical-cut-sm transition-all duration-150"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header Cover Bar */}

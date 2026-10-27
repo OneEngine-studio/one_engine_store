@@ -42,11 +42,11 @@ export const CommandPalette: React.FC = () => {
 
   return (
     <div 
-      className="fixed inset-0 z-50 flex items-start justify-center pt-20 bg-void-black/80 backdrop-blur-sm p-4 select-none"
+      className="fixed inset-0 z-[70] flex items-start justify-center pt-20 bg-void-black/80 backdrop-blur-md p-4 select-none"
       onClick={() => setCommandPaletteOpen(false)}
     >
       <div 
-        className="w-full max-w-2xl bg-gunmetal-slate border border-border-stroke rounded-xl shadow-2xl overflow-hidden flex flex-col"
+        className="w-full max-w-2xl bg-gunmetal-slate border border-white/10 border-t-white/20 rounded-xl shadow-2xl overflow-hidden flex flex-col transition-all duration-150"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Search Input Bar */}

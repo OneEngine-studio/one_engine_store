@@ -735,8 +735,21 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         e.preventDefault();
         setIsCommandPaletteOpen((prev) => !prev);
       } else if (e.key === 'Escape') {
-        setIsCommandPaletteOpen(false);
-        setSelectedArticle(null);
+        // Close topmost overlay only (priority: CommandPalette > Article > AuthModal)
+        setIsCommandPaletteOpen((prev) => {
+          if (prev) return false; // close palette, stop propagation via early return
+          // Not open — try closing article next
+          setSelectedArticle((prevA) => {
+            if (prevA) return null;
+            // Not open — close auth modal
+            setIsAuthModalOpen((prevM) => {
+              if (prevM) return false;
+              return prevM;
+            });
+            return prevA;
+          });
+          return prev;
+        });
       }
     };
     window.addEventListener('keydown', handleKeyDown);
@@ -838,7 +851,10 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       const prevEntry = history[historyIndex - 1];
       setHistoryIndex((prev) => prev - 1);
       setActiveTab(prevEntry.tab);
-      if (prevEntry.gameId) {
+      // Always restore gameId for game-detail; fallback to first game if missing
+      if (prevEntry.tab === 'game-detail') {
+        setSelectedGameId(prevEntry.gameId ?? games[0]?.id ?? 'railbound');
+      } else if (prevEntry.gameId) {
         setSelectedGameId(prevEntry.gameId);
       }
     }
@@ -850,7 +866,9 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       const nextEntry = history[historyIndex + 1];
       setHistoryIndex((prev) => prev + 1);
       setActiveTab(nextEntry.tab);
-      if (nextEntry.gameId) {
+      if (nextEntry.tab === 'game-detail') {
+        setSelectedGameId(nextEntry.gameId ?? games[0]?.id ?? 'railbound');
+      } else if (nextEntry.gameId) {
         setSelectedGameId(nextEntry.gameId);
       }
     }
