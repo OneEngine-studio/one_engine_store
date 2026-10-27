@@ -19,8 +19,9 @@ export default {
         'tactical-muted': '#8E9AA8',
       },
       fontFamily: {
+        warrior: ['"KnightWarrior"', 'sans-serif'],
+        sans: ['"KnightWarrior"', '"Rajdhani"', 'Inter', 'system-ui', 'sans-serif'],
         mono: ['"JetBrains Mono"', 'Menlo', 'Consolas', 'monospace'],
-        sans: ['"Rajdhani"', 'Inter', 'system-ui', 'sans-serif'],
       },
       boxShadow: {
         'ember-glow': '0 0 20px rgba(255, 122, 0, 0.25)',
