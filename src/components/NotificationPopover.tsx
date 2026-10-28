@@ -14,30 +14,30 @@ export const NotificationPopover: React.FC<NotificationPopoverProps> = ({ isOpen
 
   return (
     <div 
-      className="absolute top-11 right-12 w-80 bg-gunmetal-slate border border-border-stroke rounded-lg shadow-2xl z-50 overflow-hidden flex flex-col select-none"
+      className="absolute top-10 right-2 w-80 bg-gunmetal-slate border border-border-stroke border-t border-white/10 rounded-md shadow-2xl z-50 overflow-hidden flex flex-col select-none"
       onClick={(e) => e.stopPropagation()}
     >
       {/* Header */}
       <div className="p-3 border-b border-border-stroke flex items-center justify-between bg-tech-surface">
         <div className="flex items-center space-x-2">
           <Bell className="w-3.5 h-3.5 text-primary-accent" />
-          <span className="text-xs font-mono font-bold text-slate-100 uppercase tracking-wider">
-            SYSTEM NOTIFICATIONS
+          <span className="text-xs font-semibold text-slate-100">
+            Notifications
           </span>
         </div>
         <button
           onClick={markAllNotificationsRead}
-          className="text-[10px] font-mono text-primary-accent hover:underline flex items-center gap-1"
+          className="text-[11px] text-slate-400 hover:text-white flex items-center gap-1 transition-colors"
         >
-          <Check className="w-3 h-3" /> MARK ALL READ
+          <Check className="w-3 h-3" /> Mark all read
         </button>
       </div>
 
       {/* List */}
       <div className="max-h-80 overflow-y-auto divide-y divide-border-stroke/60">
         {notifications.length === 0 ? (
-          <div className="p-6 text-center text-xs font-sans text-slate-400">
-            No unread alerts in communications queue.
+          <div className="p-6 text-center text-xs text-slate-400">
+            No unread notifications.
           </div>
         ) : (
           notifications.map((item) => (
@@ -48,17 +48,17 @@ export const NotificationPopover: React.FC<NotificationPopoverProps> = ({ isOpen
               }`}
             >
               <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-1.5">
-                  {item.type === 'update' && <Sparkles className="w-3 h-3 text-primary-accent" />}
-                  {item.type === 'friend' && <User className="w-3 h-3 text-secondary-tech" />}
-                  {item.type === 'system' && <HardDrive className="w-3 h-3 text-tactical-green" />}
-                  <span className="text-xs font-mono font-bold text-slate-200">
+                <div className="flex items-center space-x-2">
+                  {item.type === 'update' && <Sparkles className="w-3.5 h-3.5 text-primary-accent" />}
+                  {item.type === 'friend' && <User className="w-3.5 h-3.5 text-secondary-tech" />}
+                  {item.type === 'system' && <HardDrive className="w-3.5 h-3.5 text-tactical-green" />}
+                  <span className="text-xs font-medium text-slate-200">
                     {item.title}
                   </span>
                 </div>
-                <span className="text-[10px] font-mono text-slate-500">{item.time}</span>
+                <span className="text-[10px] text-slate-500 tabular-nums">{item.time}</span>
               </div>
-              <p className="text-[11px] font-sans text-slate-400 leading-normal pl-4">
+              <p className="text-[11px] text-slate-400 leading-normal pl-5">
                 {item.description}
               </p>
             </div>
@@ -70,9 +70,9 @@ export const NotificationPopover: React.FC<NotificationPopoverProps> = ({ isOpen
       <div className="p-2 bg-void-black border-t border-border-stroke text-center">
         <button
           onClick={onClose}
-          className="text-[10px] font-mono text-slate-400 hover:text-white"
+          className="text-xs text-slate-400 hover:text-white transition-colors"
         >
-          DISMISS PANEL
+          Close
         </button>
       </div>
     </div>

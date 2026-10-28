@@ -8,34 +8,34 @@ export const AuthModal: React.FC = () => {
   if (!isAuthModalOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-void-black/85 backdrop-blur-md p-4 select-none">
-      <div className="w-full max-w-lg bg-gunmetal-slate border border-white/10 border-t-white/20 rounded-lg shadow-2xl p-6 relative tactical-cut-sm transition-all duration-150">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-md p-4 select-none">
+      <div className="w-full max-w-lg bg-gunmetal-slate border border-border-stroke border-t border-white/15 rounded-md shadow-2xl p-6 relative transition-all duration-150">
         {/* Header */}
         <div className="flex items-center justify-between pb-4 border-b border-border-stroke">
-          <div className="flex items-center space-x-2.5">
-            <div className="w-6 h-6 bg-primary-accent/15 border border-primary-accent rounded flex items-center justify-center">
-              <Shield className="w-3.5 h-3.5 text-primary-accent" />
+          <div className="flex items-center space-x-3">
+            <div className="w-7 h-7 bg-primary-accent/10 border border-primary-accent/40 rounded-md flex items-center justify-center">
+              <Shield className="w-4 h-4 text-primary-accent" />
             </div>
             <div>
-              <h2 className="font-mono text-sm font-bold tracking-widest text-slate-100 uppercase">
-                SWITCH ACCOUNT
+              <h2 className="text-sm font-semibold text-slate-100">
+                Switch Account
               </h2>
-              <span className="text-[10px] font-mono text-slate-400">
-                CURRENT OPERATIVE: {currentUser.callsign} // ${currentUser.walletBalance.toFixed(2)}
+              <span className="text-xs text-slate-400 tabular-nums">
+                Active: {currentUser.callsign} • ${currentUser.walletBalance.toFixed(2)}
               </span>
             </div>
           </div>
           <button 
             onClick={closeAuthModal} 
-            className="text-slate-400 hover:text-white p-1 rounded hover:bg-tech-surface transition-colors"
+            className="text-slate-400 hover:text-white p-1 rounded-md hover:bg-tech-surface transition-colors active:scale-[0.98]"
           >
             <X className="w-4 h-4" />
           </button>
         </div>
 
         {/* Description */}
-        <p className="text-xs text-slate-400 font-sans my-4 leading-relaxed">
-          Switch between operator accounts to test individual library ownership, wallet balances, and competitive states.
+        <p className="text-xs text-slate-400 my-4 leading-relaxed">
+          Switch between operator accounts to test individual library ownership, wallet balances, and store states.
         </p>
 
         {/* Quick Presets */}
@@ -43,25 +43,25 @@ export const AuthModal: React.FC = () => {
           {/* Preset 1: Developer */}
           <button
             onClick={() => switchUserPreset('DEVELOPER')}
-            className={`w-full p-3.5 rounded-lg border text-left flex items-start space-x-3.5 transition-all ${
+            className={`w-full p-3.5 rounded-md border text-left flex items-start space-x-3.5 transition-all active:scale-[0.98] ${
               currentUser.callsign === 'Spectre_07'
-                ? 'bg-tech-surface border-primary-accent shadow-ember-glow'
-                : 'bg-tech-surface/50 border-border-stroke hover:border-slate-500 hover:bg-tech-surface'
+                ? 'bg-tech-elevated border-primary-accent'
+                : 'bg-tech-surface border-border-stroke hover:border-slate-500 hover:bg-tech-elevated'
             }`}
           >
-            <div className="w-9 h-9 rounded bg-void-black border border-primary-accent flex items-center justify-center text-primary-accent shrink-0">
-              <Terminal className="w-5 h-5" />
+            <div className="w-8 h-8 rounded-md bg-void-black border border-white/10 flex items-center justify-center text-primary-accent shrink-0">
+              <Terminal className="w-4 h-4" />
             </div>
             <div className="flex-1">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-mono font-bold text-slate-100">
-                  DEVELOPER / ARCHITECT [Spectre_07]
+                <span className="text-xs font-medium text-slate-100">
+                  Developer [Spectre_07]
                 </span>
-                <span className="text-[10px] font-mono bg-primary-accent/20 text-primary-accent border border-primary-accent/40 px-1.5 py-0.5 rounded font-bold">
+                <span className="text-[11px] font-mono bg-tech-surface text-primary-accent border border-primary-accent/40 px-1.5 py-0.5 rounded-md tabular-nums">
                   $149.50
                 </span>
               </div>
-              <p className="text-[11px] text-slate-400 font-sans mt-1">
+              <p className="text-[11px] text-slate-400 mt-1 leading-normal">
                 Full 4-game library unlocked, developer tools enabled, and $149.50 store wallet credit.
               </p>
             </div>
@@ -70,26 +70,26 @@ export const AuthModal: React.FC = () => {
           {/* Preset 2: Competitive Player */}
           <button
             onClick={() => switchUserPreset('COMPETITIVE')}
-            className={`w-full p-3.5 rounded-lg border text-left flex items-start space-x-3.5 transition-all ${
+            className={`w-full p-3.5 rounded-md border text-left flex items-start space-x-3.5 transition-all active:scale-[0.98] ${
               currentUser.callsign === 'Valkyrie_9'
-                ? 'bg-tech-surface border-secondary-tech shadow-cyan-glow'
-                : 'bg-tech-surface/50 border-border-stroke hover:border-slate-500 hover:bg-tech-surface'
+                ? 'bg-tech-elevated border-secondary-tech'
+                : 'bg-tech-surface border-border-stroke hover:border-slate-500 hover:bg-tech-elevated'
             }`}
           >
-            <div className="w-9 h-9 rounded bg-void-black border border-secondary-tech flex items-center justify-center text-secondary-tech shrink-0">
-              <Award className="w-5 h-5" />
+            <div className="w-8 h-8 rounded-md bg-void-black border border-white/10 flex items-center justify-center text-secondary-tech shrink-0">
+              <Award className="w-4 h-4" />
             </div>
             <div className="flex-1">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-mono font-bold text-slate-100">
-                  COMPETITIVE OPERATOR [Valkyrie_9]
+                <span className="text-xs font-medium text-slate-100">
+                  Competitive [Valkyrie_9]
                 </span>
-                <span className="text-[10px] font-mono bg-secondary-tech/20 text-secondary-tech border border-secondary-tech/40 px-1.5 py-0.5 rounded font-bold">
+                <span className="text-[11px] font-mono bg-tech-surface text-secondary-tech border border-secondary-tech/40 px-1.5 py-0.5 rounded-md tabular-nums">
                   $42.00
                 </span>
               </div>
-              <p className="text-[11px] text-slate-400 font-sans mt-1">
-                2 tactical titles owned (Railbound & Cyber Siege), competitive rank level 42, and $42.00 wallet credit.
+              <p className="text-[11px] text-slate-400 mt-1 leading-normal">
+                2 tactical titles owned (Railbound & Cyber Siege), rank level 42, and $42.00 wallet credit.
               </p>
             </div>
           </button>
@@ -97,25 +97,25 @@ export const AuthModal: React.FC = () => {
           {/* Preset 3: Guest Operative */}
           <button
             onClick={() => switchUserPreset('GUEST')}
-            className={`w-full p-3.5 rounded-lg border text-left flex items-start space-x-3.5 transition-all ${
+            className={`w-full p-3.5 rounded-md border text-left flex items-start space-x-3.5 transition-all active:scale-[0.98] ${
               currentUser.callsign === 'Ghost_Operative'
-                ? 'bg-tech-surface border-slate-300'
-                : 'bg-tech-surface/50 border-border-stroke hover:border-slate-500 hover:bg-tech-surface'
+                ? 'bg-tech-elevated border-slate-300'
+                : 'bg-tech-surface border-border-stroke hover:border-slate-500 hover:bg-tech-elevated'
             }`}
           >
-            <div className="w-9 h-9 rounded bg-void-black border border-slate-500 flex items-center justify-center text-slate-400 shrink-0">
-              <UserCheck className="w-5 h-5" />
+            <div className="w-8 h-8 rounded-md bg-void-black border border-white/10 flex items-center justify-center text-slate-400 shrink-0">
+              <UserCheck className="w-4 h-4" />
             </div>
             <div className="flex-1">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-mono font-bold text-slate-100">
-                  RECON GUEST [Ghost_Operative]
+                <span className="text-xs font-medium text-slate-100">
+                  Guest [Ghost_Operative]
                 </span>
-                <span className="text-[10px] font-mono bg-border-stroke text-slate-300 px-1.5 py-0.5 rounded font-bold">
+                <span className="text-[11px] font-mono bg-tech-surface text-slate-300 border border-border-stroke px-1.5 py-0.5 rounded-md tabular-nums">
                   $0.00
                 </span>
               </div>
-              <p className="text-[11px] text-slate-400 font-sans mt-1">
+              <p className="text-[11px] text-slate-400 mt-1 leading-normal">
                 Clean state with zero owned titles to test store purchases, empty library onboarding, and downloads.
               </p>
             </div>
@@ -123,19 +123,19 @@ export const AuthModal: React.FC = () => {
         </div>
 
         {/* Footer */}
-        <div className="mt-5 pt-3 border-t border-border-stroke flex items-center justify-between text-xs font-mono text-slate-400">
+        <div className="mt-5 pt-3 border-t border-border-stroke flex items-center justify-between text-xs text-slate-400">
           <div>
             {settings.devTelemetryMode && (
               <span className="flex items-center gap-1.5 text-tactical-green">
-                <Zap className="w-3.5 h-3.5 text-tactical-green" /> IN-MEMORY LOCAL DATA
+                <Zap className="w-3.5 h-3.5" /> In-Memory Mode
               </span>
             )}
           </div>
           <button
             onClick={closeAuthModal}
-            className="px-4 py-1.5 bg-tech-elevated hover:bg-border-stroke text-slate-200 rounded text-xs transition-colors"
+            className="px-4 py-1.5 bg-tech-elevated hover:bg-[#232B38] text-slate-200 border border-border-stroke rounded-md text-xs transition-colors active:scale-[0.98]"
           >
-            CLOSE
+            Close
           </button>
         </div>
       </div>

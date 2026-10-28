@@ -13,6 +13,7 @@ export interface Game {
   title: string;
   tagline: string;
   description: string;
+  genre?: string;
   price: number | 'FREE';
   discountPercent?: number;
   coverImage: string;

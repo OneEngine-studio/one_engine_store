@@ -1,6 +1,7 @@
 import React from 'react';
 import { UserSession } from '../types/launcher';
 import { Shield, User, LogOut, Minus, Square, X, Wifi } from 'lucide-react';
+import { useStore } from '../store/useStore';
 
 interface TitleBarProps {
   user: UserSession | null;
@@ -9,6 +10,7 @@ interface TitleBarProps {
 }
 
 export const TitleBar: React.FC<TitleBarProps> = ({ user, onOpenAuth, onLogout }) => {
+  const { navigate, activeTab } = useStore();
   const handleMinimize = async () => {
     if (typeof window !== 'undefined' && '__TAURI_INTERNALS__' in window) {
       const { getCurrentWindow } = await import('@tauri-apps/api/window');
@@ -48,13 +50,31 @@ export const TitleBar: React.FC<TitleBarProps> = ({ user, onOpenAuth, onLogout }
 
       {/* Center Nav / Status */}
       <div className="hidden md:flex items-center space-x-6 text-xs font-mono tracking-widest text-slate-400">
-        <span className="text-ember-500 flex items-center gap-1.5">
-          <span className="inline-block w-1.5 h-1.5 rounded-full bg-ember-500 animate-pulse"></span>
+        <span
+          onClick={() => navigate('store')}
+          className={`flex items-center gap-1.5 cursor-pointer transition-colors ${activeTab === 'store' ? 'text-ember-500' : 'hover:text-slate-200'}`}
+        >
+          {activeTab === 'store' && <span className="inline-block w-1.5 h-1.5 rounded-full bg-ember-500 animate-pulse" />}
           STOREFRONT
         </span>
-        <span className="hover:text-slate-200 cursor-pointer transition-colors">LIBRARY</span>
-        <span className="hover:text-slate-200 cursor-pointer transition-colors">COMMUNITY</span>
-        <span className="hover:text-slate-200 cursor-pointer transition-colors">SETTINGS</span>
+        <span
+          onClick={() => navigate('library')}
+          className={`cursor-pointer transition-colors ${activeTab === 'library' ? 'text-ember-500' : 'hover:text-slate-200'}`}
+        >
+          LIBRARY
+        </span>
+        <span
+          onClick={() => navigate('community')}
+          className={`cursor-pointer transition-colors ${activeTab === 'community' ? 'text-ember-500' : 'hover:text-slate-200'}`}
+        >
+          COMMUNITY
+        </span>
+        <span
+          onClick={() => navigate('settings')}
+          className={`cursor-pointer transition-colors ${activeTab === 'settings' ? 'text-ember-500' : 'hover:text-slate-200'}`}
+        >
+          SETTINGS
+        </span>
       </div>
 
       {/* User Callsign Bar & Window Controls */}

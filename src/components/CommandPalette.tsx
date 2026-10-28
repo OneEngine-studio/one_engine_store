@@ -42,27 +42,27 @@ export const CommandPalette: React.FC = () => {
 
   return (
     <div 
-      className="fixed inset-0 z-[70] flex items-start justify-center pt-20 bg-void-black/80 backdrop-blur-md p-4 select-none"
+      className="fixed inset-0 z-[70] flex items-start justify-center pt-20 bg-black/70 backdrop-blur-md p-4 select-none"
       onClick={() => setCommandPaletteOpen(false)}
     >
       <div 
-        className="w-full max-w-2xl bg-gunmetal-slate border border-white/10 border-t-white/20 rounded-xl shadow-2xl overflow-hidden flex flex-col transition-all duration-150"
+        className="w-full max-w-2xl bg-gunmetal-slate border border-border-stroke border-t border-white/15 rounded-md shadow-2xl overflow-hidden flex flex-col transition-all duration-150"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Search Input Bar */}
         <div className="p-3.5 border-b border-border-stroke flex items-center space-x-3 bg-tech-surface">
-          <Search className="w-5 h-5 text-primary-accent shrink-0" />
+          <Search className="w-4 h-4 text-slate-400 shrink-0" />
           <input
             type="text"
             autoFocus
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Type a game title, tag, or dispatch topic... (ESC to close)"
-            className="w-full bg-transparent text-sm font-sans text-slate-100 placeholder-slate-400 focus:outline-none"
+            placeholder="Type a game title, tag, or topic... (ESC to close)"
+            className="w-full bg-transparent text-sm text-slate-100 placeholder-slate-400 focus:outline-none"
           />
           <button 
             onClick={() => setCommandPaletteOpen(false)}
-            className="text-slate-400 hover:text-white p-1 rounded hover:bg-void-black transition-colors"
+            className="text-slate-400 hover:text-white p-1 rounded-md hover:bg-tech-elevated transition-colors active:scale-[0.98]"
           >
             <X className="w-4 h-4" />
           </button>
@@ -73,8 +73,8 @@ export const CommandPalette: React.FC = () => {
           {/* Games Category */}
           {filteredGames.length > 0 && (
             <div className="space-y-1.5">
-              <span className="text-[10px] font-mono tracking-widest text-slate-400 uppercase block px-2">
-                CATALOG & LIBRARY TITLES
+              <span className="text-[11px] font-semibold tracking-wider text-slate-400 uppercase block px-2">
+                Games & Library
               </span>
               <div className="space-y-1">
                 {filteredGames.map((game) => {
@@ -86,32 +86,32 @@ export const CommandPalette: React.FC = () => {
                         setCommandPaletteOpen(false);
                         navigate('game-detail', game.id);
                       }}
-                      className="p-2.5 rounded-lg hover:bg-tech-surface flex items-center justify-between cursor-pointer border border-transparent hover:border-border-stroke transition-all group"
+                      className="p-2.5 rounded-md hover:bg-tech-surface flex items-center justify-between cursor-pointer border border-transparent hover:border-border-stroke transition-all active:scale-[0.98] group"
                     >
                       <div className="flex items-center space-x-3">
                         <img 
                           src={game.coverImage} 
                           alt="" 
-                          className="w-10 h-7 rounded object-cover border border-border-stroke" 
+                          className="w-10 h-7 rounded-md object-cover border border-white/10" 
                         />
                         <div>
                           <div className="flex items-center space-x-2">
-                            <span className="text-xs font-mono font-bold text-slate-200 group-hover:text-primary-accent transition-colors">
+                            <span className="text-xs font-medium text-slate-200 group-hover:text-primary-accent transition-colors">
                               {game.title}
                             </span>
                             {isOwned && (
-                              <span className="px-1.5 py-0.2 text-[9px] font-mono bg-tactical-green/15 text-tactical-green border border-tactical-green/40 rounded">
-                                OWNED
+                              <span className="px-1.5 py-0.2 text-[10px] bg-tactical-green/10 text-tactical-green border border-tactical-green/30 rounded-md">
+                                Owned
                               </span>
                             )}
                           </div>
-                          <span className="text-[11px] font-sans text-slate-400 block line-clamp-1">
+                          <span className="text-[11px] text-slate-400 block line-clamp-1">
                             {game.tagline}
                           </span>
                         </div>
                       </div>
 
-                      <div className="flex items-center space-x-2 text-xs font-mono text-slate-400">
+                      <div className="flex items-center space-x-2 text-xs text-slate-400 tabular-nums">
                         <span>{typeof game.price === 'number' ? `$${game.price}` : game.price}</span>
                         <ChevronRight className="w-3.5 h-3.5 text-slate-400 group-hover:text-primary-accent" />
                       </div>
@@ -125,8 +125,8 @@ export const CommandPalette: React.FC = () => {
           {/* Articles Category */}
           {filteredArticles.length > 0 && (
             <div className="space-y-1.5 pt-2 border-t border-border-stroke/60">
-              <span className="text-[10px] font-mono tracking-widest text-slate-400 uppercase block px-2">
-                DISPATCHES & DEV LOGS
+              <span className="text-[11px] font-semibold tracking-wider text-slate-400 uppercase block px-2">
+                Dispatches & Updates
               </span>
               <div className="space-y-1">
                 {filteredArticles.map((article) => (
@@ -136,22 +136,22 @@ export const CommandPalette: React.FC = () => {
                       setCommandPaletteOpen(false);
                       openArticle(article);
                     }}
-                    className="p-2.5 rounded-lg hover:bg-tech-surface flex items-center justify-between cursor-pointer border border-transparent hover:border-border-stroke transition-all group"
+                    className="p-2.5 rounded-md hover:bg-tech-surface flex items-center justify-between cursor-pointer border border-transparent hover:border-border-stroke transition-all active:scale-[0.98] group"
                   >
                     <div className="flex items-center space-x-3">
-                      <div className="w-8 h-8 rounded bg-void-black border border-border-stroke flex items-center justify-center text-secondary-tech shrink-0">
+                      <div className="w-8 h-8 rounded-md bg-void-black border border-border-stroke flex items-center justify-center text-secondary-tech shrink-0">
                         <Radio className="w-4 h-4" />
                       </div>
                       <div>
                         <div className="flex items-center space-x-2">
-                          <span className="text-[10px] font-mono bg-tech-elevated px-1.5 py-0.5 rounded text-primary-accent">
+                          <span className="text-[10px] bg-tech-elevated px-1.5 py-0.5 rounded-md text-slate-300">
                             {article.gameTitle}
                           </span>
-                          <span className="text-xs font-mono font-bold text-slate-200 group-hover:text-primary-accent transition-colors truncate max-w-sm">
+                          <span className="text-xs font-medium text-slate-200 group-hover:text-primary-accent transition-colors truncate max-w-sm">
                             {article.title}
                           </span>
                         </div>
-                        <span className="text-[11px] font-sans text-slate-400 block line-clamp-1">
+                        <span className="text-[11px] text-slate-400 block line-clamp-1">
                           {article.summary}
                         </span>
                       </div>
@@ -165,17 +165,17 @@ export const CommandPalette: React.FC = () => {
           )}
 
           {filteredGames.length === 0 && filteredArticles.length === 0 && (
-            <div className="p-8 text-center text-xs font-sans text-slate-400">
-              No tactical matching records found for "{query}".
+            <div className="p-8 text-center text-xs text-slate-400">
+              No matching records found for "{query}".
             </div>
           )}
         </div>
 
         {/* Footer shortcuts */}
-        <div className="p-2.5 bg-void-black border-t border-border-stroke flex items-center justify-between text-[11px] font-mono text-slate-400 px-4">
-          <span>Navigate: <kbd className="px-1.5 py-0.5 bg-tech-surface border border-border-stroke rounded text-slate-300">↑</kbd> <kbd className="px-1.5 py-0.5 bg-tech-surface border border-border-stroke rounded text-slate-300">↓</kbd></span>
-          <span>Select: <kbd className="px-1.5 py-0.5 bg-tech-surface border border-border-stroke rounded text-slate-300">ENTER</kbd></span>
-          <span>Close: <kbd className="px-1.5 py-0.5 bg-tech-surface border border-border-stroke rounded text-slate-300">ESC</kbd></span>
+        <div className="p-2.5 bg-void-black border-t border-border-stroke flex items-center justify-between text-[11px] text-slate-400 px-4">
+          <span>Navigate: <kbd className="px-1.5 py-0.5 bg-tech-surface border border-border-stroke rounded-md text-slate-300">↑</kbd> <kbd className="px-1.5 py-0.5 bg-tech-surface border border-border-stroke rounded-md text-slate-300">↓</kbd></span>
+          <span>Select: <kbd className="px-1.5 py-0.5 bg-tech-surface border border-border-stroke rounded-md text-slate-300">ENTER</kbd></span>
+          <span>Close: <kbd className="px-1.5 py-0.5 bg-tech-surface border border-border-stroke rounded-md text-slate-300">ESC</kbd></span>
         </div>
       </div>
     </div>

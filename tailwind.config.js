@@ -8,10 +8,10 @@ export default {
     extend: {
       colors: {
         'void-black': '#090B0E',
-        'gunmetal-slate': '#0E1116',
-        'tech-surface': '#15181F',
-        'tech-elevated': '#1B202A',
-        'border-stroke': '#2A313D',
+        'gunmetal-slate': '#0E1217',
+        'tech-surface': '#141921',
+        'tech-elevated': '#1C232E',
+        'border-stroke': '#262F3D',
         'primary-accent': '#FF7A00',
         'secondary-tech': '#00E5FF',
         'tactical-green': '#10B981',
@@ -20,7 +20,11 @@ export default {
       },
       fontFamily: {
         mono: ['"JetBrains Mono"', 'Menlo', 'Consolas', 'monospace'],
-        sans: ['"Rajdhani"', 'Inter', 'system-ui', 'sans-serif'],
+        sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', '"Segoe UI"', 'Roboto', 'sans-serif'],
+      },
+      borderRadius: {
+        DEFAULT: '6px',
+        md: '6px',
       },
       spacing: {
         '84': '21rem',
@@ -28,9 +32,8 @@ export default {
         '92': '23rem',
       },
       boxShadow: {
-        'ember-glow': '0 0 20px rgba(255, 122, 0, 0.25)',
-        'cyan-glow': '0 0 20px rgba(0, 229, 255, 0.25)',
-        'tactical-card': '0 4px 20px rgba(0, 0, 0, 0.45)',
+        'subtle-card': '0 2px 8px rgba(0, 0, 0, 0.35)',
+        'modal': '0 16px 40px rgba(0, 0, 0, 0.65)',
       },
       animation: {
         'pulse-subtle': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
