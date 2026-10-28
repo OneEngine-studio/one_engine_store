@@ -11,6 +11,8 @@ import {
   CreditCard
 } from 'lucide-react';
 import { NotificationPopover } from './NotificationPopover';
+import { NumberTicker } from './ui/NumberTicker';
+import { Kbd } from './ui/Kbd';
 
 export const WindowFrame: React.FC = () => {
   const { 
@@ -45,7 +47,7 @@ export const WindowFrame: React.FC = () => {
     <header 
       data-tauri-drag-region 
       style={{ WebkitAppRegion: 'drag' } as React.CSSProperties}
-      className="h-10 bg-gunmetal-slate border-b border-border-stroke flex items-center justify-between px-3 select-none z-40 shrink-0 relative"
+      className="h-11 bg-transparent flex items-center justify-between px-3 select-none z-40 shrink-0 relative"
     >
       {/* Left: Brand Glyph & History Controls */}
       <div className="flex items-center space-x-3 pointer-events-none">
@@ -58,7 +60,7 @@ export const WindowFrame: React.FC = () => {
           <span className="text-xs font-semibold tracking-wide text-slate-200">
             One<span className="text-primary-accent">Engine</span>
           </span>
-          <span className="text-[10px] text-slate-400 border border-white/5 px-1.5 py-0.2 rounded-md bg-void-black">
+          <span className="text-[10px] text-slate-400 border border-white/5 px-1.5 py-0.2 rounded-full bg-white/[0.04]">
             v2.6
           </span>
         </div>
@@ -66,15 +68,15 @@ export const WindowFrame: React.FC = () => {
         {/* Back / Forward Controls */}
         <div 
           style={{ WebkitAppRegion: 'no-drag' } as React.CSSProperties}
-          className="hidden sm:flex items-center space-x-0.5 pl-2 pointer-events-auto"
+          className="hidden sm:flex items-center space-x-1 pl-2 pointer-events-auto"
         >
           <button 
             onClick={goBack}
             disabled={!canGoBack}
-            className={`w-6 h-6 flex items-center justify-center rounded-md transition-colors ${
+            className={`w-7 h-7 flex items-center justify-center rounded-full transition-colors ${
               canGoBack 
-                ? 'hover:bg-tech-surface text-slate-300 hover:text-white cursor-pointer active:scale-[0.98]' 
-                : 'text-slate-600 cursor-not-allowed'
+                ? 'bg-white/5 hover:bg-white/10 text-slate-300 hover:text-white cursor-pointer active:scale-95' 
+                : 'text-slate-600 cursor-not-allowed opacity-40'
             }`}
             title="Back"
           >
@@ -83,10 +85,10 @@ export const WindowFrame: React.FC = () => {
           <button 
             onClick={goForward}
             disabled={!canGoForward}
-            className={`w-6 h-6 flex items-center justify-center rounded-md transition-colors ${
+            className={`w-7 h-7 flex items-center justify-center rounded-full transition-colors ${
               canGoForward 
-                ? 'hover:bg-tech-surface text-slate-300 hover:text-white cursor-pointer active:scale-[0.98]' 
-                : 'text-slate-600 cursor-not-allowed'
+                ? 'bg-white/5 hover:bg-white/10 text-slate-300 hover:text-white cursor-pointer active:scale-95' 
+                : 'text-slate-600 cursor-not-allowed opacity-40'
             }`}
             title="Forward"
           >
@@ -102,15 +104,13 @@ export const WindowFrame: React.FC = () => {
       >
         <button
           onClick={() => setCommandPaletteOpen(true)}
-          className="w-full bg-void-black/70 hover:bg-void-black border border-border-stroke hover:border-slate-600 rounded-md px-3 py-1 flex items-center justify-between text-xs text-slate-400 transition-colors"
+          className="w-full bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 rounded-full px-4 py-1.5 flex items-center justify-between text-xs text-slate-400 hover:text-slate-200 transition-all shadow-inner"
         >
           <div className="flex items-center space-x-2">
             <Search className="w-3.5 h-3.5 text-slate-400" />
             <span className="truncate">Search games, library, community...</span>
           </div>
-          <kbd className="px-1.5 py-0.2 text-[10px] font-mono bg-tech-surface border border-white/10 rounded text-slate-400">
-            Ctrl K
-          </kbd>
+          <Kbd className="bg-white/10 border-white/10 text-slate-300">Ctrl K</Kbd>
         </button>
       </div>
 
@@ -121,7 +121,7 @@ export const WindowFrame: React.FC = () => {
       >
         {/* Live Running Status Pill */}
         {runningGame && (
-          <div className="hidden lg:flex items-center space-x-1.5 px-2 py-0.5 rounded-md bg-tactical-green/10 border border-tactical-green/30 text-tactical-green text-xs tabular-nums">
+          <div className="hidden lg:flex items-center space-x-1.5 px-2.5 py-1 rounded-full bg-tactical-green/10 border border-tactical-green/30 text-tactical-green text-xs tabular-nums">
             <span className="w-1.5 h-1.5 rounded-full bg-tactical-green animate-pulse" />
             <span className="truncate max-w-[120px]">{runningGame.title}</span>
             <span className="text-slate-400">({formatTimer(sessionElapsedSeconds)})</span>
@@ -129,16 +129,21 @@ export const WindowFrame: React.FC = () => {
         )}
 
         {/* User Wallet Pill */}
-        <div className="hidden md:flex items-center space-x-1.5 px-2 py-0.5 bg-tech-surface border border-border-stroke rounded-md text-xs tabular-nums">
+        <div className="hidden md:flex items-center space-x-1.5 px-2.5 py-1 bg-white/5 border border-white/10 rounded-full text-xs tabular-nums">
           <CreditCard className="w-3 h-3 text-slate-400" />
           <span className="text-slate-400 text-[11px]">Wallet:</span>
-          <span className="text-slate-100 font-medium">${currentUser.walletBalance.toFixed(2)}</span>
+          <NumberTicker
+            value={currentUser.walletBalance}
+            decimalPlaces={2}
+            prefix="$"
+            className="text-slate-100 font-medium"
+          />
         </div>
 
         {/* Profile Switcher Trigger */}
         <button 
           onClick={openAuthModal}
-          className="flex items-center space-x-2 px-2 py-0.5 bg-tech-surface hover:bg-tech-elevated border border-border-stroke hover:border-slate-500 rounded-md text-xs transition-colors active:scale-[0.98]"
+          className="flex items-center space-x-2 px-2.5 py-1 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 rounded-full text-xs transition-colors active:scale-95"
           title="Switch Account"
         >
           <img 
@@ -154,12 +159,12 @@ export const WindowFrame: React.FC = () => {
         <div className="relative">
           <button 
             onClick={() => setIsNotifOpen((prev) => !prev)}
-            className="w-7 h-7 flex items-center justify-center text-slate-400 hover:text-slate-200 hover:bg-tech-surface rounded-md transition-colors relative"
+            className="w-7 h-7 flex items-center justify-center text-slate-400 hover:text-slate-200 bg-white/5 hover:bg-white/10 rounded-full transition-colors relative"
             title="Notifications"
           >
             <Bell className="w-3.5 h-3.5" />
             {unreadNotifsCount > 0 && (
-              <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full bg-primary-accent" />
+              <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-primary-accent ring-2 ring-[#0A0507]" />
             )}
           </button>
           
@@ -170,24 +175,24 @@ export const WindowFrame: React.FC = () => {
         </div>
 
         {/* Windows OS Frame Controls */}
-        <div className="flex items-center pl-1 border-l border-border-stroke">
+        <div className="flex items-center pl-1 border-l border-white/10">
           <button
             onClick={minimizeWindow}
-            className="w-8 h-7 flex items-center justify-center text-slate-400 hover:text-white hover:bg-tech-elevated rounded-sm transition-colors"
+            className="w-8 h-7 flex items-center justify-center text-slate-400 hover:text-white hover:bg-white/10 rounded-md transition-colors"
             title="Minimize"
           >
             <Minus className="w-3 h-3" />
           </button>
           <button
             onClick={toggleMaximizeWindow}
-            className="w-8 h-7 flex items-center justify-center text-slate-400 hover:text-white hover:bg-tech-elevated rounded-sm transition-colors"
+            className="w-8 h-7 flex items-center justify-center text-slate-400 hover:text-white hover:bg-white/10 rounded-md transition-colors"
             title="Maximize / Restore"
           >
             <Square className="w-2.5 h-2.5" />
           </button>
           <button
             onClick={closeWindow}
-            className="w-8 h-7 flex items-center justify-center text-slate-400 hover:text-white hover:bg-[#E53935] rounded-sm transition-colors"
+            className="w-8 h-7 flex items-center justify-center text-slate-400 hover:text-white hover:bg-[#E53935] rounded-md transition-colors"
             title="Close"
           >
             <X className="w-3.5 h-3.5" />

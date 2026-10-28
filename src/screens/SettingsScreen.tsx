@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useStore } from '../store/useStore';
 import { 
   Settings, 
@@ -13,8 +13,10 @@ import {
   Activity,
   Trash2,
   CheckCircle,
-  Terminal
+  Terminal,
+  Check
 } from 'lucide-react';
+import { NumberTicker } from '../components/ui/NumberTicker';
 
 export const SettingsScreen: React.FC = () => {
   const { 
@@ -22,8 +24,12 @@ export const SettingsScreen: React.FC = () => {
     updateSettings, 
     playTactileSound,
     clearShaderCache,
-    verifyGameFiles
+    verifyGameFiles,
+    addToast
   } = useStore();
+
+  const [isEditingDir, setIsEditingDir] = useState(false);
+  const [customDir, setCustomDir] = useState(settings.downloadDirectory);
 
   const accentOptions = [
     { label: 'Ember Orange', value: '#FF7A00', className: 'bg-[#FF7A00]' },
@@ -32,15 +38,16 @@ export const SettingsScreen: React.FC = () => {
     { label: 'Crimson Red', value: '#EF4444', className: 'bg-[#EF4444]' },
   ];
 
-  const handleDirectoryChange = () => {
-    const newDir = prompt('Select Directory:', settings.downloadDirectory);
-    if (newDir && newDir.trim()) {
-      updateSettings({ downloadDirectory: newDir.trim() });
+  const handleSaveDirectory = () => {
+    if (customDir && customDir.trim()) {
+      updateSettings({ downloadDirectory: customDir.trim() });
+      addToast(`Installation directory set to ${customDir.trim()}`, 'success');
+      setIsEditingDir(false);
     }
   };
 
   return (
-    <div className="flex-1 overflow-y-auto bg-void-black p-6 space-y-6 select-none">
+    <div className="flex-1 overflow-y-auto bg-transparent p-6 space-y-6 select-none">
       {/* Header */}
       <div className="flex items-center space-x-3 border-b border-border-stroke pb-4">
         <div className="w-8 h-8 rounded-md bg-tech-surface border border-border-stroke flex items-center justify-center text-slate-200">
@@ -153,16 +160,58 @@ export const SettingsScreen: React.FC = () => {
               <div className="flex items-center space-x-2">
                 <input
                   type="text"
-                  readOnly
-                  value={settings.downloadDirectory}
-                  className="flex-1 bg-void-black border border-border-stroke rounded-md px-3 py-1.5 text-xs text-slate-200"
+                  readOnly={!isEditingDir}
+                  value={isEditingDir ? customDir : settings.downloadDirectory}
+                  onChange={(e) => setCustomDir(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') handleSaveDirectory();
+                    if (e.key === 'Escape') setIsEditingDir(false);
+                  }}
+                  className={`flex-1 bg-void-black border rounded-md px-3 py-1.5 text-xs text-slate-200 transition-colors ${
+                    isEditingDir ? 'border-primary-accent ring-1 ring-primary-accent/30' : 'border-border-stroke'
+                  }`}
                 />
+                {isEditingDir ? (
+                  <button
+                    onClick={handleSaveDirectory}
+                    className="px-3.5 py-1.5 bg-primary-accent hover:bg-[#E66E00] text-void-black font-semibold rounded-md text-xs flex items-center gap-1.5 transition-colors active:scale-[0.98]"
+                  >
+                    <Check className="w-3.5 h-3.5" />
+                    <span>Save</span>
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => {
+                      setCustomDir(settings.downloadDirectory);
+                      setIsEditingDir(true);
+                    }}
+                    className="px-3.5 py-1.5 bg-tech-elevated hover:bg-[#232B38] text-slate-200 border border-border-stroke rounded-md text-xs flex items-center gap-1.5 transition-colors active:scale-[0.98]"
+                  >
+                    <Folder className="w-3.5 h-3.5 text-slate-400" />
+                    <span>Edit Path</span>
+                  </button>
+                )}
+              </div>
+              <div className="flex items-center gap-2 pt-1 text-[11px] text-slate-500">
+                <span>Presets:</span>
                 <button
-                  onClick={handleDirectoryChange}
-                  className="px-3.5 py-1.5 bg-tech-elevated hover:bg-[#232B38] text-slate-200 border border-border-stroke rounded-md text-xs flex items-center gap-1.5 transition-colors active:scale-[0.98]"
+                  onClick={() => {
+                    updateSettings({ downloadDirectory: 'C:\\OneEngine\\GameLibrary' });
+                    addToast('Installation directory set to C:\\OneEngine\\GameLibrary', 'success');
+                  }}
+                  className="hover:text-slate-300 underline underline-offset-2"
                 >
-                  <Folder className="w-3.5 h-3.5 text-slate-400" />
-                  <span>Browse</span>
+                  C:\OneEngine
+                </button>
+                <span>•</span>
+                <button
+                  onClick={() => {
+                    updateSettings({ downloadDirectory: 'D:\\Games\\OneEngine' });
+                    addToast('Installation directory set to D:\\Games\\OneEngine', 'success');
+                  }}
+                  className="hover:text-slate-300 underline underline-offset-2"
+                >
+                  D:\Games
                 </button>
               </div>
             </div>
@@ -231,14 +280,20 @@ export const SettingsScreen: React.FC = () => {
             <div className="space-y-2">
               <div className="flex justify-between text-xs">
                 <span className="text-slate-400">Library Disk:</span>
-                <span className="text-slate-200 font-medium tabular-nums">142.8 GB / 512 GB</span>
+                <span className="text-slate-200 font-medium tabular-nums">
+                  <NumberTicker value={142.8} decimalPlaces={1} suffix=" GB" /> / 512 GB
+                </span>
               </div>
               <div className="w-full h-1.5 bg-void-black rounded-full overflow-hidden border border-white/5">
                 <div className="h-full bg-primary-accent w-[28%]" />
               </div>
               <div className="flex justify-between text-[11px] text-slate-500 tabular-nums">
-                <span>Used: 142.8 GB</span>
-                <span>Available: 369.2 GB</span>
+                <span>
+                  Used: <NumberTicker value={142.8} decimalPlaces={1} suffix=" GB" />
+                </span>
+                <span>
+                  Available: <NumberTicker value={369.2} decimalPlaces={1} suffix=" GB" />
+                </span>
               </div>
             </div>
 
@@ -300,7 +355,7 @@ export const SettingsScreen: React.FC = () => {
                   devTelemetryMode: false,
                   bandwidthThrottleMbps: 0,
                 });
-                alert('Preferences reset to factory defaults.');
+                addToast('Preferences reset to factory defaults.', 'info');
               }}
               className="w-full mt-2 py-1.5 bg-void-black hover:bg-tech-elevated border border-border-stroke text-slate-400 hover:text-white rounded-md text-xs flex items-center justify-center gap-1.5 transition-colors active:scale-[0.98]"
             >

@@ -1,6 +1,8 @@
 import React from 'react';
 import { useStore } from '../store/useStore';
 import { Shield, X, UserCheck, Terminal, Award, Zap } from 'lucide-react';
+import { Kbd } from './ui/Kbd';
+import { NumberTicker } from './ui/NumberTicker';
 
 export const AuthModal: React.FC = () => {
   const { isAuthModalOpen, closeAuthModal, switchUserPreset, currentUser, settings } = useStore();
@@ -21,15 +23,17 @@ export const AuthModal: React.FC = () => {
                 Switch Account
               </h2>
               <span className="text-xs text-slate-400 tabular-nums">
-                Active: {currentUser.callsign} • ${currentUser.walletBalance.toFixed(2)}
+                Active: {currentUser.callsign} • <NumberTicker value={currentUser.walletBalance} decimalPlaces={2} prefix="$" />
               </span>
             </div>
           </div>
           <button 
             onClick={closeAuthModal} 
-            className="text-slate-400 hover:text-white p-1 rounded-md hover:bg-tech-surface transition-colors active:scale-[0.98]"
+            className="text-slate-400 hover:text-white px-2 py-1 rounded-md hover:bg-tech-surface transition-colors active:scale-[0.98] flex items-center gap-1.5"
+            title="Close (ESC)"
           >
             <X className="w-4 h-4" />
+            <Kbd className="text-[10px]">ESC</Kbd>
           </button>
         </div>
 

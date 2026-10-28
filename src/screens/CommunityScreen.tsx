@@ -7,6 +7,9 @@ import {
   Calendar, 
   ArrowUpRight
 } from 'lucide-react';
+import { SpotlightCard } from '../components/ui/SpotlightCard';
+import { AnimatedTabs, TabItem } from '../components/ui/AnimatedTabs';
+import { NumberTicker } from '../components/ui/NumberTicker';
 
 export const CommunityScreen: React.FC = () => {
   const { articles, openArticle, toggleArticleLike } = useStore();
@@ -16,8 +19,15 @@ export const CommunityScreen: React.FC = () => {
     ? articles
     : articles.filter((a) => a.category === selectedCategory);
 
+  const categoryTabs: TabItem[] = [
+    { id: 'ALL', label: 'All News' },
+    { id: 'PATCH_NOTES', label: 'Patch Notes' },
+    { id: 'DEV_LOGS', label: 'Dev Logs' },
+    { id: 'COMMUNITY_SPOTLIGHT', label: 'Spotlight' },
+  ];
+
   return (
-    <div className="flex-1 overflow-y-auto bg-void-black p-6 space-y-6 select-none">
+    <div className="flex-1 overflow-y-auto bg-transparent p-6 space-y-6 select-none">
       {/* Header & Category Filters */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-border-stroke pb-4">
         <div>
@@ -32,71 +42,39 @@ export const CommunityScreen: React.FC = () => {
           </h1>
         </div>
 
-        {/* Category Filter Pills */}
-        <div className="flex items-center space-x-1 bg-tech-surface p-1 rounded-md border border-border-stroke text-xs">
-          <button
-            onClick={() => setSelectedCategory('ALL')}
-            className={`px-3 py-1 rounded-md transition-colors ${
-              selectedCategory === 'ALL'
-                ? 'bg-tech-elevated text-slate-100 font-medium border border-white/10'
-                : 'text-slate-400 hover:text-white'
-            }`}
-          >
-            All News
-          </button>
-          <button
-            onClick={() => setSelectedCategory('PATCH_NOTES')}
-            className={`px-3 py-1 rounded-md transition-colors ${
-              selectedCategory === 'PATCH_NOTES'
-                ? 'bg-tech-elevated text-slate-100 font-medium border border-white/10'
-                : 'text-slate-400 hover:text-white'
-            }`}
-          >
-            Patch Notes
-          </button>
-          <button
-            onClick={() => setSelectedCategory('DEV_LOGS')}
-            className={`px-3 py-1 rounded-md transition-colors ${
-              selectedCategory === 'DEV_LOGS'
-                ? 'bg-tech-elevated text-slate-100 font-medium border border-white/10'
-                : 'text-slate-400 hover:text-white'
-            }`}
-          >
-            Dev Logs
-          </button>
-          <button
-            onClick={() => setSelectedCategory('COMMUNITY_SPOTLIGHT')}
-            className={`px-3 py-1 rounded-md transition-colors ${
-              selectedCategory === 'COMMUNITY_SPOTLIGHT'
-                ? 'bg-tech-elevated text-slate-100 font-medium border border-white/10'
-                : 'text-slate-400 hover:text-white'
-            }`}
-          >
-            Spotlight
-          </button>
+        {/* Animated Category Filter Pills */}
+        <div className="bg-tech-surface p-1 rounded-md border border-border-stroke">
+          <AnimatedTabs
+            tabs={categoryTabs}
+            activeTab={selectedCategory}
+            onChange={(id) => setSelectedCategory(id)}
+            orientation="horizontal"
+            activePillClassName="bg-tech-elevated rounded-md border border-white/10 shadow-sm"
+          />
         </div>
       </div>
 
-      {/* Articles Grid */}
+      {/* Articles Grid with Spotlight and Staggered Entry */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-        {filteredArticles.map((item) => (
-          <article
+        {filteredArticles.map((item, index) => (
+          <SpotlightCard
             key={item.id}
             onClick={() => openArticle(item)}
-            className="group bg-tech-surface border border-border-stroke border-t border-white/10 hover:border-slate-500 hover:bg-tech-elevated rounded-md overflow-hidden flex flex-col justify-between transition-all duration-150 ease-out hover:-translate-y-0.5 cursor-pointer shadow-subtle-card"
+            className="cursor-pointer flex flex-col justify-between animate-stagger-entry"
+            style={{ animationDelay: `${index * 25}ms` }}
           >
             <div>
               <div className="relative aspect-[16/9] w-full overflow-hidden bg-void-black rounded-t-[5px]">
                 <img
                   src={item.cover}
                   alt={item.title}
-                  className="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-300"
+                  className="w-full h-full object-cover group-hover/spotlight:scale-[1.03] transition-transform duration-500 ease-out"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-tech-surface/80 via-transparent to-black/20" />
+                <div className="absolute inset-0 bg-gradient-to-t from-[#141921] via-[#141921]/40 to-transparent" />
                 <div className="absolute inset-0 ring-1 ring-inset ring-white/5 pointer-events-none rounded-t-[5px]" />
                 
                 {/* Max 1 Status Badge */}
-                <div className="absolute top-2.5 left-2.5 px-2 py-0.5 rounded-md bg-[#0E1217]/90 text-[11px] text-slate-200 border border-white/10 font-medium backdrop-blur-sm">
+                <div className="absolute top-2.5 left-2.5 px-2 py-0.5 rounded-md bg-[#0E1217]/90 text-[11px] text-slate-200 border border-white/10 font-medium backdrop-blur-sm z-20">
                   {item.gameTitle}
                 </div>
               </div>
@@ -109,7 +87,7 @@ export const CommunityScreen: React.FC = () => {
                   <span>{item.author}</span>
                 </div>
 
-                <h3 className="text-[14px] font-medium text-[#F8FAFC] group-hover:text-primary-accent transition-colors leading-snug">
+                <h3 className="text-[14px] font-medium text-[#F8FAFC] group-hover/spotlight:text-primary-accent transition-colors leading-snug">
                   {item.title}
                 </h3>
 
@@ -131,19 +109,24 @@ export const CommunityScreen: React.FC = () => {
                   }`}
                 >
                   <ThumbsUp className={`w-3.5 h-3.5 ${item.hasLiked ? 'fill-current' : ''}`} />
-                  <span className="tabular-nums">{item.likes}</span>
+                  <span className="tabular-nums">
+                    <NumberTicker value={item.likes} />
+                  </span>
                 </button>
                 <span className="flex items-center gap-1">
-                  <MessageSquare className="w-3.5 h-3.5" /> <span className="tabular-nums">{item.comments}</span>
+                  <MessageSquare className="w-3.5 h-3.5" />
+                  <span className="tabular-nums">
+                    <NumberTicker value={item.comments} />
+                  </span>
                 </span>
               </div>
 
-              <span className="flex items-center gap-1 text-slate-300 group-hover:text-primary-accent text-xs font-medium transition-colors">
+              <span className="flex items-center gap-1 text-slate-300 group-hover/spotlight:text-primary-accent text-xs font-medium transition-colors">
                 <span>Read</span>
                 <ArrowUpRight className="w-3 h-3" />
               </span>
             </div>
-          </article>
+          </SpotlightCard>
         ))}
       </div>
     </div>

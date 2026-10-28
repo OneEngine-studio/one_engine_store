@@ -5,12 +5,14 @@ import {
   ThumbsUp,
   Calendar,
   User,
-  ExternalLink,
-  Share2
+  Share2,
+  ExternalLink
 } from 'lucide-react';
+import { Kbd } from './ui/Kbd';
+import { NumberTicker } from './ui/NumberTicker';
 
 export const ArticleReaderModal: React.FC = () => {
-  const { selectedArticle, closeArticle, toggleArticleLike, navigate } = useStore();
+  const { selectedArticle, closeArticle, toggleArticleLike, addToast, navigate } = useStore();
 
   if (!selectedArticle) return null;
 
@@ -35,9 +37,11 @@ export const ArticleReaderModal: React.FC = () => {
 
           <button
             onClick={closeArticle}
-            className="absolute top-4 right-4 w-7 h-7 rounded-md bg-void-black/80 hover:bg-void-black text-slate-300 hover:text-white border border-white/10 flex items-center justify-center transition-colors active:scale-[0.98]"
+            className="absolute top-4 right-4 px-2 py-1 rounded-md bg-void-black/80 hover:bg-void-black text-slate-300 hover:text-white border border-white/10 flex items-center gap-1.5 transition-colors active:scale-[0.98]"
+            title="Close (ESC)"
           >
-            <X className="w-4 h-4" />
+            <X className="w-3.5 h-3.5" />
+            <Kbd className="text-[10px]">ESC</Kbd>
           </button>
 
           <div className="absolute bottom-4 left-6 right-6">
@@ -75,10 +79,15 @@ export const ArticleReaderModal: React.FC = () => {
                 }`}
             >
               <ThumbsUp className={`w-3.5 h-3.5 ${selectedArticle.hasLiked ? 'fill-current' : ''}`} />
-              <span className="tabular-nums">{selectedArticle.likes}</span>
+              <span className="tabular-nums">
+                <NumberTicker value={selectedArticle.likes} />
+              </span>
             </button>
             <button
-              onClick={() => alert('Article link copied.')}
+              onClick={() => {
+                navigator.clipboard.writeText(`oneengine://article/${selectedArticle.id}`).catch(() => {});
+                addToast('Article link copied to clipboard.', 'success');
+              }}
               className="p-1.5 rounded-md border border-border-stroke bg-tech-surface hover:text-white text-slate-400 transition-colors active:scale-[0.98]"
               title="Share"
             >

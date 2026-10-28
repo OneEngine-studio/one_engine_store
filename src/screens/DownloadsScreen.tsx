@@ -7,12 +7,13 @@ import {
   X, 
   HardDrive, 
   Activity, 
-  CheckCircle,
-  Clock,
-  Zap,
-  Sliders,
-  FileText
+  CheckCircle, 
+  Clock, 
+  Zap, 
+  Sliders, 
+  FileText 
 } from 'lucide-react';
+import { NumberTicker } from '../components/ui/NumberTicker';
 
 export const DownloadsScreen: React.FC = () => {
   const { 
@@ -81,7 +82,7 @@ export const DownloadsScreen: React.FC = () => {
   };
 
   return (
-    <div className="flex-1 overflow-y-auto bg-void-black p-6 space-y-6 select-none">
+    <div className="flex-1 overflow-y-auto bg-transparent p-6 space-y-6 select-none">
       {/* Throttle Modal */}
       {showThrottleModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-md p-4">
@@ -191,22 +192,28 @@ export const DownloadsScreen: React.FC = () => {
               <path d={lineD} fill="none" stroke="#FF7A00" strokeWidth="1.5" />
             </svg>
             <div className="absolute top-2 left-2 text-[11px] text-slate-400 tabular-nums">
-              Network: <span className="text-secondary-tech font-medium">{currentSpeed.toFixed(1)} MB/s</span> • Disk: <span className="text-tactical-green font-medium">{diskSpeed.toFixed(1)} MB/s</span>
+              Network: <span className="text-secondary-tech font-medium"><NumberTicker value={currentSpeed} decimalPlaces={1} suffix=" MB/s" /></span> • Disk: <span className="text-tactical-green font-medium"><NumberTicker value={diskSpeed} decimalPlaces={1} suffix=" MB/s" /></span>
             </div>
           </div>
 
           <div className="grid grid-cols-3 gap-2 text-center text-xs pt-2 border-t border-border-stroke tabular-nums">
             <div className="p-2 bg-void-black rounded-md border border-border-stroke/40">
               <span className="text-[11px] text-slate-400 block">Download Speed</span>
-              <span className="text-slate-100 font-medium">{currentSpeed} MB/s</span>
+              <span className="text-slate-100 font-medium">
+                <NumberTicker value={currentSpeed} decimalPlaces={1} suffix=" MB/s" />
+              </span>
             </div>
             <div className="p-2 bg-void-black rounded-md border border-border-stroke/40">
               <span className="text-[11px] text-slate-400 block">Disk Write</span>
-              <span className="text-tactical-green font-medium">{diskSpeed} MB/s</span>
+              <span className="text-tactical-green font-medium">
+                <NumberTicker value={diskSpeed} decimalPlaces={1} suffix=" MB/s" />
+              </span>
             </div>
             <div className="p-2 bg-void-black rounded-md border border-border-stroke/40">
               <span className="text-[11px] text-slate-400 block">Peak Speed</span>
-              <span className="text-slate-200 font-medium">78.4 MB/s</span>
+              <span className="text-slate-200 font-medium">
+                <NumberTicker value={78.4} decimalPlaces={1} suffix=" MB/s" />
+              </span>
             </div>
           </div>
         </div>
@@ -262,17 +269,18 @@ export const DownloadsScreen: React.FC = () => {
           </div>
         ) : (
           <div className="space-y-3">
-            {downloads.map((item) => {
+            {downloads.map((item, index) => {
               const isPaused = item.status === 'PAUSED' || isPausedAll;
               const isCompleted = item.status === 'COMPLETED';
 
               return (
                 <div
                   key={item.gameId}
-                  className="bg-tech-surface border border-border-stroke border-t border-white/10 rounded-md p-4 flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-subtle-card"
+                  className="relative bg-tech-surface border border-border-stroke border-t border-white/10 rounded-md p-4 flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-subtle-card overflow-hidden animate-stagger-entry"
+                  style={{ animationDelay: `${index * 25}ms` }}
                 >
                   {/* Left: Thumbnail & Name */}
-                  <div className="flex items-center space-x-3.5 min-w-[240px]">
+                  <div className="flex items-center space-x-3.5 min-w-[240px] z-10">
                     <img
                       src={item.coverImage}
                       alt={item.title}
@@ -287,15 +295,19 @@ export const DownloadsScreen: React.FC = () => {
                           {isPaused ? 'Paused' : item.status}
                         </span>
                         <span>•</span>
-                        <span>{item.downloadedGb} GB / {item.totalGb} GB</span>
+                        <span>
+                          <NumberTicker value={item.downloadedGb} decimalPlaces={1} suffix=" GB" /> / {item.totalGb} GB
+                        </span>
                       </div>
                     </div>
                   </div>
 
                   {/* Center: Progress Bar & Stats */}
-                  <div className="flex-1 max-w-md space-y-1.5">
+                  <div className="flex-1 max-w-md space-y-1.5 z-10">
                     <div className="flex items-center justify-between text-xs tabular-nums">
-                      <span className="text-slate-200 font-medium">{item.progress}%</span>
+                      <span className="text-slate-200 font-medium">
+                        <NumberTicker value={item.progress} suffix="%" />
+                      </span>
                       {!isCompleted && !isPaused && (
                         <span className="text-slate-400 flex items-center gap-1">
                           <Clock className="w-3 h-3 text-slate-400" /> ETA: ~{Math.ceil(item.etaSeconds / 60)} min
@@ -317,7 +329,7 @@ export const DownloadsScreen: React.FC = () => {
                   </div>
 
                   {/* Right: Controls */}
-                  <div className="flex items-center space-x-1.5 shrink-0">
+                  <div className="flex items-center space-x-1.5 shrink-0 z-10">
                     {!isCompleted && (
                       isPaused ? (
                         <button

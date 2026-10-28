@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useStore } from '../store/useStore';
 import { Search, Radio, X, ChevronRight } from 'lucide-react';
+import { Kbd } from './ui/Kbd';
 
 export const CommandPalette: React.FC = () => {
   const { 
@@ -173,9 +174,9 @@ export const CommandPalette: React.FC = () => {
 
         {/* Footer shortcuts */}
         <div className="p-2.5 bg-void-black border-t border-border-stroke flex items-center justify-between text-[11px] text-slate-400 px-4">
-          <span>Navigate: <kbd className="px-1.5 py-0.5 bg-tech-surface border border-border-stroke rounded-md text-slate-300">↑</kbd> <kbd className="px-1.5 py-0.5 bg-tech-surface border border-border-stroke rounded-md text-slate-300">↓</kbd></span>
-          <span>Select: <kbd className="px-1.5 py-0.5 bg-tech-surface border border-border-stroke rounded-md text-slate-300">ENTER</kbd></span>
-          <span>Close: <kbd className="px-1.5 py-0.5 bg-tech-surface border border-border-stroke rounded-md text-slate-300">ESC</kbd></span>
+          <span className="flex items-center gap-1">Navigate: <Kbd>↑</Kbd> <Kbd>↓</Kbd></span>
+          <span className="flex items-center gap-1">Select: <Kbd>ENTER</Kbd></span>
+          <span className="flex items-center gap-1">Close: <Kbd>ESC</Kbd></span>
         </div>
       </div>
     </div>
