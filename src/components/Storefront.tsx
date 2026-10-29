@@ -21,8 +21,8 @@ interface StorefrontProps {
 export const Storefront: React.FC<StorefrontProps> = ({ user, onRequireAuth }) => {
   const [game, setGame] = useState<GameInfo>({
     id: 'railbound',
-    title: 'RAILBOUND: TACTICAL PROTOCOL',
-    tagline: 'High-speed tactical railway logistics & automated rail defense systems.',
+    title: 'Railbound: Tactical Protocol',
+    tagline: 'High-speed tactical railway logistics and automated rail defense systems.',
     version: 'v1.4.2-rel',
     installedVersion: 'v1.4.2-rel',
     executableName: 'Railbound.exe',
@@ -34,17 +34,17 @@ export const Storefront: React.FC<StorefrontProps> = ({ user, onRequireAuth }) =
     patchNotes: [
       {
         version: 'v1.4.2-rel',
-        date: 'OCT 26, 2026',
+        date: 'Oct 26, 2026',
         notes: [
-          'Direct OneEngine Store headless bypass integration (--auth-token payload).',
-          'Automated GameLobby scene handoff with zero manual credential prompting.',
-          'Reduced load-in latency by 45% using native IPC session validation.',
-          'High tick-rate rail physics network stabilization.',
+          'Direct OneEngine Store headless bypass integration.',
+          'Automated GameLobby scene handoff without manual credentials.',
+          'Reduced load-in latency using native IPC session validation.',
+          'Rail physics network stabilization.',
         ],
       },
       {
         version: 'v1.4.1-hotfix',
-        date: 'OCT 12, 2026',
+        date: 'Oct 12, 2026',
         notes: [
           'Resolved collision glitch on junction Switch-7.',
           'Updated shader cache for DirectX 12 render pipelines.',
@@ -65,9 +65,7 @@ export const Storefront: React.FC<StorefrontProps> = ({ user, onRequireAuth }) =
   const [cliOutput, setCliOutput] = useState<string>('Ready for launch trigger.');
 
   useEffect(() => {
-    // Listen for process exit from Tauri backend
     const unlistenPromise = LauncherBridge.onProcessExit((payload) => {
-      console.log('Game process exited:', payload);
       setGame((prev) => ({ ...prev, status: 'READY' }));
       setActivePid(null);
       setCliOutput((prev) => `${prev}\n[PROCESS TERMINATED] PID: ${payload.pid} with Code: ${payload.code}`);
@@ -87,7 +85,7 @@ export const Storefront: React.FC<StorefrontProps> = ({ user, onRequireAuth }) =
     }
 
     const commandPreview = `${game.executableName} --auth-token "${user.authToken}" --player-name "${user.callsign}" --user-id "${user.userId}"`;
-    setCliOutput(`[INVOKING RUST PROCESS]\nCommand: ${commandPreview}\nStarting std::process::Command spawn...`);
+    setCliOutput(`[INVOKING PROCESS]\nCommand: ${commandPreview}\nStarting process spawn...`);
 
     try {
       setGame((prev) => ({ ...prev, status: 'RUNNING' }));
@@ -100,7 +98,7 @@ export const Storefront: React.FC<StorefrontProps> = ({ user, onRequireAuth }) =
 
       if (result.success && result.pid) {
         setActivePid(result.pid);
-        setCliOutput((prev) => `${prev}\n[SUCCESS] Child process spawned. PID: ${result.pid}\nBypassing in-game login scene direct to GameLobby...`);
+        setCliOutput((prev) => `${prev}\n[SUCCESS] Child process spawned. PID: ${result.pid}\nBypassing in-game login to GameLobby...`);
       } else {
         setCliOutput((prev) => `${prev}\n[NOTE] ${result.message || 'Launched process'}`);
       }
@@ -139,27 +137,27 @@ export const Storefront: React.FC<StorefrontProps> = ({ user, onRequireAuth }) =
         return (
           <button
             onClick={handleDownload}
-            className="flex items-center space-x-2 px-8 py-3.5 bg-ember-500 hover:bg-ember-600 active:bg-ember-700 text-gunmetal-950 font-bold font-mono tracking-wider rounded transition-all shadow-lg shadow-ember-500/25"
+            className="flex items-center gap-2 px-6 py-2.5 bg-accent hover:bg-accent-hover active:scale-[0.98] text-bg-app font-semibold text-xs rounded-md transition-[background-color,transform] duration-150 cursor-default"
           >
-            <Download className="w-5 h-5" />
-            <span>DOWNLOAD [{game.sizeGb} GB]</span>
+            <Download className="w-4 h-4" strokeWidth={1.5} />
+            <span>Download ({game.sizeGb} GB)</span>
           </button>
         );
 
       case 'DOWNLOADING':
       case 'UPDATING':
         return (
-          <div className="flex flex-col space-y-2 min-w-[240px]">
-            <div className="flex items-center justify-between text-xs font-mono text-slate-300">
-              <span className="flex items-center gap-1.5 text-ember-400">
-                <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+          <div className="flex flex-col gap-2 min-w-[240px]">
+            <div className="flex items-center justify-between text-xs text-slate-300 tabular-nums">
+              <span className="flex items-center gap-1.5 text-accent">
+                <RefreshCw className="w-3.5 h-3.5 animate-spin" strokeWidth={1.5} />
                 {game.status}
               </span>
               <span>{game.downloadProgress}%</span>
             </div>
-            <div className="w-full h-3 bg-gunmetal-950 rounded-full overflow-hidden border border-gunmetal-600">
+            <div className="w-full h-1.5 bg-bg-app rounded-full overflow-hidden border border-white/5">
               <div 
-                className="h-full bg-gradient-to-r from-ember-600 to-ember-400 transition-all duration-300"
+                className="h-full bg-accent transition-[width] duration-300"
                 style={{ width: `${game.downloadProgress}%` }}
               />
             </div>
@@ -168,17 +166,17 @@ export const Storefront: React.FC<StorefrontProps> = ({ user, onRequireAuth }) =
 
       case 'RUNNING':
         return (
-          <div className="flex items-center space-x-3">
-            <div className="flex items-center space-x-2 px-6 py-3.5 bg-tactical-green/10 border border-tactical-green/50 text-tactical-green font-bold font-mono tracking-wider rounded">
-              <span className="w-2.5 h-2.5 rounded-full bg-tactical-green animate-ping" />
-              <span>RUNNING (PID: {activePid || 'Active'})</span>
+          <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 px-4 py-2 bg-success/10 border border-success/30 text-success font-medium text-xs rounded-md">
+              <span className="w-2 h-2 rounded-full bg-success animate-pulse" />
+              <span>Running (PID: {activePid || 'Active'})</span>
             </div>
             <button
               onClick={handleKill}
-              className="p-3.5 bg-red-500/20 hover:bg-red-500/30 border border-red-500/50 text-red-400 rounded transition-colors"
-              title="Terminate Process"
+              className="p-2 bg-danger/15 hover:bg-danger/25 border border-danger/40 text-danger rounded-md transition-[background-color] duration-150 active:scale-[0.98] cursor-default"
+              title="Terminate"
             >
-              <Square className="w-5 h-5 fill-current" />
+              <Square className="w-4 h-4 fill-current" strokeWidth={1.5} />
             </button>
           </div>
         );
@@ -188,148 +186,145 @@ export const Storefront: React.FC<StorefrontProps> = ({ user, onRequireAuth }) =
         return (
           <button
             onClick={handleLaunch}
-            className="flex items-center space-x-3 px-10 py-3.5 bg-ember-500 hover:bg-ember-600 active:bg-ember-700 text-gunmetal-950 font-bold font-mono text-base tracking-widest rounded transition-all shadow-xl shadow-ember-500/30 hover:scale-[1.02] active:scale-[0.98]"
+            className="flex items-center gap-2 px-6 py-2.5 bg-accent hover:bg-accent-hover active:scale-[0.98] text-bg-app font-semibold text-xs rounded-md transition-[background-color,transform] duration-150 cursor-default"
           >
-            <Play className="w-5 h-5 fill-current" />
-            <span>PLAY RAILBOUND</span>
+            <Play className="w-4 h-4 fill-current" strokeWidth={1.5} />
+            <span>Play</span>
           </button>
         );
     }
   };
 
   return (
-    <div className="flex-1 overflow-y-auto bg-gunmetal-900 p-6 space-y-6">
+    <div className="flex-1 overflow-y-auto p-6 space-y-6 select-none">
       {/* Featured Banner Hero */}
-      <div className="relative rounded-xl overflow-hidden border border-gunmetal-700 bg-gunmetal-800 shadow-2xl tactical-corner">
-        {/* Background Image & Overlays */}
-        <div className="h-72 w-full relative">
+      <div className="relative rounded-md overflow-hidden border border-white/5 border-t-white/10 bg-bg-card shadow-card">
+        <div className="h-64 w-full relative">
           <img
             src={game.bannerImage}
             alt={game.title}
-            className="w-full h-full object-cover object-center filter brightness-60 contrast-125"
+            className="w-full h-full object-cover object-center filter brightness-[0.70]"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-gunmetal-800 via-gunmetal-800/60 to-transparent" />
-          <div className="absolute inset-0 bg-tactical-grid opacity-30" />
+          <div className="absolute inset-0 bg-gradient-to-t from-bg-card via-bg-card/60 to-transparent" />
         </div>
 
         {/* Content Overlay */}
         <div className="absolute bottom-0 left-0 right-0 p-6 flex flex-col md:flex-row md:items-end justify-between gap-4">
           <div className="space-y-2 max-w-xl">
-            <div className="flex items-center space-x-2">
-              <span className="px-2 py-0.5 text-[10px] font-mono tracking-widest bg-ember-500 text-gunmetal-950 font-bold rounded">
-                FEATURED
+            <div className="flex items-center gap-2">
+              <span className="px-2 py-0.5 text-[10px] bg-accent text-bg-app font-semibold rounded-md">
+                Featured
               </span>
-              <span className="px-2 py-0.5 text-[10px] font-mono tracking-widest bg-gunmetal-700 text-slate-300 rounded border border-gunmetal-600">
+              <span className="px-2 py-0.5 text-[10px] bg-bg-hover text-slate-300 rounded-md border border-white/10">
                 {game.version}
               </span>
-              <span className="px-2 py-0.5 text-[10px] font-mono tracking-widest bg-gunmetal-700 text-tactical-green rounded border border-gunmetal-600 flex items-center gap-1">
-                <ShieldCheck className="w-3 h-3" /> VERIFIED
+              <span className="px-2 py-0.5 text-[10px] bg-bg-hover text-success rounded-md border border-white/10 flex items-center gap-1">
+                <ShieldCheck className="w-3 h-3" strokeWidth={1.5} /> Verified
               </span>
             </div>
 
-            <h1 className="text-3xl font-black tracking-tight text-white font-mono">
+            <h1 className="text-2xl font-semibold tracking-tight text-white">
               {game.title}
             </h1>
-            <p className="text-sm text-slate-300 leading-relaxed font-sans">
+            <p className="text-xs text-slate-300 leading-relaxed font-sans">
               {game.tagline}
             </p>
           </div>
 
-          <div className="flex items-center space-x-3">
+          <div className="flex items-center gap-3">
             {renderActionButton()}
           </div>
         </div>
       </div>
 
-      {/* Auth Warning Bar if not logged in */}
+      {/* Auth Warning Bar */}
       {!user && (
-        <div className="p-3 bg-amber-500/10 border border-amber-500/40 rounded-lg flex items-center justify-between">
-          <div className="flex items-center space-x-2 text-xs font-mono text-amber-300">
-            <AlertCircle className="w-4 h-4 text-amber-400 shrink-0" />
-            <span>OPERATOR NOT AUTHENTICATED: Launching requires an active OneEngine session token for direct Unity GameLobby bypass.</span>
+        <div className="p-3 bg-warning/10 border border-warning/30 rounded-md flex items-center justify-between">
+          <div className="flex items-center gap-2 text-xs text-warning">
+            <AlertCircle className="w-4 h-4 text-warning shrink-0" strokeWidth={1.5} />
+            <span>Sign in to verify ownership and synchronize save state.</span>
           </div>
           <button
             onClick={onRequireAuth}
-            className="text-xs font-mono px-3 py-1 bg-amber-500/20 hover:bg-amber-500/30 text-amber-200 border border-amber-500/50 rounded uppercase"
+            className="text-xs px-3 py-1 bg-warning/20 hover:bg-warning/30 text-warning border border-warning/40 rounded-md cursor-default transition-[background-color] duration-150"
           >
-            Authenticate Now
+            Sign in
           </button>
         </div>
       )}
 
-      {/* Main Grid: Details + CLI Terminal Inspector */}
+      {/* Main Grid: Details + Process Inspector */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Left Column (2 Cols): Details, Patch Notes, Specs */}
         <div className="lg:col-span-2 space-y-4">
           {/* Subnavigation Tabs */}
-          <div className="flex border-b border-gunmetal-700 space-x-6 text-sm font-mono tracking-wider">
+          <div className="flex border-b border-white/5 gap-6 text-xs font-medium">
             <button
               onClick={() => setActiveTab('overview')}
-              className={`pb-2.5 transition-colors ${
+              className={`pb-2.5 transition-colors cursor-default ${
                 activeTab === 'overview'
-                  ? 'border-b-2 border-ember-500 text-ember-400 font-bold'
+                  ? 'border-b-2 border-accent text-accent font-semibold'
                   : 'text-slate-400 hover:text-slate-200'
               }`}
             >
-              OVERVIEW
+              Overview
             </button>
             <button
               onClick={() => setActiveTab('patchNotes')}
-              className={`pb-2.5 transition-colors flex items-center gap-1.5 ${
+              className={`pb-2.5 transition-colors flex items-center gap-1.5 cursor-default ${
                 activeTab === 'patchNotes'
-                  ? 'border-b-2 border-ember-500 text-ember-400 font-bold'
+                  ? 'border-b-2 border-accent text-accent font-semibold'
                   : 'text-slate-400 hover:text-slate-200'
               }`}
             >
-              <FileText className="w-3.5 h-3.5" />
-              PATCH NOTES
+              <FileText className="w-3.5 h-3.5" strokeWidth={1.5} />
+              Patch notes
             </button>
             <button
               onClick={() => setActiveTab('specs')}
-              className={`pb-2.5 transition-colors flex items-center gap-1.5 ${
+              className={`pb-2.5 transition-colors flex items-center gap-1.5 cursor-default ${
                 activeTab === 'specs'
-                  ? 'border-b-2 border-ember-500 text-ember-400 font-bold'
+                  ? 'border-b-2 border-accent text-accent font-semibold'
                   : 'text-slate-400 hover:text-slate-200'
               }`}
             >
-              <Cpu className="w-3.5 h-3.5" />
-              HARDWARE SPECS
+              <Cpu className="w-3.5 h-3.5" strokeWidth={1.5} />
+              Requirements
             </button>
           </div>
 
           {/* Tab Content */}
-          <div className="bg-gunmetal-800 border border-gunmetal-700 rounded-lg p-5">
+          <div className="bg-bg-card border border-white/5 border-t-white/10 rounded-md p-4 shadow-card">
             {activeTab === 'overview' && (
-              <div className="space-y-4 text-sm text-slate-300">
+              <div className="space-y-4 text-xs text-slate-300 leading-relaxed select-text">
                 <p>
-                  Experience seamless desktop-to-game synchronization. OneEngine Store directly initializes the Unity engine binary (<code className="text-ember-400 font-mono">Railbound.exe</code>) injecting cryptographic session credentials via low-level OS command vectors.
+                  Experience seamless desktop integration. OneEngine Store directly initializes the native client session using local command execution.
                 </p>
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-3 pt-2">
-                  <div className="bg-gunmetal-900/60 p-3 rounded border border-gunmetal-700">
-                    <span className="text-[10px] text-slate-500 font-mono uppercase block">Executable</span>
-                    <span className="text-xs font-mono text-slate-200">{game.executableName}</span>
+                  <div className="bg-bg-app p-3 rounded-md border border-white/5">
+                    <span className="text-[10px] text-slate-500 uppercase tracking-[0.06em] block">Executable</span>
+                    <span className="text-xs text-slate-200">{game.executableName}</span>
                   </div>
-                  <div className="bg-gunmetal-900/60 p-3 rounded border border-gunmetal-700">
-                    <span className="text-[10px] text-slate-500 font-mono uppercase block">Target Scene</span>
-                    <span className="text-xs font-mono text-ember-400">GameLobby (Direct)</span>
+                  <div className="bg-bg-app p-3 rounded-md border border-white/5">
+                    <span className="text-[10px] text-slate-500 uppercase tracking-[0.06em] block">Target Scene</span>
+                    <span className="text-xs text-accent">GameLobby</span>
                   </div>
-                  <div className="bg-gunmetal-900/60 p-3 rounded border border-gunmetal-700">
-                    <span className="text-[10px] text-slate-500 font-mono uppercase block">Auth Protocol</span>
-                    <span className="text-xs font-mono text-slate-200">JWT Token Injection</span>
+                  <div className="bg-bg-app p-3 rounded-md border border-white/5">
+                    <span className="text-[10px] text-slate-500 uppercase tracking-[0.06em] block">Protocol</span>
+                    <span className="text-xs text-slate-200">Session Handshake</span>
                   </div>
                 </div>
               </div>
             )}
 
             {activeTab === 'patchNotes' && (
-              <div className="space-y-5">
+              <div className="space-y-4">
                 {game.patchNotes.map((entry) => (
-                  <div key={entry.version} className="space-y-2">
-                    <div className="flex items-center space-x-3">
-                      <span className="text-xs font-mono font-bold text-ember-400 bg-ember-500/10 px-2 py-0.5 rounded border border-ember-500/30">
+                  <div key={entry.version} className="space-y-1.5">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-semibold text-accent bg-accent/10 px-2 py-0.5 rounded-md border border-accent/20">
                         {entry.version}
                       </span>
-                      <span className="text-[11px] font-mono text-slate-500">{entry.date}</span>
+                      <span className="text-[11px] text-slate-500">{entry.date}</span>
                     </div>
                     <ul className="list-disc list-inside text-xs text-slate-300 space-y-1 pl-1">
                       {entry.notes.map((n, i) => (
@@ -342,26 +337,26 @@ export const Storefront: React.FC<StorefrontProps> = ({ user, onRequireAuth }) =
             )}
 
             {activeTab === 'specs' && (
-              <div className="space-y-3">
-                <div className="grid grid-cols-2 gap-3 text-xs font-mono">
-                  <div className="p-2.5 bg-gunmetal-900/50 rounded border border-gunmetal-700">
+              <div className="space-y-2">
+                <div className="grid grid-cols-2 gap-2 text-xs">
+                  <div className="p-2.5 bg-bg-app rounded-md border border-white/5">
                     <span className="text-slate-500 block text-[10px]">OS</span>
                     <span className="text-slate-200">{game.systemRequirements.os}</span>
                   </div>
-                  <div className="p-2.5 bg-gunmetal-900/50 rounded border border-gunmetal-700">
-                    <span className="text-slate-500 block text-[10px]">PROCESSOR</span>
+                  <div className="p-2.5 bg-bg-app rounded-md border border-white/5">
+                    <span className="text-slate-500 block text-[10px]">Processor</span>
                     <span className="text-slate-200">{game.systemRequirements.processor}</span>
                   </div>
-                  <div className="p-2.5 bg-gunmetal-900/50 rounded border border-gunmetal-700">
-                    <span className="text-slate-500 block text-[10px]">MEMORY</span>
+                  <div className="p-2.5 bg-bg-app rounded-md border border-white/5">
+                    <span className="text-slate-500 block text-[10px]">Memory</span>
                     <span className="text-slate-200">{game.systemRequirements.memory}</span>
                   </div>
-                  <div className="p-2.5 bg-gunmetal-900/50 rounded border border-gunmetal-700">
-                    <span className="text-slate-500 block text-[10px]">GRAPHICS</span>
+                  <div className="p-2.5 bg-bg-app rounded-md border border-white/5">
+                    <span className="text-slate-500 block text-[10px]">Graphics</span>
                     <span className="text-slate-200">{game.systemRequirements.graphics}</span>
                   </div>
-                  <div className="col-span-2 p-2.5 bg-gunmetal-900/50 rounded border border-gunmetal-700">
-                    <span className="text-slate-500 block text-[10px]">STORAGE</span>
+                  <div className="col-span-2 p-2.5 bg-bg-app rounded-md border border-white/5">
+                    <span className="text-slate-500 block text-[10px]">Storage</span>
                     <span className="text-slate-200">{game.systemRequirements.storage}</span>
                   </div>
                 </div>
@@ -370,29 +365,29 @@ export const Storefront: React.FC<StorefrontProps> = ({ user, onRequireAuth }) =
           </div>
         </div>
 
-        {/* Right Column: Rust Process Manager & Command-Line Inspector */}
-        <div className="space-y-4">
-          <div className="flex items-center space-x-2 text-xs font-mono text-slate-400">
-            <Terminal className="w-4 h-4 text-ember-500" />
-            <span>PROCESS MONITOR & CLI INJECTION</span>
+        {/* Right Column: Process Monitor */}
+        <div className="space-y-2">
+          <div className="flex items-center gap-2 text-xs text-slate-400">
+            <Terminal className="w-4 h-4 text-accent" strokeWidth={1.5} />
+            <span>Process Monitor</span>
           </div>
 
-          <div className="bg-gunmetal-950 border border-gunmetal-700 rounded-lg p-4 font-mono text-xs flex flex-col h-72">
-            <div className="flex items-center justify-between pb-2 mb-2 border-b border-gunmetal-800 text-[10px] text-gunmetal-500">
-              <span>STREAM // STDIO-IPC</span>
+          <div className="bg-bg-app border border-white/10 rounded-md p-4 text-xs flex flex-col h-72">
+            <div className="flex items-center justify-between pb-2 mb-2 border-b border-white/5 text-[10px] text-slate-500">
+              <span>Standard I/O stream</span>
               <span className="flex items-center gap-1">
-                <span className={`w-1.5 h-1.5 rounded-full ${game.status === 'RUNNING' ? 'bg-tactical-green animate-ping' : 'bg-slate-600'}`} />
+                <span className={`w-1.5 h-1.5 rounded-full ${game.status === 'RUNNING' ? 'bg-success animate-pulse' : 'bg-slate-600'}`} />
                 {game.status}
               </span>
             </div>
 
-            <div className="flex-1 overflow-y-auto space-y-1 text-slate-300 font-mono text-[11px] leading-relaxed break-all">
+            <div className="flex-1 overflow-y-auto space-y-1 text-slate-300 font-mono text-[11px] leading-relaxed break-all select-text">
               <pre className="whitespace-pre-wrap">{cliOutput}</pre>
             </div>
 
-            <div className="pt-2 mt-2 border-t border-gunmetal-800 text-[10px] text-gunmetal-500 flex justify-between">
-              <span>ENCRYPTED ARG PAYLOAD</span>
-              <span className="text-ember-500 font-mono">TAURI v2 BRIDGE</span>
+            <div className="pt-2 mt-2 border-t border-white/5 text-[10px] text-slate-500 flex justify-between">
+              <span>Bridge Session</span>
+              <span className="text-accent">IPC v2</span>
             </div>
           </div>
         </div>

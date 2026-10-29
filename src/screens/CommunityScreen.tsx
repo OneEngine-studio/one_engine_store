@@ -27,67 +27,67 @@ export const CommunityScreen: React.FC = () => {
   ];
 
   return (
-    <div className="flex-1 overflow-y-auto bg-transparent p-6 space-y-6 select-none">
+    <div className="flex-1 overflow-y-auto p-6 space-y-6 select-none">
       {/* Header & Category Filters */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-border-stroke pb-4">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-white/5 pb-4">
         <div>
-          <div className="flex items-center space-x-2 text-primary-accent mb-1">
-            <Radio className="w-4 h-4" />
-            <span className="text-[11px] font-semibold tracking-wider uppercase text-slate-400">
+          <div className="flex items-center gap-2 text-accent mb-1">
+            <Radio className="w-4 h-4" strokeWidth={1.5} />
+            <span className="text-[11px] font-semibold tracking-[0.06em] uppercase text-slate-400">
               Community News
             </span>
           </div>
-          <h1 className="text-xl font-semibold text-white">
+          <h1 className="text-sm font-semibold text-white">
             Dispatches & Community
           </h1>
         </div>
 
-        {/* Animated Category Filter Pills */}
-        <div className="bg-tech-surface p-1 rounded-md border border-border-stroke">
+        {/* Category Filter Tabs */}
+        <div className="bg-bg-card p-1 rounded-md border border-white/10">
           <AnimatedTabs
             tabs={categoryTabs}
             activeTab={selectedCategory}
             onChange={(id) => setSelectedCategory(id)}
             orientation="horizontal"
-            activePillClassName="bg-tech-elevated rounded-md border border-white/10 shadow-sm"
+            activePillClassName="bg-bg-hover rounded-md border border-white/10 shadow-sm"
           />
         </div>
       </div>
 
-      {/* Articles Grid with Spotlight and Staggered Entry */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+      {/* Articles Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {filteredArticles.map((item, index) => (
           <SpotlightCard
             key={item.id}
             onClick={() => openArticle(item)}
-            className="cursor-pointer flex flex-col justify-between animate-stagger-entry"
-            style={{ animationDelay: `${index * 25}ms` }}
+            className="cursor-default flex flex-col justify-between animate-stagger-entry group"
+            style={{ animationDelay: `${index * 20}ms` }}
           >
             <div>
-              <div className="relative aspect-[16/9] w-full overflow-hidden bg-void-black rounded-t-[5px]">
+              <div className="relative aspect-[16/9] w-full overflow-hidden bg-bg-app">
                 <img
                   src={item.cover}
                   alt={item.title}
-                  className="w-full h-full object-cover group-hover/spotlight:scale-[1.03] transition-transform duration-500 ease-out"
+                  className="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-300 ease-out"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-[#141921] via-[#141921]/40 to-transparent" />
-                <div className="absolute inset-0 ring-1 ring-inset ring-white/5 pointer-events-none rounded-t-[5px]" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent pointer-events-none" />
+                <div className="absolute inset-0 ring-1 ring-inset ring-white/5 pointer-events-none" />
                 
                 {/* Max 1 Status Badge */}
-                <div className="absolute top-2.5 left-2.5 px-2 py-0.5 rounded-md bg-[#0E1217]/90 text-[11px] text-slate-200 border border-white/10 font-medium backdrop-blur-sm z-20">
+                <div className="absolute top-2 left-2 px-2 py-0.5 rounded-md bg-bg-sidebar/90 text-[10px] text-slate-200 border border-white/10 font-medium backdrop-blur-sm z-10">
                   {item.gameTitle}
                 </div>
               </div>
 
               <div className="p-4 space-y-2">
-                <div className="flex items-center space-x-2 text-[11px] text-slate-400">
-                  <Calendar className="w-3 h-3" />
+                <div className="flex items-center gap-2 text-[11px] text-slate-400">
+                  <Calendar className="w-3.5 h-3.5" strokeWidth={1.5} />
                   <span>{item.date}</span>
-                  <span>•</span>
+                  <span>·</span>
                   <span>{item.author}</span>
                 </div>
 
-                <h3 className="text-[14px] font-medium text-[#F8FAFC] group-hover/spotlight:text-primary-accent transition-colors leading-snug">
+                <h3 className="text-[14px] font-medium text-slate-100 group-hover:text-accent transition-colors leading-snug">
                   {item.title}
                 </h3>
 
@@ -97,33 +97,33 @@ export const CommunityScreen: React.FC = () => {
               </div>
             </div>
 
-            <div className="p-4 pt-2 border-t border-border-stroke/60 flex items-center justify-between text-xs text-slate-400">
-              <div className="flex items-center space-x-3">
+            <div className="p-4 pt-2 border-t border-white/5 flex items-center justify-between text-xs text-slate-400">
+              <div className="flex items-center gap-3">
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
                     toggleArticleLike(item.id);
                   }}
-                  className={`flex items-center gap-1 transition-colors active:scale-[0.98] ${
-                    item.hasLiked ? 'text-primary-accent font-medium' : 'hover:text-white'
+                  className={`flex items-center gap-1 transition-colors active:scale-[0.98] cursor-default ${
+                    item.hasLiked ? 'text-accent font-medium' : 'hover:text-white'
                   }`}
                 >
-                  <ThumbsUp className={`w-3.5 h-3.5 ${item.hasLiked ? 'fill-current' : ''}`} />
+                  <ThumbsUp className={`w-3.5 h-3.5 ${item.hasLiked ? 'fill-current' : ''}`} strokeWidth={1.5} />
                   <span className="tabular-nums">
                     <NumberTicker value={item.likes} />
                   </span>
                 </button>
                 <span className="flex items-center gap-1">
-                  <MessageSquare className="w-3.5 h-3.5" />
+                  <MessageSquare className="w-3.5 h-3.5" strokeWidth={1.5} />
                   <span className="tabular-nums">
                     <NumberTicker value={item.comments} />
                   </span>
                 </span>
               </div>
 
-              <span className="flex items-center gap-1 text-slate-300 group-hover/spotlight:text-primary-accent text-xs font-medium transition-colors">
+              <span className="flex items-center gap-1 text-slate-300 group-hover:text-accent text-xs font-medium transition-colors">
                 <span>Read</span>
-                <ArrowUpRight className="w-3 h-3" />
+                <ArrowUpRight className="w-3 h-3" strokeWidth={1.5} />
               </span>
             </div>
           </SpotlightCard>

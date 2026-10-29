@@ -35,109 +35,110 @@ export const TitleBar: React.FC<TitleBarProps> = ({ user, onOpenAuth, onLogout }
   return (
     <header 
       data-tauri-drag-region 
-      className="h-12 bg-gunmetal-950 border-b border-gunmetal-700 flex items-center justify-between px-4 select-none z-50"
+      className="h-10 bg-bg-sidebar border-b border-white/5 flex items-center justify-between px-3 select-none z-50"
     >
       {/* Brand Identity */}
-      <div className="flex items-center space-x-3 pointer-events-none">
-        <div className="w-6 h-6 rounded bg-ember-500/10 border border-ember-500 flex items-center justify-center">
-          <div className="w-2.5 h-2.5 bg-ember-500 rotate-45 transform" />
-        </div>
-        <div className="flex items-baseline space-x-1">
-          <span className="font-bold tracking-wider text-sm text-slate-100 font-mono">ONE<span className="text-ember-500">ENGINE</span></span>
-          <span className="text-[10px] text-gunmetal-500 font-mono">CLIENT // v2.4</span>
+      <div className="flex items-center gap-2 pointer-events-none">
+        <img
+          src="/images/logo.png"
+          alt="OneEngine"
+          className="w-4 h-4 object-contain"
+        />
+        <div className="flex items-baseline gap-1">
+          <span className="font-semibold text-xs text-slate-100">One<span className="text-accent">Engine</span></span>
+          <span className="text-[10px] text-slate-400">v2.6</span>
         </div>
       </div>
 
       {/* Center Nav / Status */}
-      <div className="hidden md:flex items-center space-x-6 text-xs font-mono tracking-widest text-slate-400">
+      <div className="hidden md:flex items-center gap-6 text-xs text-slate-400">
         <span
           onClick={() => navigate('store')}
-          className={`flex items-center gap-1.5 cursor-pointer transition-colors ${activeTab === 'store' ? 'text-ember-500' : 'hover:text-slate-200'}`}
+          className={`flex items-center gap-1.5 cursor-default transition-colors ${activeTab === 'store' ? 'text-accent font-medium' : 'hover:text-slate-200'}`}
         >
-          {activeTab === 'store' && <span className="inline-block w-1.5 h-1.5 rounded-full bg-ember-500 animate-pulse" />}
-          STOREFRONT
+          Store
         </span>
         <span
           onClick={() => navigate('library')}
-          className={`cursor-pointer transition-colors ${activeTab === 'library' ? 'text-ember-500' : 'hover:text-slate-200'}`}
+          className={`cursor-default transition-colors ${activeTab === 'library' ? 'text-accent font-medium' : 'hover:text-slate-200'}`}
         >
-          LIBRARY
+          Library
         </span>
         <span
           onClick={() => navigate('community')}
-          className={`cursor-pointer transition-colors ${activeTab === 'community' ? 'text-ember-500' : 'hover:text-slate-200'}`}
+          className={`cursor-default transition-colors ${activeTab === 'community' ? 'text-accent font-medium' : 'hover:text-slate-200'}`}
         >
-          COMMUNITY
+          Community
         </span>
         <span
           onClick={() => navigate('settings')}
-          className={`cursor-pointer transition-colors ${activeTab === 'settings' ? 'text-ember-500' : 'hover:text-slate-200'}`}
+          className={`cursor-default transition-colors ${activeTab === 'settings' ? 'text-accent font-medium' : 'hover:text-slate-200'}`}
         >
-          SETTINGS
+          Settings
         </span>
       </div>
 
       {/* User Callsign Bar & Window Controls */}
-      <div className="flex items-center space-x-4">
+      <div className="flex items-center gap-3">
         {user ? (
-          <div className="flex items-center space-x-3 bg-gunmetal-800/80 border border-gunmetal-600 rounded px-3 py-1">
+          <div className="flex items-center gap-2 bg-bg-card border border-white/10 rounded-md px-2.5 py-1">
             <div className="relative">
               {user.avatarUrl ? (
-                <img src={user.avatarUrl} alt="Avatar" className="w-6 h-6 rounded object-cover border border-ember-500/50" />
+                <img src={user.avatarUrl} alt="Avatar" className="w-5 h-5 rounded-full object-cover border border-white/20" />
               ) : (
-                <div className="w-6 h-6 rounded bg-gunmetal-700 border border-ember-500/40 flex items-center justify-center text-ember-400">
-                  <User className="w-3.5 h-3.5" />
+                <div className="w-5 h-5 rounded-full bg-bg-app border border-white/20 flex items-center justify-center text-slate-300">
+                  <User className="w-3 h-3" />
                 </div>
               )}
-              <span className="absolute -bottom-0.5 -right-0.5 w-2 h-2 rounded-full bg-tactical-green border border-gunmetal-900" />
+              <span className="absolute -bottom-0.5 -right-0.5 w-1.5 h-1.5 rounded-full bg-success ring-1 ring-bg-sidebar" />
             </div>
 
             <div className="flex flex-col text-left">
-              <span className="text-xs font-bold text-slate-200 font-mono tracking-tight leading-none">
+              <span className="text-xs font-medium text-slate-200 leading-none">
                 {user.callsign}
               </span>
-              <span className="text-[9px] text-gunmetal-500 font-mono leading-none mt-0.5 flex items-center gap-1">
-                <Wifi className="w-2.5 h-2.5 text-tactical-green" /> AUTHENTICATED
+              <span className="text-[9px] text-slate-400 leading-none mt-0.5 flex items-center gap-1">
+                <Wifi className="w-2.5 h-2.5 text-success" /> Online
               </span>
             </div>
 
             <button 
               onClick={onLogout}
-              title="Sign Out"
-              className="text-slate-400 hover:text-ember-500 p-1 transition-colors"
+              title="Sign out"
+              className="text-slate-400 hover:text-white p-1 transition-colors ml-1 cursor-default"
             >
-              <LogOut className="w-3.5 h-3.5" />
+              <LogOut className="w-3 h-3" strokeWidth={1.5} />
             </button>
           </div>
         ) : (
           <button
             onClick={onOpenAuth}
-            className="flex items-center space-x-2 bg-ember-500/10 hover:bg-ember-500/20 text-ember-400 border border-ember-500/40 hover:border-ember-500 px-3 py-1 rounded text-xs font-mono transition-all"
+            className="flex items-center gap-1.5 bg-accent/10 hover:bg-accent/20 text-accent border border-accent/30 hover:border-accent/50 px-2.5 py-1 rounded-md text-xs transition-[background-color] duration-150 cursor-default"
           >
-            <Shield className="w-3.5 h-3.5" />
-            <span>OPERATOR LOGIN</span>
+            <Shield className="w-3.5 h-3.5" strokeWidth={1.5} />
+            <span>Sign in</span>
           </button>
         )}
 
         {/* Window controls */}
-        <div className="flex items-center space-x-1 pl-2 border-l border-gunmetal-700">
+        <div className="flex items-center gap-0.5 pl-2 border-l border-white/10">
           <button 
             onClick={handleMinimize}
-            className="w-7 h-7 flex items-center justify-center text-slate-400 hover:text-slate-200 hover:bg-gunmetal-800 rounded transition-colors"
+            className="w-7 h-7 flex items-center justify-center text-slate-400 hover:text-slate-200 hover:bg-bg-hover rounded-md transition-colors cursor-default"
           >
-            <Minus className="w-3 h-3" />
+            <Minus className="w-3 h-3" strokeWidth={1.5} />
           </button>
           <button 
             onClick={handleMaximize}
-            className="w-7 h-7 flex items-center justify-center text-slate-400 hover:text-slate-200 hover:bg-gunmetal-800 rounded transition-colors"
+            className="w-7 h-7 flex items-center justify-center text-slate-400 hover:text-slate-200 hover:bg-bg-hover rounded-md transition-colors cursor-default"
           >
-            <Square className="w-2.5 h-2.5" />
+            <Square className="w-2.5 h-2.5" strokeWidth={1.5} />
           </button>
           <button 
             onClick={handleClose}
-            className="w-7 h-7 flex items-center justify-center text-slate-400 hover:text-red-400 hover:bg-red-500/20 rounded transition-colors"
+            className="w-7 h-7 flex items-center justify-center text-slate-400 hover:text-danger hover:bg-danger/10 rounded-md transition-colors cursor-default"
           >
-            <X className="w-3.5 h-3.5" />
+            <X className="w-3.5 h-3.5" strokeWidth={1.5} />
           </button>
         </div>
       </div>

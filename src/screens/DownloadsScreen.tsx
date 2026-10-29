@@ -82,27 +82,27 @@ export const DownloadsScreen: React.FC = () => {
   };
 
   return (
-    <div className="flex-1 overflow-y-auto bg-transparent p-6 space-y-6 select-none">
+    <div className="flex-1 overflow-y-auto p-6 space-y-6 select-none">
       {/* Throttle Modal */}
       {showThrottleModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-md p-4">
-          <div className="bg-gunmetal-slate border border-border-stroke border-t border-white/15 rounded-md p-6 w-84 shadow-2xl space-y-4">
+          <div className="bg-bg-sidebar border border-white/10 border-t-white/15 rounded-[10px] p-6 w-84 shadow-overlay space-y-4">
             <div className="flex items-center justify-between">
               <h3 className="text-sm font-semibold text-slate-100 flex items-center gap-2">
-                <Sliders className="w-4 h-4 text-primary-accent" /> Bandwidth Limit
+                <Sliders className="w-4 h-4 text-accent" strokeWidth={1.5} /> Bandwidth Limit
               </h3>
               <button 
                 onClick={() => setShowThrottleModal(false)} 
-                className="text-slate-400 hover:text-white p-1 rounded-md transition-colors active:scale-[0.98]"
+                className="text-slate-400 hover:text-white p-1 rounded-md transition-[color] duration-150 active:scale-[0.98] cursor-default"
               >
-                <X className="w-4 h-4" />
+                <X className="w-4 h-4" strokeWidth={1.5} />
               </button>
             </div>
             <p className="text-xs text-slate-400 leading-relaxed">
               Set maximum download bandwidth in MB/s. Enter <span className="text-white font-medium">0</span> for unlimited.
             </p>
             <div className="space-y-2">
-              <label className="text-[11px] font-medium text-slate-400 uppercase tracking-wider block">
+              <label className="text-[11px] font-semibold text-slate-400 uppercase tracking-[0.06em] block">
                 Max Speed (MB/s)
               </label>
               <input
@@ -111,7 +111,7 @@ export const DownloadsScreen: React.FC = () => {
                 max="1000"
                 value={throttleInput}
                 onChange={(e) => setThrottleInput(e.target.value)}
-                className="w-full bg-void-black border border-border-stroke focus:border-slate-500 rounded-md px-3 py-1.5 text-xs text-slate-100 focus:outline-none"
+                className="w-full bg-bg-app border border-white/10 focus:border-accent rounded-md px-3 py-1.5 text-xs text-slate-100 focus:outline-none select-text"
                 autoFocus
                 onKeyDown={(e) => e.key === 'Enter' && applyThrottle()}
               />
@@ -121,23 +121,23 @@ export const DownloadsScreen: React.FC = () => {
                 max="200"
                 value={throttleInput}
                 onChange={(e) => setThrottleInput(e.target.value)}
-                className="w-full accent-primary-accent"
+                className="w-full accent-accent"
               />
-              <div className="flex justify-between text-[11px] text-slate-500">
+              <div className="flex justify-between text-[11px] text-slate-500 tabular-nums">
                 <span>Unlimited</span>
                 <span>200 MB/s</span>
               </div>
             </div>
-            <div className="flex items-center space-x-2 pt-2">
+            <div className="flex items-center gap-2 pt-2">
               <button
                 onClick={applyThrottle}
-                className="flex-1 py-2 bg-primary-accent hover:bg-[#E66E00] text-void-black font-semibold text-xs rounded-md transition-colors active:scale-[0.98]"
+                className="flex-1 py-2 bg-accent hover:bg-accent-hover text-bg-app font-semibold text-xs rounded-md transition-[background-color] duration-150 active:scale-[0.98] cursor-default"
               >
                 Apply
               </button>
               <button
                 onClick={() => setShowThrottleModal(false)}
-                className="flex-1 py-2 bg-tech-elevated border border-border-stroke text-slate-300 font-medium text-xs rounded-md hover:border-slate-500 transition-colors active:scale-[0.98]"
+                className="flex-1 py-2 bg-bg-hover border border-white/10 text-slate-300 font-medium text-xs rounded-md hover:bg-bg-pressed transition-[background-color] duration-150 active:scale-[0.98] cursor-default"
               >
                 Cancel
               </button>
@@ -147,36 +147,36 @@ export const DownloadsScreen: React.FC = () => {
       )}
 
       {/* Top Telemetry Dashboard */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         {/* Real-time Transfer Speed Monitor */}
-        <div className="lg:col-span-2 bg-tech-surface border border-border-stroke border-t border-white/10 rounded-md p-5 flex flex-col justify-between shadow-subtle-card">
-          <div className="flex items-center justify-between pb-3 border-b border-border-stroke">
-            <div className="flex items-center space-x-2">
-              <Activity className="w-4 h-4 text-primary-accent animate-pulse" />
-              <h2 className="text-xs font-semibold uppercase tracking-wider text-slate-400">
+        <div className="lg:col-span-2 bg-bg-card border border-white/5 border-t-white/10 rounded-md p-4 flex flex-col justify-between shadow-card">
+          <div className="flex items-center justify-between pb-3 border-b border-white/5">
+            <div className="flex items-center gap-2">
+              <Activity className="w-4 h-4 text-accent animate-pulse" strokeWidth={1.5} />
+              <h2 className="text-[11px] font-semibold uppercase tracking-[0.06em] text-slate-400">
                 Download Telemetry & Speed
               </h2>
             </div>
             
-            <div className="flex items-center space-x-2">
+            <div className="flex items-center gap-2">
               <button
                 onClick={handleThrottleSettings}
-                className="px-2.5 py-1 bg-tech-elevated hover:bg-[#232B38] border border-border-stroke rounded-md text-xs text-slate-300 flex items-center gap-1.5 transition-colors active:scale-[0.98]"
+                className="px-2.5 py-1 bg-bg-hover hover:bg-bg-pressed border border-white/10 rounded-md text-xs text-slate-300 flex items-center gap-1.5 transition-[background-color] duration-150 active:scale-[0.98] cursor-default"
               >
-                <Sliders className="w-3.5 h-3.5 text-slate-400" />
-                <span>Bandwidth Limit</span>
+                <Sliders className="w-3.5 h-3.5 text-slate-400" strokeWidth={1.5} />
+                <span>Bandwidth limit</span>
               </button>
               <button
                 onClick={togglePauseAllDownloads}
-                className="px-2.5 py-1 bg-tech-elevated hover:bg-[#232B38] border border-border-stroke rounded-md text-xs text-slate-200 font-medium transition-colors active:scale-[0.98]"
+                className="px-2.5 py-1 bg-bg-hover hover:bg-bg-pressed border border-white/10 rounded-md text-xs text-slate-200 font-medium transition-[background-color] duration-150 active:scale-[0.98] cursor-default"
               >
-                {isPausedAll ? 'Resume All' : 'Pause All'}
+                {isPausedAll ? 'Resume all' : 'Pause all'}
               </button>
             </div>
           </div>
 
           {/* SVG Live Speed Wave Graph */}
-          <div className="relative h-28 my-3 overflow-hidden bg-void-black/70 rounded-md border border-border-stroke/60">
+          <div className="relative h-28 my-3 overflow-hidden bg-bg-app rounded-md border border-white/5">
             <svg 
               viewBox={`0 0 ${svgWidth} ${svgHeight}`} 
               className="w-full h-full"
@@ -192,25 +192,25 @@ export const DownloadsScreen: React.FC = () => {
               <path d={lineD} fill="none" stroke="#FF7A00" strokeWidth="1.5" />
             </svg>
             <div className="absolute top-2 left-2 text-[11px] text-slate-400 tabular-nums">
-              Network: <span className="text-secondary-tech font-medium"><NumberTicker value={currentSpeed} decimalPlaces={1} suffix=" MB/s" /></span> • Disk: <span className="text-tactical-green font-medium"><NumberTicker value={diskSpeed} decimalPlaces={1} suffix=" MB/s" /></span>
+              Network: <span className="text-slate-200 font-medium"><NumberTicker value={currentSpeed} decimalPlaces={1} suffix=" MB/s" /></span> · Disk: <span className="text-success font-medium"><NumberTicker value={diskSpeed} decimalPlaces={1} suffix=" MB/s" /></span>
             </div>
           </div>
 
-          <div className="grid grid-cols-3 gap-2 text-center text-xs pt-2 border-t border-border-stroke tabular-nums">
-            <div className="p-2 bg-void-black rounded-md border border-border-stroke/40">
-              <span className="text-[11px] text-slate-400 block">Download Speed</span>
+          <div className="grid grid-cols-3 gap-2 text-center text-xs pt-2 border-t border-white/5 tabular-nums">
+            <div className="p-2 bg-bg-app rounded-md border border-white/5">
+              <span className="text-[11px] text-slate-400 block">Download speed</span>
               <span className="text-slate-100 font-medium">
                 <NumberTicker value={currentSpeed} decimalPlaces={1} suffix=" MB/s" />
               </span>
             </div>
-            <div className="p-2 bg-void-black rounded-md border border-border-stroke/40">
-              <span className="text-[11px] text-slate-400 block">Disk Write</span>
-              <span className="text-tactical-green font-medium">
+            <div className="p-2 bg-bg-app rounded-md border border-white/5">
+              <span className="text-[11px] text-slate-400 block">Disk write</span>
+              <span className="text-success font-medium">
                 <NumberTicker value={diskSpeed} decimalPlaces={1} suffix=" MB/s" />
               </span>
             </div>
-            <div className="p-2 bg-void-black rounded-md border border-border-stroke/40">
-              <span className="text-[11px] text-slate-400 block">Peak Speed</span>
+            <div className="p-2 bg-bg-app rounded-md border border-white/5">
+              <span className="text-[11px] text-slate-400 block">Peak speed</span>
               <span className="text-slate-200 font-medium">
                 <NumberTicker value={78.4} decimalPlaces={1} suffix=" MB/s" />
               </span>
@@ -219,11 +219,11 @@ export const DownloadsScreen: React.FC = () => {
         </div>
 
         {/* Disk Space Meter */}
-        <div className="bg-tech-surface border border-border-stroke border-t border-white/10 rounded-md p-5 flex flex-col justify-between shadow-subtle-card">
+        <div className="bg-bg-card border border-white/5 border-t-white/10 rounded-md p-4 flex flex-col justify-between shadow-card">
           <div>
-            <div className="flex items-center space-x-2 pb-3 border-b border-border-stroke">
-              <HardDrive className="w-4 h-4 text-slate-400" />
-              <h2 className="text-xs font-semibold uppercase tracking-wider text-slate-400">
+            <div className="flex items-center gap-2 pb-3 border-b border-white/5">
+              <HardDrive className="w-4 h-4 text-slate-400" strokeWidth={1.5} />
+              <h2 className="text-[11px] font-semibold uppercase tracking-[0.06em] text-slate-400">
                 Storage Allocation
               </h2>
             </div>
@@ -233,38 +233,38 @@ export const DownloadsScreen: React.FC = () => {
                 <span className="text-slate-400 truncate max-w-[160px]">{settings.downloadDirectory}</span>
                 <span className="text-slate-200 font-medium tabular-nums">542 / 1024 GB</span>
               </div>
-              <div className="w-full h-1.5 bg-void-black rounded-full overflow-hidden border border-white/5">
-                <div className="h-full bg-primary-accent w-[53%]" />
+              <div className="w-full h-1.5 bg-bg-app rounded-full overflow-hidden border border-white/5">
+                <div className="h-full bg-accent w-[53%]" />
               </div>
               <span className="text-[11px] text-slate-400 block pt-1">
-                482 GB Available Storage
+                482 GB available storage
               </span>
             </div>
           </div>
 
-          <div className="p-3 bg-void-black rounded-md border border-border-stroke text-xs text-slate-400 space-y-1">
+          <div className="p-3 bg-bg-app rounded-md border border-white/5 text-xs text-slate-400 space-y-1">
             <span className="text-slate-200 font-medium block flex items-center gap-1.5">
-              <Zap className="w-3.5 h-3.5 text-primary-accent" /> Fast Pre-Allocation Active
+              <Zap className="w-3.5 h-3.5 text-accent" strokeWidth={1.5} /> Fast pre-allocation active
             </span>
-            <p className="leading-relaxed">Blocks are reserved ahead of time to eliminate fragmentation during concurrent updates.</p>
+            <p className="leading-relaxed">Storage blocks reserved ahead of time to eliminate fragmentation during updates.</p>
           </div>
         </div>
       </div>
 
       {/* Active Downloads Queue Card */}
       <div className="space-y-3">
-        <div className="flex items-center justify-between border-b border-border-stroke pb-2">
-          <div className="flex items-center space-x-2">
-            <Download className="w-4 h-4 text-primary-accent" />
-            <h2 className="text-xs font-semibold uppercase tracking-wider text-slate-400">
+        <div className="flex items-center justify-between border-b border-white/5 pb-2">
+          <div className="flex items-center gap-2">
+            <Download className="w-4 h-4 text-accent" strokeWidth={1.5} />
+            <h2 className="text-[11px] font-semibold uppercase tracking-[0.06em] text-slate-400">
               Active Downloads ({downloads.length})
             </h2>
           </div>
         </div>
 
         {downloads.length === 0 ? (
-          <div className="bg-tech-surface border border-border-stroke rounded-md p-8 text-center text-slate-400 text-xs">
-            <CheckCircle className="w-7 h-7 text-tactical-green mx-auto mb-2 opacity-80" />
+          <div className="bg-bg-card border border-white/5 rounded-md p-8 text-center text-slate-400 text-xs">
+            <CheckCircle className="w-6 h-6 text-success mx-auto mb-2 opacity-80" strokeWidth={1.5} />
             <span>All games are fully updated and synchronized.</span>
           </div>
         ) : (
@@ -276,11 +276,11 @@ export const DownloadsScreen: React.FC = () => {
               return (
                 <div
                   key={item.gameId}
-                  className="relative bg-tech-surface border border-border-stroke border-t border-white/10 rounded-md p-4 flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-subtle-card overflow-hidden animate-stagger-entry"
-                  style={{ animationDelay: `${index * 25}ms` }}
+                  className="relative bg-bg-card border border-white/5 border-t-white/10 rounded-md p-4 flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-card overflow-hidden animate-stagger-entry"
+                  style={{ animationDelay: `${index * 20}ms` }}
                 >
                   {/* Left: Thumbnail & Name */}
-                  <div className="flex items-center space-x-3.5 min-w-[240px] z-10">
+                  <div className="flex items-center gap-3.5 min-w-[240px] z-10">
                     <img
                       src={item.coverImage}
                       alt={item.title}
@@ -290,11 +290,11 @@ export const DownloadsScreen: React.FC = () => {
                       <h3 className="text-xs font-medium text-white truncate max-w-xs">
                         {item.title}
                       </h3>
-                      <div className="flex items-center space-x-2 text-[11px] text-slate-400 mt-0.5 tabular-nums">
-                        <span className={isCompleted ? 'text-tactical-green font-medium' : isPaused ? 'text-amber-400 font-medium' : 'text-primary-accent font-medium'}>
+                      <div className="flex items-center gap-2 text-[11px] text-slate-400 mt-0.5 tabular-nums">
+                        <span className={isCompleted ? 'text-success font-medium' : isPaused ? 'text-warning font-medium' : 'text-accent font-medium'}>
                           {isPaused ? 'Paused' : item.status}
                         </span>
-                        <span>•</span>
+                        <span>·</span>
                         <span>
                           <NumberTicker value={item.downloadedGb} decimalPlaces={1} suffix=" GB" /> / {item.totalGb} GB
                         </span>
@@ -310,18 +310,18 @@ export const DownloadsScreen: React.FC = () => {
                       </span>
                       {!isCompleted && !isPaused && (
                         <span className="text-slate-400 flex items-center gap-1">
-                          <Clock className="w-3 h-3 text-slate-400" /> ETA: ~{Math.ceil(item.etaSeconds / 60)} min
+                          <Clock className="w-3 h-3 text-slate-400" strokeWidth={1.5} /> ETA: ~{Math.ceil(item.etaSeconds / 60)} min
                         </span>
                       )}
                     </div>
-                    <div className="w-full h-1.5 bg-void-black rounded-full overflow-hidden border border-white/5">
+                    <div className="w-full h-1.5 bg-bg-app rounded-full overflow-hidden border border-white/5">
                       <div
-                        className={`h-full transition-all duration-300 ${
+                        className={`h-full transition-[width] duration-300 ${
                           isCompleted
-                            ? 'bg-tactical-green'
+                            ? 'bg-success'
                             : isPaused
-                            ? 'bg-amber-500'
-                            : 'bg-primary-accent'
+                            ? 'bg-warning'
+                            : 'bg-accent'
                         }`}
                         style={{ width: `${item.progress}%` }}
                       />
@@ -329,33 +329,33 @@ export const DownloadsScreen: React.FC = () => {
                   </div>
 
                   {/* Right: Controls */}
-                  <div className="flex items-center space-x-1.5 shrink-0 z-10">
+                  <div className="flex items-center gap-1.5 shrink-0 z-10">
                     {!isCompleted && (
                       isPaused ? (
                         <button
                           onClick={() => resumeDownload(item.gameId)}
-                          className="p-2 bg-tech-elevated hover:bg-[#232B38] text-primary-accent border border-border-stroke rounded-md transition-colors active:scale-[0.98]"
+                          className="p-2 bg-bg-hover hover:bg-bg-pressed text-accent border border-white/10 rounded-md transition-[background-color] duration-150 active:scale-[0.98] cursor-default"
                           title="Resume"
                         >
-                          <Play className="w-4 h-4 fill-current" />
+                          <Play className="w-4 h-4 fill-current" strokeWidth={1.5} />
                         </button>
                       ) : (
                         <button
                           onClick={() => pauseDownload(item.gameId)}
-                          className="p-2 bg-tech-elevated hover:bg-[#232B38] text-slate-300 border border-border-stroke rounded-md transition-colors active:scale-[0.98]"
+                          className="p-2 bg-bg-hover hover:bg-bg-pressed text-slate-300 border border-white/10 rounded-md transition-[background-color] duration-150 active:scale-[0.98] cursor-default"
                           title="Pause"
                         >
-                          <Pause className="w-4 h-4 fill-current" />
+                          <Pause className="w-4 h-4 fill-current" strokeWidth={1.5} />
                         </button>
                       )
                     )}
 
                     <button
                       onClick={() => cancelDownload(item.gameId)}
-                      className="p-2 bg-tech-elevated hover:bg-tactical-danger/20 text-slate-400 hover:text-tactical-danger border border-border-stroke rounded-md transition-colors active:scale-[0.98]"
+                      className="p-2 bg-bg-hover hover:bg-danger/20 text-slate-400 hover:text-danger border border-white/10 rounded-md transition-[background-color,color] duration-150 active:scale-[0.98] cursor-default"
                       title="Cancel"
                     >
-                      <X className="w-4 h-4" />
+                      <X className="w-4 h-4" strokeWidth={1.5} />
                     </button>
                   </div>
                 </div>
@@ -367,10 +367,10 @@ export const DownloadsScreen: React.FC = () => {
 
       {/* Completed Section */}
       <div className="space-y-3 pt-2">
-        <div className="flex items-center justify-between border-b border-border-stroke pb-2">
-          <div className="flex items-center space-x-2">
-            <CheckCircle className="w-4 h-4 text-tactical-green" />
-            <h2 className="text-xs font-semibold uppercase tracking-wider text-slate-400">
+        <div className="flex items-center justify-between border-b border-white/5 pb-2">
+          <div className="flex items-center gap-2">
+            <CheckCircle className="w-4 h-4 text-success" strokeWidth={1.5} />
+            <h2 className="text-[11px] font-semibold uppercase tracking-[0.06em] text-slate-400">
               Recently Completed
             </h2>
           </div>
@@ -380,40 +380,40 @@ export const DownloadsScreen: React.FC = () => {
           {recentlyCompleted.map((item) => (
             <div
               key={item.id}
-              className="bg-tech-surface border border-border-stroke border-t border-white/10 rounded-md p-3.5 flex items-center justify-between shadow-subtle-card"
+              className="bg-bg-card border border-white/5 border-t-white/10 rounded-md p-3.5 flex items-center justify-between shadow-card"
             >
-              <div className="flex items-center space-x-3">
+              <div className="flex items-center gap-3">
                 <img src={item.cover} alt="" className="w-12 h-8 rounded-md object-cover border border-white/10" />
                 <div>
                   <h4 className="text-xs font-medium text-slate-200">
                     {item.title}
                   </h4>
-                  <div className="flex items-center space-x-2 text-[11px] text-slate-400 mt-0.5">
+                  <div className="flex items-center gap-2 text-[11px] text-slate-400 mt-0.5">
                     <span className="text-slate-300">{item.patchVersion}</span>
-                    <span>•</span>
+                    <span>·</span>
                     <span className="tabular-nums">{item.size}</span>
-                    <span>•</span>
-                    <span className="text-slate-500">{item.completedDate}</span>
+                    <span>·</span>
+                    <span className="text-slate-400">{item.completedDate}</span>
                   </div>
                 </div>
               </div>
 
-              <div className="flex items-center space-x-2">
+              <div className="flex items-center gap-2">
                 <button
                   onClick={() => {
                     const article = articles.find((a) => a.gameId === item.id) || articles[0];
                     openArticle(article);
                   }}
-                  className="px-3 py-1.5 bg-tech-elevated hover:bg-[#232B38] border border-border-stroke rounded-md text-xs text-slate-300 flex items-center gap-1.5 transition-colors active:scale-[0.98]"
+                  className="px-3 py-1.5 bg-bg-hover hover:bg-bg-pressed border border-white/10 rounded-md text-xs text-slate-300 flex items-center gap-1.5 transition-[background-color] duration-150 active:scale-[0.98] cursor-default"
                 >
-                  <FileText className="w-3.5 h-3.5 text-slate-400" />
-                  <span>Patch Notes</span>
+                  <FileText className="w-3.5 h-3.5 text-slate-400" strokeWidth={1.5} />
+                  <span>Patch notes</span>
                 </button>
                 <button
                   onClick={() => launchGame(item.id)}
-                  className="px-4 py-1.5 bg-primary-accent hover:bg-[#E66E00] text-void-black font-semibold text-xs rounded-md transition-colors flex items-center gap-1 active:scale-[0.98]"
+                  className="px-4 py-1.5 bg-accent hover:bg-accent-hover text-bg-app font-semibold text-xs rounded-md transition-[background-color] duration-150 flex items-center gap-1 active:scale-[0.98] cursor-default"
                 >
-                  <Play className="w-3.5 h-3.5 fill-current" />
+                  <Play className="w-3.5 h-3.5 fill-current" strokeWidth={1.5} />
                   <span>Play</span>
                 </button>
               </div>

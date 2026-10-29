@@ -1,5 +1,11 @@
 import React from 'react';
 
+/**
+ * BentoGrid / BentoCard — layout primitives.
+ * Surface: bg-card, 6px radius (rounded-md), 1px border with specular top edge.
+ * No glow, no rounded-2xl/3xl.
+ */
+
 interface BentoGridProps {
   children: React.ReactNode;
   className?: string;
@@ -33,10 +39,9 @@ export const BentoCard: React.FC<BentoCardProps> = ({
 
   return (
     <div
-      className={`group relative bg-[#131722]/80 hover:bg-[#181D2B]/90 border border-white/5 border-t border-white/10 rounded-2xl overflow-hidden transition-all duration-200 ease-out shadow-xl shadow-black/30 ${colSpanClass} ${className}`}
+      className={`relative bg-bg-card border border-white/5 border-t-white/10 rounded-md overflow-hidden shadow-card ${colSpanClass} ${className}`}
       {...props}
     >
-      <div className="absolute inset-0 ring-1 ring-inset ring-white/5 pointer-events-none rounded-2xl z-10" />
       {children}
     </div>
   );

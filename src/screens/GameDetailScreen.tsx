@@ -69,17 +69,17 @@ export const GameDetailScreen: React.FC = () => {
   const renderActionHub = () => {
     if (isRunning) {
       return (
-        <div className="flex items-center space-x-2 w-full">
-          <div className="flex-1 flex items-center justify-center space-x-2 px-4 py-2.5 bg-tactical-green/10 border border-tactical-green/30 text-tactical-green font-medium text-xs rounded-md">
-            <span className="w-2 h-2 rounded-full bg-tactical-green animate-pulse" />
-            <span>Currently Running</span>
+        <div className="flex items-center gap-2 w-full">
+          <div className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-success/10 border border-success/30 text-success font-medium text-xs rounded-md">
+            <span className="w-2 h-2 rounded-full bg-success animate-pulse" />
+            <span>Running</span>
           </div>
           <button
             onClick={() => stopGame(game.id)}
-            className="p-2.5 bg-tactical-danger/20 hover:bg-tactical-danger/30 border border-tactical-danger/40 text-tactical-danger rounded-md transition-colors active:scale-[0.98]"
-            title="Stop Process"
+            className="p-2.5 bg-danger/15 hover:bg-danger/25 border border-danger/40 text-danger rounded-md transition-[background-color] duration-150 active:scale-[0.98] cursor-default"
+            title="Stop"
           >
-            <Square className="w-4 h-4 fill-current" />
+            <Square className="w-4 h-4 fill-current" strokeWidth={1.5} />
           </button>
         </div>
       );
@@ -89,10 +89,10 @@ export const GameDetailScreen: React.FC = () => {
       return (
         <button
           disabled
-          className="w-full flex items-center justify-center space-x-2 px-5 py-2.5 bg-amber-500/15 border border-amber-500/40 text-amber-300 font-medium text-xs rounded-md animate-pulse"
+          className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-warning/10 border border-warning/30 text-warning font-medium text-xs rounded-md animate-pulse cursor-default"
         >
-          <RefreshCw className="w-4 h-4 animate-spin text-amber-400" />
-          <span>Starting Application...</span>
+          <RefreshCw className="w-4 h-4 animate-spin" strokeWidth={1.5} />
+          <span>Starting…</span>
         </button>
       );
     }
@@ -101,10 +101,10 @@ export const GameDetailScreen: React.FC = () => {
       return (
         <button
           onClick={() => navigate('downloads')}
-          className="w-full flex items-center justify-center space-x-2 px-5 py-2.5 bg-tech-elevated hover:bg-[#232B38] border border-border-stroke text-slate-100 font-medium text-xs rounded-md transition-all active:scale-[0.98]"
+          className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-bg-hover hover:bg-bg-pressed border border-white/10 text-slate-100 font-medium text-xs rounded-md transition-[background-color] duration-150 active:scale-[0.98] cursor-default"
         >
-          <RefreshCw className="w-4 h-4 animate-spin text-primary-accent" />
-          <span>Downloading • View Queue</span>
+          <RefreshCw className="w-4 h-4 animate-spin text-accent" strokeWidth={1.5} />
+          <span>Downloading · View queue</span>
         </button>
       );
     }
@@ -114,70 +114,69 @@ export const GameDetailScreen: React.FC = () => {
         return (
           <button
             onClick={() => launchGame(game.id)}
-            className="w-full flex items-center justify-center space-x-2 px-6 py-2.5 bg-primary-accent hover:bg-[#E66E00] text-void-black font-semibold text-xs rounded-md transition-all active:scale-[0.98] shadow-subtle-card"
+            className="w-full flex items-center justify-center gap-2 px-6 py-2.5 bg-accent hover:bg-accent-hover text-bg-app font-semibold text-xs rounded-md transition-[background-color,transform] duration-150 active:scale-[0.98] cursor-default"
           >
-            <Play className="w-4 h-4 fill-current" />
-            <span>Play Now</span>
+            <Play className="w-4 h-4 fill-current" strokeWidth={1.5} />
+            <span>Play</span>
           </button>
         );
       }
       return (
         <button
           onClick={() => startDownload(game.id)}
-          className="w-full flex items-center justify-center space-x-2 px-6 py-2.5 bg-primary-accent hover:bg-[#E66E00] text-void-black font-semibold text-xs rounded-md transition-all active:scale-[0.98]"
+          className="w-full flex items-center justify-center gap-2 px-6 py-2.5 bg-accent hover:bg-accent-hover text-bg-app font-semibold text-xs rounded-md transition-[background-color,transform] duration-150 active:scale-[0.98] cursor-default"
         >
-          <Download className="w-4 h-4" />
+          <Download className="w-4 h-4" strokeWidth={1.5} />
           <span>Install ({game.installSizeGb} GB)</span>
         </button>
       );
     }
 
-    // Unowned -> Purchase
     return (
       <button
         onClick={() => purchaseGame(game.id)}
-        className="w-full flex items-center justify-center space-x-2 px-6 py-2.5 bg-primary-accent hover:bg-[#E66E00] text-void-black font-semibold text-xs rounded-md transition-all active:scale-[0.98]"
+        className="w-full flex items-center justify-center gap-2 px-6 py-2.5 bg-accent hover:bg-accent-hover text-bg-app font-semibold text-xs rounded-md transition-[background-color,transform] duration-150 active:scale-[0.98] cursor-default"
       >
-        <ShoppingCart className="w-4 h-4" />
+        <ShoppingCart className="w-4 h-4" strokeWidth={1.5} />
         <span>Buy for {typeof effectivePrice === 'number' ? `$${effectivePrice.toFixed(2)}` : effectivePrice}</span>
       </button>
     );
   };
 
   return (
-    <div className="flex-1 overflow-y-auto bg-transparent p-6 space-y-6 select-none">
-      {/* Top Back Navigation Bar */}
+    <div className="flex-1 overflow-y-auto p-6 space-y-6 select-none">
+      {/* Back navigation */}
       <div className="flex items-center justify-between">
         <button
           onClick={goBack}
-          className="flex items-center space-x-2 text-xs text-slate-400 hover:text-white transition-colors active:scale-[0.98]"
+          className="flex items-center gap-2 text-xs text-slate-400 hover:text-white transition-[color] duration-150 active:scale-[0.98] cursor-default"
         >
-          <ArrowLeft className="w-4 h-4" />
+          <ArrowLeft className="w-4 h-4" strokeWidth={1.5} />
           <span>Back</span>
           <Kbd>ESC</Kbd>
         </button>
 
-        <div className="flex items-center space-x-2">
+        <div className="flex items-center gap-2">
           <button
             onClick={() => toggleFavorite(game.id)}
-            className={`p-2 rounded-md border transition-colors active:scale-[0.98] ${
+            className={`p-2 rounded-md border transition-[background-color,border-color,color] duration-150 active:scale-[0.98] cursor-default ${
               game.isFavorite
-                ? 'bg-primary-accent/10 border-primary-accent/40 text-primary-accent'
-                : 'bg-tech-surface border-border-stroke text-slate-400 hover:text-white'
+                ? 'bg-accent/10 border-accent/40 text-accent'
+                : 'bg-bg-card border-white/10 text-slate-400 hover:text-white hover:border-white/20'
             }`}
-            title="Toggle Favorite"
+            title="Toggle wishlist"
           >
-            <Heart className={`w-4 h-4 ${game.isFavorite ? 'fill-current' : ''}`} />
+            <Heart className={`w-4 h-4 ${game.isFavorite ? 'fill-current' : ''}`} strokeWidth={1.5} />
           </button>
           <button
             onClick={() => {
               navigator.clipboard.writeText(`oneengine://game/${game.id}`).catch(() => {});
               addToast(`Link for ${game.title} copied to clipboard.`, 'success');
             }}
-            className="p-2 bg-tech-surface border border-border-stroke hover:border-slate-500 rounded-md text-slate-400 hover:text-white transition-colors active:scale-[0.98]"
+            className="p-2 bg-bg-card border border-white/10 hover:border-white/20 rounded-md text-slate-400 hover:text-white transition-[border-color,color] duration-150 active:scale-[0.98] cursor-default"
             title="Share"
           >
-            <Share2 className="w-4 h-4" />
+            <Share2 className="w-4 h-4" strokeWidth={1.5} />
           </button>
         </div>
       </div>
@@ -220,7 +219,7 @@ export const GameDetailScreen: React.FC = () => {
               <button
                 key={index}
                 onClick={() => setSelectedMediaIndex(index)}
-                className={`relative aspect-video rounded-md overflow-hidden border transition-all active:scale-[0.98] ${
+                className={`relative aspect-video rounded-md overflow-hidden border transition-[border-color,opacity] duration-150 active:scale-[0.98] cursor-default ${
                   selectedMediaIndex === index
                     ? 'border-primary-accent ring-1 ring-primary-accent/40'
                     : 'border-border-stroke opacity-60 hover:opacity-100'
@@ -234,7 +233,7 @@ export const GameDetailScreen: React.FC = () => {
         </BentoCard>
 
         {/* Right 1 Column: Telemetry Stats, System Compatibility & Quick Purchase Module */}
-        <BentoCard colSpan={1} className="p-5 flex flex-col justify-between space-y-4">
+        <BentoCard colSpan={1} className="p-4 flex flex-col justify-between space-y-4">
           <div className="space-y-3">
             <div className="flex items-center space-x-2">
               <span className="px-2 py-0.5 text-[11px] font-semibold bg-primary-accent text-void-black rounded-md">
@@ -255,7 +254,7 @@ export const GameDetailScreen: React.FC = () => {
             {/* Compact Telemetry Stats Card */}
             <div className="p-2.5 bg-void-black/60 border border-border-stroke rounded-md flex items-center justify-between text-xs">
               <span className="text-slate-400 flex items-center gap-1.5">
-                <Star className="w-3.5 h-3.5 text-secondary-tech fill-current" /> Rating:
+                <Star className="w-3.5 h-3.5 text-warning fill-current" strokeWidth={1.5} /> Rating:
               </span>
               <span className="text-slate-200 font-medium tabular-nums">
                 <NumberTicker value={game.ratingBreakdown.positivePercent} suffix="%" /> Positive (
@@ -344,7 +343,7 @@ export const GameDetailScreen: React.FC = () => {
         </div>
 
         {/* Tab Body */}
-        <div className="bg-tech-surface border border-border-stroke border-t border-white/10 rounded-md p-5 shadow-subtle-card">
+        <div className="bg-bg-card border border-white/5 border-t-white/10 rounded-md p-4 shadow-card">
           {activeTab === 'overview' && (
             <div className="space-y-4 text-xs text-slate-300 leading-relaxed">
               <p className="text-sm leading-relaxed text-slate-200">{game.description}</p>
@@ -366,7 +365,7 @@ export const GameDetailScreen: React.FC = () => {
           {activeTab === 'specs' && (
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs border border-border-stroke rounded-md overflow-hidden">
-                <thead className="bg-[#0E1217] border-b border-border-stroke text-slate-400 text-[11px] uppercase font-semibold tracking-wider">
+                <thead className="bg-bg-sidebar border-b border-white/5 text-slate-400 text-[11px] uppercase font-semibold tracking-[0.06em]">
                   <tr>
                     <th className="p-3">Component</th>
                     <th className="p-3 text-slate-200">Minimum</th>
@@ -436,7 +435,7 @@ export const GameDetailScreen: React.FC = () => {
                       ) : (
                         <button
                           onClick={() => alert(`DLC purchase simulated.`)}
-                          className="px-3 py-1 bg-primary-accent hover:bg-[#E66E00] text-void-black font-semibold text-xs rounded-md active:scale-[0.98]"
+                          className="px-3 py-1 bg-accent hover:bg-accent-hover text-bg-app font-semibold text-xs rounded-md active:scale-[0.98] transition-[background-color] duration-150 cursor-default"
                         >
                           Buy DLC
                         </button>

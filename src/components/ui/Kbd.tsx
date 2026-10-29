@@ -8,7 +8,7 @@ interface KbdProps extends React.HTMLAttributes<HTMLElement> {
 export const Kbd: React.FC<KbdProps> = ({ children, className = '', ...props }) => {
   return (
     <kbd
-      className={`inline-flex items-center justify-center bg-[#1C232E] border border-white/10 shadow-[0_2px_0_0_rgba(0,0,0,0.6)] rounded px-1.5 py-0.5 text-[11px] font-mono text-slate-300 select-none ${className}`}
+      className={`inline-flex items-center justify-center bg-bg-hover border border-white/10 shadow-sm rounded-md px-1.5 py-0.5 text-[11px] font-sans font-medium text-slate-300 select-none ${className}`}
       {...props}
     >
       {children}
