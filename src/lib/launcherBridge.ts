@@ -28,6 +28,8 @@ export const LauncherBridge = {
       authToken: payload.authToken,
       playerName: payload.playerName,
       userId: payload.userId,
+      nakamaToken: payload.nakamaToken,
+      nakamaRefreshToken: payload.nakamaRefreshToken,
     });
   },
 

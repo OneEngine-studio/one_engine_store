@@ -51,11 +51,16 @@ function createWindow() {
 
   // Handle Game Process Execution with Headless Session Token Flags
   ipcMain.handle('launch-game', async (_event, payload) => {
-    const { gamePath, authToken, playerName, userId } = payload;
+    const { gamePath, authToken, playerName, userId, nakamaToken, nakamaRefreshToken } = payload;
     console.log(`[OneEngine Electron] Launching game for: ${playerName} (${userId})`);
 
+    const effectiveToken = nakamaToken || authToken || '';
+    const effectiveRefreshToken = nakamaRefreshToken || '';
+
     const args = [
-      '--auth-token', authToken || '',
+      '--nakama-token', effectiveToken,
+      '--nakama-refresh-token', effectiveRefreshToken,
+      '--auth-token', effectiveToken,
       '--player-name', playerName || '',
       '--user-id', userId || '',
     ];

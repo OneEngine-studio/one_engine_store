@@ -40,6 +40,8 @@ export interface LaunchGamePayload {
   authToken: string;
   playerName: string;
   userId: string;
+  nakamaToken?: string;
+  nakamaRefreshToken?: string;
 }
 
 export interface LaunchResult {

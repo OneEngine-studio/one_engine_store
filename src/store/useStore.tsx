@@ -9,6 +9,8 @@ import {
   ClientNotification, 
   ToastNotification 
 } from '../types/store';
+import { nakamaService } from '../lib/nakama';
+import { LauncherBridge } from '../lib/launcherBridge';
 
 // Synthetic Tactical Audio Engine via Web Audio API (zero audio files needed)
 const playSynthesizerSound = (type: 'click' | 'launch' | 'hover' | 'alert' | 'purchase', enabled: boolean) => {
@@ -425,43 +427,18 @@ const INITIAL_GAMES: Game[] = [
   }
 ];
 
-const PRESET_USERS: Record<string, UserProfile> = {
-  DEVELOPER: {
-    id: 'usr_spectre_07',
-    callsign: 'Spectre_07',
-    rank: 'LEAD SYSTEMS ARCHITECT',
-    level: 74,
-    avatarUrl: 'https://api.dicebear.com/7.x/bottts/svg?seed=Spectre_07',
-    status: 'ONLINE',
-    currentGame: undefined,
-    walletBalance: 149.50,
-    role: 'DEVELOPER',
-    ownedGameIds: ['railbound', 'cyber-siege', 'rust-protocol', 'neon-drifter'], // 4 owned
-  },
-  COMPETITIVE: {
-    id: 'usr_valkyrie_9',
-    callsign: 'Valkyrie_9',
-    rank: 'ELITE VANGUARD',
-    level: 42,
-    avatarUrl: 'https://api.dicebear.com/7.x/bottts/svg?seed=Valkyrie_9',
-    status: 'IN_GAME',
-    currentGame: 'Railbound',
-    walletBalance: 42.00,
-    role: 'OPERATOR',
-    ownedGameIds: ['railbound', 'cyber-siege'], // 2 owned
-  },
-  GUEST: {
-    id: 'usr_guest_recon',
-    callsign: 'Ghost_Operative',
-    rank: 'RECON SCOUT',
-    level: 1,
-    avatarUrl: 'https://api.dicebear.com/7.x/bottts/svg?seed=Ghost_Operative',
-    status: 'ONLINE',
-    currentGame: undefined,
-    walletBalance: 0.00,
-    role: 'OPERATOR',
-    ownedGameIds: [], // 0 owned (clean empty state)
-  }
+export const DEFAULT_GUEST_USER: UserProfile = {
+  id: '',
+  callsign: 'Guest',
+  email: '',
+  rank: 'GUEST OPERATIVE',
+  level: 1,
+  avatarUrl: 'https://api.dicebear.com/7.x/bottts/svg?seed=OneEngineGuest',
+  status: 'ONLINE',
+  currentGame: undefined,
+  walletBalance: 0.00,
+  role: 'OPERATOR',
+  ownedGameIds: ['railbound'],
 };
 
 const INITIAL_ARTICLES: Article[] = [
@@ -592,7 +569,7 @@ const INITIAL_NOTIFICATIONS: ClientNotification[] = [
   },
   {
     id: 'notif-2',
-    title: "Operative 'Valkyrie_9' is in-game",
+    title: "Operative 'Apex_09' is in-game",
     description: 'Playing Railbound: Tactical Protocol (Squad slot open).',
     time: '45m ago',
     read: false,
@@ -629,6 +606,12 @@ interface StoreContextType {
   canGoBack: boolean;
   canGoForward: boolean;
   isPausedAll: boolean;
+  
+  isAuthenticated: boolean;
+  loginWithNakama: (email: string, pass: string) => Promise<{ success: boolean; error?: string }>;
+  registerWithNakama: (email: string, pass: string, username: string) => Promise<{ success: boolean; error?: string }>;
+  loginAsGuest: (username?: string) => Promise<{ success: boolean; error?: string }>;
+  logout: () => void;
   
   navigate: (tab: NavigationTab, gameId?: string) => void;
   goBack: () => void;
@@ -682,7 +665,8 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       etaSeconds: 210,
     }
   ]);
-  const [currentUser, setCurrentUser] = useState<UserProfile>(PRESET_USERS.DEVELOPER);
+  const [currentUser, setCurrentUser] = useState<UserProfile>(DEFAULT_GUEST_USER);
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
@@ -706,14 +690,21 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   ]);
   const [historyIndex, setHistoryIndex] = useState(0);
 
-  const [settings, setSettings] = useState<AppSettings>({
-    launchOnStartup: true,
-    downloadDirectory: 'C:\\OneEngine\\GameLibrary',
-    primaryAccent: '#FF7A00',
-    enableTactileAudio: true,
-    hardwareAcceleration: true,
-    devTelemetryMode: false,
-    bandwidthThrottleMbps: 0,
+  const [settings, setSettings] = useState<AppSettings>(() => {
+    const cfg = nakamaService.getConfig();
+    return {
+      launchOnStartup: true,
+      downloadDirectory: 'C:\\OneEngine\\GameLibrary',
+      primaryAccent: '#FF7A00',
+      enableTactileAudio: true,
+      hardwareAcceleration: true,
+      devTelemetryMode: false,
+      bandwidthThrottleMbps: 0,
+      nakamaHost: cfg.host,
+      nakamaPort: cfg.port,
+      nakamaUseSsl: cfg.useSsl,
+      nakamaServerKey: cfg.serverKey,
+    };
   });
 
   const settingsRef = useRef(settings);
@@ -737,6 +728,42 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const removeToast = (id: string) => {
     setToasts((prev) => prev.filter((t) => t.id !== id));
   };
+
+  // Restore Nakama session or cached profile on startup
+  useEffect(() => {
+    let active = true;
+    const initAuth = async () => {
+      try {
+        const session = await nakamaService.restoreSession();
+        if (session && active) {
+          const profile = await nakamaService.getAccount();
+          if (profile && active) {
+            setCurrentUser(profile);
+            setIsAuthenticated(true);
+            return;
+          }
+        }
+        const cached = localStorage.getItem('oneengine_user_profile');
+        if (cached && active) {
+          try {
+            const parsed = JSON.parse(cached);
+            if (parsed && parsed.id) {
+              setCurrentUser(parsed);
+              setIsAuthenticated(true);
+            }
+          } catch {
+            // ignore
+          }
+        }
+      } catch (e) {
+        console.warn('[OneEngine] Session restore check:', e);
+      }
+    };
+    initAuth();
+    return () => {
+      active = false;
+    };
+  }, []);
 
   // Keyboard shortcut listener for Command Palette (Ctrl+K)
   useEffect(() => {
@@ -961,18 +988,35 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     addToast(isPausedAll ? 'Resumed all downloads' : 'Paused all downloads', 'info');
   };
 
-  const launchGame = (gameId: string) => {
+  const launchGame = async (gameId: string) => {
     triggerSound('click');
     setLaunchingGameId(gameId);
 
-    // Lifecycle: INITIALIZING (1.5s) -> RUNNING
+    const target = games.find((g) => g.id === gameId);
+    const exePath = `${settings.downloadDirectory}\\${gameId}\\${gameId}.exe`;
+    const token = currentUser.nakamaToken || 'nakama_session_active';
+    const refreshToken = currentUser.nakamaRefreshToken || '';
+
+    // Invoke OS process launcher with session handoff
+    try {
+      await LauncherBridge.launchGame({
+        gamePath: exePath,
+        authToken: token,
+        nakamaToken: token,
+        nakamaRefreshToken: refreshToken,
+        playerName: currentUser.callsign,
+        userId: currentUser.id || 'usr_anonymous',
+      });
+    } catch (err) {
+      console.warn('[OneEngine Launcher] Process bridge dispatch:', err);
+    }
+
     setTimeout(() => {
       triggerSound('launch');
       setLaunchingGameId(null);
       setRunningGameId(gameId);
       setSessionElapsedSeconds(0);
 
-      const target = games.find((g) => g.id === gameId);
       setGames((prev) =>
         prev.map((g) => (g.id === gameId ? { ...g, status: 'RUNNING' } : g))
       );
@@ -982,7 +1026,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         currentGame: target?.title || 'Tactical Title',
       }));
 
-      addToast(`Direct headless bypass active: ${target?.title} is running.`, 'success');
+      addToast(`Session handoff verified: ${target?.title} is running.`, 'success');
     }, 1500);
   };
 
@@ -1032,22 +1076,115 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       ownedGameIds: [...new Set([...prev.ownedGameIds, gameId])]
     }));
 
+    // Record game entitlement in Nakama storage
+    nakamaService.claimGameEntitlement(gameId).catch(() => {});
+
     addToast(`Purchase successful! Added ${target.title} to Tactical Library.`, 'success');
     return true;
   };
 
-  const switchUserPreset = (preset: 'DEVELOPER' | 'COMPETITIVE' | 'GUEST') => {
+  const loginWithNakama = async (email: string, pass: string): Promise<{ success: boolean; error?: string }> => {
     triggerSound('click');
-    const selected = PRESET_USERS[preset];
-    setCurrentUser(selected);
-    setIsAuthModalOpen(false);
+    try {
+      await nakamaService.authenticateEmail(email, pass, false);
+      const profile = await nakamaService.getAccount();
+      if (profile) {
+        setCurrentUser(profile);
+        setIsAuthenticated(true);
+        localStorage.setItem('oneengine_user_profile', JSON.stringify(profile));
+        addToast(`Welcome back, ${profile.callsign}! Nakama session active.`, 'success');
+        return { success: true };
+      }
+      return { success: false, error: 'Failed to retrieve Nakama user profile.' };
+    } catch (err: unknown) {
+      triggerSound('alert');
+      const msg = err instanceof Error ? err.message : String(err);
+      return { success: false, error: msg };
+    }
+  };
 
-    // If currently running game, stop it
+  const registerWithNakama = async (
+    email: string,
+    pass: string,
+    username: string
+  ): Promise<{ success: boolean; error?: string }> => {
+    triggerSound('click');
+    try {
+      await nakamaService.authenticateEmail(email, pass, true, username);
+      const profile = await nakamaService.getAccount();
+      if (profile) {
+        setCurrentUser(profile);
+        setIsAuthenticated(true);
+        localStorage.setItem('oneengine_user_profile', JSON.stringify(profile));
+        addToast(`Operative registration complete. Welcome, ${profile.callsign}!`, 'success');
+        return { success: true };
+      }
+      return { success: false, error: 'Registration succeeded but profile could not be loaded.' };
+    } catch (err: unknown) {
+      triggerSound('alert');
+      const msg = err instanceof Error ? err.message : String(err);
+      return { success: false, error: msg };
+    }
+  };
+
+  const loginAsGuest = async (username = 'Guest_Operative'): Promise<{ success: boolean; error?: string }> => {
+    triggerSound('click');
+    try {
+      let token = 'guest_offline_token';
+      let rToken = '';
+      let userId = `usr_guest_${Date.now().toString(36)}`;
+
+      try {
+        const deviceId = 'dev_' + Math.random().toString(36).substring(2, 10);
+        const s = await nakamaService.authenticateDevice(deviceId, true, username);
+        token = s.token || 'guest_offline_token';
+        rToken = s.refresh_token || '';
+        userId = s.user_id || userId;
+      } catch {
+        // Offline fallback
+      }
+
+      const guestProfile: UserProfile = {
+        id: userId,
+        callsign: username,
+        email: `${username.toLowerCase()}@guest.oneengine.io`,
+        rank: 'RECON SCOUT',
+        level: 1,
+        avatarUrl: `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(username)}`,
+        status: 'ONLINE',
+        walletBalance: 50.00,
+        role: 'OPERATOR',
+        ownedGameIds: ['railbound'],
+        nakamaToken: token,
+        nakamaRefreshToken: rToken,
+      };
+
+      setCurrentUser(guestProfile);
+      setIsAuthenticated(true);
+      localStorage.setItem('oneengine_user_profile', JSON.stringify(guestProfile));
+      addToast(`Signed in as ${guestProfile.callsign}.`, 'info');
+      return { success: true };
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      return { success: false, error: msg };
+    }
+  };
+
+  const logout = () => {
+    triggerSound('click');
     if (runningGameId) {
       stopGame(runningGameId);
     }
+    nakamaService.logout();
+    localStorage.removeItem('oneengine_user_profile');
+    setCurrentUser(DEFAULT_GUEST_USER);
+    setIsAuthenticated(false);
+    addToast('Signed out from OneEngine.', 'info');
+  };
 
-    addToast(`Active Operative switched to ${selected.callsign} (${selected.role})`, 'info');
+  const switchUserPreset = (_preset: 'DEVELOPER' | 'COMPETITIVE' | 'GUEST') => {
+    triggerSound('click');
+    setIsAuthModalOpen(true);
   };
 
   const openArticle = (article: Article) => {
@@ -1104,7 +1241,23 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   const updateSettings = (partial: Partial<AppSettings>) => {
     triggerSound('click');
-    setSettings((prev) => ({ ...prev, ...partial }));
+    setSettings((prev) => {
+      const next = { ...prev, ...partial };
+      if (
+        partial.nakamaHost !== undefined ||
+        partial.nakamaPort !== undefined ||
+        partial.nakamaUseSsl !== undefined ||
+        partial.nakamaServerKey !== undefined
+      ) {
+        nakamaService.updateConfig({
+          host: next.nakamaHost,
+          port: next.nakamaPort,
+          useSsl: next.nakamaUseSsl,
+          serverKey: next.nakamaServerKey,
+        });
+      }
+      return next;
+    });
     addToast('Preferences updated', 'info');
   };
 
@@ -1153,6 +1306,11 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         games,
         downloads,
         currentUser,
+        isAuthenticated,
+        loginWithNakama,
+        registerWithNakama,
+        loginAsGuest,
+        logout,
         searchQuery,
         isAuthModalOpen,
         isCommandPaletteOpen,

@@ -195,14 +195,16 @@ export const Sidebar: React.FC = () => {
         <button
           onClick={openAuthModal}
           className="relative w-10 h-10 rounded-full p-0.5 border border-white/15 hover:border-accent/60 transition-surface cursor-default group"
-          title={`Signed in as ${currentUser.callsign}`}
+          title={currentUser.id ? `Signed in as ${currentUser.callsign}` : 'Sign in to OneEngine Store'}
         >
           <img
             src={currentUser.avatarUrl}
             alt={currentUser.callsign}
             className="w-full h-full rounded-full object-cover"
           />
-          <span className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-success ring-2 ring-bg-app" />
+          <span className={`absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full ring-2 ring-bg-app ${
+            currentUser.id ? 'bg-success' : 'bg-slate-500'
+          }`} />
         </button>
       </div>
     </aside>

@@ -26,6 +26,7 @@ namespace OneEngine.Integration
 
         // Static session properties accessible across any Unity gameplay scripts
         public static string AuthToken { get; private set; } = string.Empty;
+        public static string NakamaRefreshToken { get; private set; } = string.Empty;
         public static string PlayerName { get; private set; } = string.Empty;
         public static string UserId { get; private set; } = string.Empty;
         public static bool IsAuthenticated => !string.IsNullOrEmpty(AuthToken);
@@ -98,11 +99,26 @@ namespace OneEngine.Integration
                 }
             }
 
-            // Extract session credentials injected by OneEngine Rust backend
-            if (parsedArgs.TryGetValue("auth-token", out string token) && !string.IsNullOrWhiteSpace(token))
+            // Extract session credentials injected by OneEngine launcher backend
+            string token = null;
+            if (parsedArgs.TryGetValue("nakama-token", out string nToken) && !string.IsNullOrWhiteSpace(nToken))
+            {
+                token = nToken;
+            }
+            else if (parsedArgs.TryGetValue("auth-token", out string aToken) && !string.IsNullOrWhiteSpace(aToken))
+            {
+                token = aToken;
+            }
+
+            if (!string.IsNullOrWhiteSpace(token))
             {
                 AuthToken = token;
                 
+                if (parsedArgs.TryGetValue("nakama-refresh-token", out string rToken) && !string.IsNullOrWhiteSpace(rToken))
+                {
+                    NakamaRefreshToken = rToken;
+                }
+
                 parsedArgs.TryGetValue("player-name", out string pName);
                 PlayerName = !string.IsNullOrWhiteSpace(pName) ? pName : "Operative";
                 cachedPlayerName = PlayerName;

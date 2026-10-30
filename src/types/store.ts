@@ -81,6 +81,7 @@ export interface DownloadItem {
 export interface UserProfile {
   id: string;
   callsign: string;
+  email?: string;
   rank: string;
   level: number;
   avatarUrl: string;
@@ -89,6 +90,8 @@ export interface UserProfile {
   walletBalance: number;
   role: 'OPERATOR' | 'DEVELOPER' | 'ADMIN';
   ownedGameIds: string[];
+  nakamaToken?: string;
+  nakamaRefreshToken?: string;
 }
 
 export type NavigationTab = 'store' | 'game-detail' | 'library' | 'downloads' | 'community' | 'settings';
@@ -101,6 +104,10 @@ export interface AppSettings {
   hardwareAcceleration: boolean;
   devTelemetryMode: boolean;
   bandwidthThrottleMbps: number;
+  nakamaHost: string;
+  nakamaPort: string;
+  nakamaUseSsl: boolean;
+  nakamaServerKey: string;
 }
 
 export interface Article {

@@ -14,7 +14,10 @@ import {
   Terminal,
   Check,
   AlertTriangle,
+  Server,
+  RefreshCw,
 } from 'lucide-react';
+import { nakamaService } from '../lib/nakama';
 
 export const SettingsScreen: React.FC = () => {
   const {
@@ -29,6 +32,24 @@ export const SettingsScreen: React.FC = () => {
   const [isEditingDir, setIsEditingDir] = useState(false);
   const [customDir, setCustomDir] = useState(settings.downloadDirectory);
   const [showResetConfirm, setShowResetConfirm] = useState(false);
+  const [testingNakama, setTestingNakama] = useState(false);
+  const [nakamaTestResult, setNakamaTestResult] = useState<{ ok: boolean; message: string } | null>(null);
+
+  const handleTestNakamaConnection = async () => {
+    setTestingNakama(true);
+    setNakamaTestResult(null);
+    try {
+      const res = await nakamaService.testConnection();
+      setNakamaTestResult(res);
+      if (res.ok) {
+        addToast(res.message, 'success');
+      } else {
+        addToast(res.message, 'warning');
+      }
+    } finally {
+      setTestingNakama(false);
+    }
+  };
 
   // Runtime verification
   const getRuntimeInfo = () => {
@@ -259,6 +280,97 @@ export const SettingsScreen: React.FC = () => {
                 )}
               </div>
             </div>
+          </section>
+
+          {/* Group: Nakama Server & Authentication */}
+          <section className="win11-card rounded-2xl p-6 space-y-4">
+            <div className="flex items-center justify-between">
+              <h2 className="text-sm font-semibold text-white flex items-center gap-2">
+                <Server className="w-4 h-4 text-accent" /> Nakama server connection
+              </h2>
+              <button
+                onClick={handleTestNakamaConnection}
+                disabled={testingNakama}
+                className="px-3.5 py-1.5 rounded-full bg-white/[0.06] hover:bg-white/[0.12] border border-white/[0.09] text-xs font-medium text-slate-200 flex items-center gap-1.5 transition-surface disabled:opacity-50"
+              >
+                <RefreshCw className={`w-3.5 h-3.5 ${testingNakama ? 'animate-spin text-accent' : 'text-slate-400'}`} />
+                <span>{testingNakama ? 'Testing...' : 'Test connection'}</span>
+              </button>
+            </div>
+
+            <p className="text-xs text-slate-400 leading-relaxed">
+              Configured backend for OneEngine player authentication, library entitlement sync, and session handoff to Railbound.
+            </p>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-1">
+              <div>
+                <label className="text-[11px] font-medium text-slate-400 block mb-1">
+                  Host
+                </label>
+                <input
+                  type="text"
+                  value={settings.nakamaHost}
+                  onChange={(e) => updateSettings({ nakamaHost: e.target.value.trim() })}
+                  className="w-full bg-bg-app border border-white/[0.08] focus:border-accent rounded-thumb px-3 py-1.5 text-xs text-slate-200 outline-none select-text"
+                />
+              </div>
+
+              <div>
+                <label className="text-[11px] font-medium text-slate-400 block mb-1">
+                  Port
+                </label>
+                <input
+                  type="text"
+                  value={settings.nakamaPort}
+                  onChange={(e) => updateSettings({ nakamaPort: e.target.value.trim() })}
+                  className="w-full bg-bg-app border border-white/[0.08] focus:border-accent rounded-thumb px-3 py-1.5 text-xs text-slate-200 outline-none select-text tabular-nums"
+                />
+              </div>
+
+              <div>
+                <label className="text-[11px] font-medium text-slate-400 block mb-1">
+                  Server Key
+                </label>
+                <input
+                  type="text"
+                  value={settings.nakamaServerKey}
+                  onChange={(e) => updateSettings({ nakamaServerKey: e.target.value.trim() })}
+                  className="w-full bg-bg-app border border-white/[0.08] focus:border-accent rounded-thumb px-3 py-1.5 text-xs text-slate-200 outline-none select-text font-mono"
+                />
+              </div>
+
+              <div className="flex items-center justify-between pt-4">
+                <div>
+                  <span className="text-xs font-medium text-slate-200 block">Use SSL / TLS</span>
+                  <span className="text-[11px] text-slate-400 block">Enable for HTTPS / WSS</span>
+                </div>
+                <button
+                  onClick={() => updateSettings({ nakamaUseSsl: !settings.nakamaUseSsl })}
+                  className={`w-12 h-6 flex items-center rounded-full p-1 transition-surface cursor-default ${
+                    settings.nakamaUseSsl
+                      ? 'bg-accent justify-end shadow-sm'
+                      : 'bg-white/[0.12] justify-start border border-white/10'
+                  }`}
+                >
+                  <div className="w-4 h-4 rounded-full bg-white shadow-sm" />
+                </button>
+              </div>
+            </div>
+
+            {nakamaTestResult && (
+              <div className={`p-3 rounded-thumb text-xs flex items-center gap-2 ${
+                nakamaTestResult.ok
+                  ? 'bg-success/15 border border-success/30 text-success'
+                  : 'bg-amber-400/15 border border-amber-400/30 text-amber-300'
+              }`}>
+                {nakamaTestResult.ok ? (
+                  <Check className="w-4 h-4 shrink-0" />
+                ) : (
+                  <AlertTriangle className="w-4 h-4 shrink-0" />
+                )}
+                <span>{nakamaTestResult.message}</span>
+              </div>
+            )}
           </section>
 
           {/* Group: Developer telemetry mode */}

@@ -143,22 +143,32 @@ export const WindowFrame: React.FC = () => {
           />
         </div>
 
-        {/* Profile chip */}
-        <button
-          onClick={openAuthModal}
-          className="flex items-center gap-2 pl-1 pr-3 py-1 bg-white/[0.04] hover:bg-white/[0.08] backdrop-blur-md border border-white/[0.09] hover:border-white/[0.18] shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06)] rounded-full text-xs transition-all cursor-default"
-          title="Switch account"
-        >
-          <div className="relative">
-            <img
-              src={currentUser.avatarUrl}
-              alt={currentUser.callsign}
-              className="w-5 h-5 rounded-full border border-white/20 object-cover"
-            />
-            <span className="absolute bottom-0 right-0 w-1.5 h-1.5 rounded-full bg-success ring-1 ring-bg-app" />
-          </div>
-          <span className="text-slate-200 font-medium hidden sm:inline">{currentUser.callsign}</span>
-        </button>
+        {/* Profile chip or Sign in button */}
+        {currentUser.id ? (
+          <button
+            onClick={openAuthModal}
+            className="flex items-center gap-2 pl-1 pr-3 py-1 bg-white/[0.04] hover:bg-white/[0.08] backdrop-blur-md border border-white/[0.09] hover:border-white/[0.18] shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06)] rounded-full text-xs transition-all cursor-default"
+            title="Account & Nakama session"
+          >
+            <div className="relative">
+              <img
+                src={currentUser.avatarUrl}
+                alt={currentUser.callsign}
+                className="w-5 h-5 rounded-full border border-white/20 object-cover"
+              />
+              <span className="absolute bottom-0 right-0 w-1.5 h-1.5 rounded-full bg-success ring-1 ring-bg-app" />
+            </div>
+            <span className="text-slate-200 font-medium hidden sm:inline">{currentUser.callsign}</span>
+          </button>
+        ) : (
+          <button
+            onClick={openAuthModal}
+            className="px-3.5 py-1 bg-accent hover:bg-accent-hover text-bg-app rounded-full text-xs font-semibold shadow-sm transition-surface cursor-default"
+            title="Sign in to OneEngine Store"
+          >
+            Sign in
+          </button>
+        )}
 
         {/* Window controls */}
         <div className="flex items-center pl-2 ml-1 border-l border-white/[0.08] gap-1">
