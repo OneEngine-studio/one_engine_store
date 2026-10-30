@@ -74,30 +74,78 @@ class NakamaService {
   }
 
   /**
-   * Quick connection / healthcheck verification
+   * Dispatches an HTTP request via Electron IPC (native Node.js) to bypass CORS / Chromium limitations,
+   * falling back to standard fetch if in browser.
+   */
+  private async apiRequest(
+    path: string,
+    method = 'GET',
+    headers: Record<string, string> = {},
+    body?: unknown,
+    timeoutMs = 7000
+  ): Promise<{ ok: boolean; status: number; statusText: string; data: string }> {
+    const url = `${this.config.useSsl ? 'https' : 'http'}://${this.config.host}:${this.config.port}${path}`;
+
+    if (typeof window !== 'undefined' && window.electronAPI?.nakamaRequest) {
+      return window.electronAPI.nakamaRequest({
+        url,
+        method,
+        headers,
+        body,
+        timeoutMs,
+      });
+    }
+
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), timeoutMs);
+    try {
+      const resp = await fetch(url, {
+        method,
+        headers,
+        body: body ? (typeof body === 'string' ? body : JSON.stringify(body)) : undefined,
+        signal: controller.signal,
+      });
+      clearTimeout(timer);
+      const text = await resp.text();
+      return {
+        ok: resp.ok,
+        status: resp.status,
+        statusText: resp.statusText,
+        data: text,
+      };
+    } catch (err: unknown) {
+      clearTimeout(timer);
+      const msg = err instanceof Error ? err.message : String(err);
+      return {
+        ok: false,
+        status: 0,
+        statusText: msg,
+        data: '',
+      };
+    }
+  }
+
+  /**
+   * Healthcheck verification
    */
   public async testConnection(): Promise<{ ok: boolean; message: string }> {
     try {
-      const url = `${this.config.useSsl ? 'https' : 'http'}://${this.config.host}:${this.config.port}/`;
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 4000);
+      const basicAuth = btoa(`${this.config.serverKey}:`);
+      const res = await this.apiRequest(
+        '/',
+        'GET',
+        { Authorization: `Basic ${basicAuth}` },
+        undefined,
+        4000
+      );
 
-      const resp = await fetch(url, {
-        method: 'GET',
-        headers: {
-          Authorization: `Basic ${btoa(this.config.serverKey + ':')}`,
-        },
-        signal: controller.signal,
-      }).catch((err) => {
-        return { ok: false, status: 0, statusText: err.message };
-      });
-
-      clearTimeout(timeoutId);
-
-      if (resp && 'status' in resp && resp.status !== 0) {
+      if (res.status !== 0) {
         return { ok: true, message: `Connected to Nakama (${this.config.host}:${this.config.port})` };
       }
-      return { ok: false, message: 'Server unreachable or refused connection' };
+      return {
+        ok: false,
+        message: `Port ${this.config.port} on ${this.config.host} is unreachable (Connection timed out).`,
+      };
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : String(e);
       return { ok: false, message: msg };
@@ -113,20 +161,91 @@ class NakamaService {
     createAccount = false,
     username?: string
   ): Promise<Session> {
-    const session = await this.client.authenticateEmail(
-      email,
-      pass,
-      createAccount,
-      username
+    const query = new URLSearchParams({
+      create: String(createAccount),
+    });
+    if (username) {
+      query.set('username', username);
+    }
+
+    const path = `/v2/account/authenticate/email?${query.toString()}`;
+    const basicAuth = btoa(`${this.config.serverKey}:`);
+
+    const res = await this.apiRequest(
+      path,
+      'POST',
+      {
+        'Content-Type': 'application/json',
+        Authorization: `Basic ${basicAuth}`,
+      },
+      {
+        email,
+        password: pass,
+      },
+      8000
     );
-    this.setSession(session);
-    return session;
+
+    if (res.ok && res.data) {
+      try {
+        const json = JSON.parse(res.data);
+        const session = Session.restore(json.token, json.refresh_token);
+        this.setSession(session);
+        return session;
+      } catch {
+        throw new Error('Failed to parse Nakama session token.');
+      }
+    }
+
+    if (res.status === 0) {
+      throw new Error(
+        `Connection timed out to ${this.config.host}:${this.config.port}. If your server is on Oracle Cloud, ensure port 7350 is allowed in VCN Ingress Rules & OS firewall.`
+      );
+    }
+
+    let errorDetail = res.statusText;
+    if (res.data) {
+      try {
+        const errJson = JSON.parse(res.data);
+        if (errJson.message) errorDetail = errJson.message;
+      } catch {
+        // ignore
+      }
+    }
+
+    throw new Error(errorDetail || `Authentication failed (status ${res.status}).`);
   }
 
   /**
    * Authenticate device / guest session
    */
   public async authenticateDevice(deviceId: string, createAccount = true, username?: string): Promise<Session> {
+    const query = new URLSearchParams({
+      create: String(createAccount),
+    });
+    if (username) query.set('username', username);
+
+    const path = `/v2/account/authenticate/device?${query.toString()}`;
+    const basicAuth = btoa(`${this.config.serverKey}:`);
+
+    const res = await this.apiRequest(
+      path,
+      'POST',
+      {
+        'Content-Type': 'application/json',
+        Authorization: `Basic ${basicAuth}`,
+      },
+      { id: deviceId },
+      6000
+    );
+
+    if (res.ok && res.data) {
+      const json = JSON.parse(res.data);
+      const session = Session.restore(json.token, json.refresh_token);
+      this.setSession(session);
+      return session;
+    }
+
+    // Fallback to client SDK
     const session = await this.client.authenticateDevice(deviceId, createAccount, username);
     this.setSession(session);
     return session;
@@ -168,7 +287,6 @@ class NakamaService {
       const restored = Session.restore(token, refreshToken);
       if (restored.isexpired(Date.now() / 1000)) {
         if (refreshToken) {
-          // Attempt refresh
           const refreshed = await this.client.sessionRefresh(restored);
           this.setSession(refreshed);
           return refreshed;
@@ -191,72 +309,58 @@ class NakamaService {
   public async getAccount(): Promise<UserProfile | null> {
     if (!this.session) return null;
     try {
-      const account = await this.client.getAccount(this.session);
-      const user = account.user;
-      const username = user?.username || this.session.username || 'Operative';
-      const userId = user?.id || this.session.user_id || 'usr_anonymous';
-      const avatarUrl =
-        user?.avatar_url ||
-        `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(username)}`;
+      const res = await this.apiRequest(
+        '/v2/account',
+        'GET',
+        {
+          Authorization: `Bearer ${this.session.token}`,
+        },
+        undefined,
+        5000
+      );
 
-      // Read owned games from Nakama storage "library" collection
-      const owned = await this.fetchOwnedGames(userId);
+      if (res.ok && res.data) {
+        const account = JSON.parse(res.data);
+        const user = account.user;
+        const username = user?.username || this.session.username || 'Operative';
+        const userId = user?.id || this.session.user_id || 'usr_anonymous';
+        const avatarUrl =
+          user?.avatar_url ||
+          `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(username)}`;
 
-      return {
-        id: userId,
-        callsign: username,
-        email: account.email || `${username.toLowerCase()}@oneengine.io`,
-        rank: 'VERIFIED OPERATIVE',
-        level: 1,
-        avatarUrl,
-        status: 'ONLINE',
-        walletBalance: 100.00,
-        role: 'OPERATOR',
-        ownedGameIds: owned.length > 0 ? owned : ['railbound'],
-        nakamaToken: this.session.token,
-        nakamaRefreshToken: this.session.refresh_token,
-      };
-    } catch {
-      // Fallback profile if server account fetch fails
-      const username = this.session.username || 'Operative';
-      return {
-        id: this.session.user_id || 'usr_anonymous',
-        callsign: username,
-        rank: 'VERIFIED OPERATIVE',
-        level: 1,
-        avatarUrl: `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(username)}`,
-        status: 'ONLINE',
-        walletBalance: 100.00,
-        role: 'OPERATOR',
-        ownedGameIds: ['railbound'],
-        nakamaToken: this.session.token,
-        nakamaRefreshToken: this.session.refresh_token,
-      };
-    }
-  }
-
-  /**
-   * Fetch game entitlements from Nakama storage "library" collection
-   */
-  public async fetchOwnedGames(userId: string): Promise<string[]> {
-    if (!this.session) return ['railbound'];
-    try {
-      const objects = await this.client.readStorageObjects(this.session, {
-        object_ids: [
-          { collection: 'library', key: 'railbound', user_id: userId },
-          { collection: 'library', key: 'cyber-siege', user_id: userId },
-          { collection: 'library', key: 'rust-protocol', user_id: userId },
-          { collection: 'library', key: 'neon-drifter', user_id: userId },
-        ],
-      });
-
-      if (objects.objects && objects.objects.length > 0) {
-        return objects.objects.map((o) => o.key).filter((k): k is string => Boolean(k));
+        return {
+          id: userId,
+          callsign: username,
+          email: account.email || `${username.toLowerCase()}@oneengine.io`,
+          rank: 'VERIFIED OPERATIVE',
+          level: 1,
+          avatarUrl,
+          status: 'ONLINE',
+          walletBalance: 100.0,
+          role: 'OPERATOR',
+          ownedGameIds: ['railbound'],
+          nakamaToken: this.session.token,
+          nakamaRefreshToken: this.session.refresh_token,
+        };
       }
-      return ['railbound'];
     } catch {
-      return ['railbound'];
+      // Fallback
     }
+
+    const username = this.session.username || 'Operative';
+    return {
+      id: this.session.user_id || 'usr_anonymous',
+      callsign: username,
+      rank: 'VERIFIED OPERATIVE',
+      level: 1,
+      avatarUrl: `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(username)}`,
+      status: 'ONLINE',
+      walletBalance: 100.0,
+      role: 'OPERATOR',
+      ownedGameIds: ['railbound'],
+      nakamaToken: this.session.token,
+      nakamaRefreshToken: this.session.refresh_token,
+    };
   }
 
   /**
@@ -273,8 +377,8 @@ class NakamaService {
             acquiredAt: new Date().toISOString(),
             store: 'OneEngine',
           },
-          permission_read: 1, // public read
-          permission_write: 1, // owner write
+          permission_read: 1,
+          permission_write: 1,
         },
       ]);
       return true;

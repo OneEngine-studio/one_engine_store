@@ -19,6 +19,7 @@ function createWindow() {
       nodeIntegration: false,
       contextIsolation: true,
       sandbox: false,
+      webSecurity: false,
     },
   });
 
@@ -47,6 +48,72 @@ function createWindow() {
 
   ipcMain.on('window-close', () => {
     if (mainWindow) mainWindow.close();
+  });
+
+  // Native HTTP dispatcher bypassing Chromium CORS
+  ipcMain.handle('nakama-request', async (_event, payload) => {
+    const { url, method = 'GET', headers = {}, body, timeoutMs = 8000 } = payload;
+    const http = url.startsWith('https:') ? require('https') : require('http');
+
+    return new Promise((resolve) => {
+      try {
+        const parsed = new URL(url);
+        const req = http.request(
+          {
+            protocol: parsed.protocol,
+            hostname: parsed.hostname,
+            port: parsed.port || (parsed.protocol === 'https:' ? 443 : 80),
+            path: parsed.pathname + parsed.search,
+            method: method,
+            headers: headers,
+            timeout: timeoutMs,
+          },
+          (res) => {
+            let data = '';
+            res.on('data', (chunk) => (data += chunk));
+            res.on('end', () => {
+              resolve({
+                ok: res.statusCode >= 200 && res.statusCode < 300,
+                status: res.statusCode,
+                statusText: res.statusMessage,
+                data: data,
+              });
+            });
+          }
+        );
+
+        req.on('timeout', () => {
+          req.destroy();
+          resolve({
+            ok: false,
+            status: 0,
+            statusText: 'Connection timed out. Server or port 7350 might be firewalled.',
+            data: '',
+          });
+        });
+
+        req.on('error', (err) => {
+          resolve({
+            ok: false,
+            status: 0,
+            statusText: err.message,
+            data: '',
+          });
+        });
+
+        if (body) {
+          req.write(typeof body === 'string' ? body : JSON.stringify(body));
+        }
+        req.end();
+      } catch (err) {
+        resolve({
+          ok: false,
+          status: 0,
+          statusText: err.message,
+          data: '',
+        });
+      }
+    });
   });
 
   // Handle Game Process Execution with Headless Session Token Flags

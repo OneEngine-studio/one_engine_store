@@ -28,6 +28,7 @@ export const AuthModal: React.FC = () => {
     loginAsGuest,
     logout,
     settings,
+    updateSettings,
     addToast,
   } = useStore();
 
@@ -417,25 +418,50 @@ export const AuthModal: React.FC = () => {
 
             {/* Server details dropdown */}
             {showServerDetails && (
-              <div className="p-3 rounded-card bg-bg-card border border-white/[0.06] text-[11px] space-y-1 font-mono text-slate-400 animate-soft-enter">
-                <div className="flex justify-between">
-                  <span>Nakama Host:</span>
-                  <span className="text-slate-200">{settings.nakamaHost}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Port:</span>
-                  <span className="text-slate-200">{settings.nakamaPort}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Server Key:</span>
-                  <span className="text-slate-200">{settings.nakamaServerKey}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Status:</span>
-                  <span className={serverStatus === 'ONLINE' ? 'text-success' : 'text-amber-400'}>
-                    {serverStatus}
+              <div className="p-3.5 rounded-card bg-bg-card border border-white/[0.08] text-xs space-y-2.5 animate-soft-enter">
+                <div className="flex items-center justify-between text-[11px] font-semibold text-slate-300">
+                  <span>Backend connection settings</span>
+                  <span className={`px-2 py-0.5 rounded-full text-[10px] font-mono ${
+                    serverStatus === 'ONLINE' ? 'bg-success/20 text-success' : 'bg-amber-400/20 text-amber-300'
+                  }`}>
+                    {serverStatus === 'ONLINE' ? 'ONLINE' : 'UNREACHABLE'}
                   </span>
                 </div>
+
+                <div className="grid grid-cols-3 gap-2">
+                  <div className="col-span-2">
+                    <label className="text-[10px] text-slate-400 block mb-0.5">Host / IP</label>
+                    <input
+                      type="text"
+                      value={settings.nakamaHost}
+                      onChange={(e) => updateSettings({ nakamaHost: e.target.value.trim() })}
+                      onBlur={() => {
+                        setServerStatus('CHECKING');
+                        nakamaService.testConnection().then((r) => setServerStatus(r.ok ? 'ONLINE' : 'OFFLINE'));
+                      }}
+                      className="w-full bg-white/[0.04] border border-white/[0.08] focus:border-accent rounded-thumb px-2.5 py-1 text-xs text-slate-200 outline-none font-mono"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[10px] text-slate-400 block mb-0.5">Port</label>
+                    <input
+                      type="text"
+                      value={settings.nakamaPort}
+                      onChange={(e) => updateSettings({ nakamaPort: e.target.value.trim() })}
+                      onBlur={() => {
+                        setServerStatus('CHECKING');
+                        nakamaService.testConnection().then((r) => setServerStatus(r.ok ? 'ONLINE' : 'OFFLINE'));
+                      }}
+                      className="w-full bg-white/[0.04] border border-white/[0.08] focus:border-accent rounded-thumb px-2.5 py-1 text-xs text-slate-200 outline-none font-mono tabular-nums"
+                    />
+                  </div>
+                </div>
+
+                {serverStatus === 'OFFLINE' && (
+                  <p className="text-[11px] text-amber-300/90 leading-tight">
+                    Port 7350 timed out. If running on Oracle Cloud/VPS, verify that TCP 7350 is allowed in Oracle VCN Ingress Rules and Linux firewall (`sudo ufw allow 7350/tcp`).
+                  </p>
+                )}
               </div>
             )}
           </form>
