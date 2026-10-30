@@ -1,39 +1,45 @@
 import React, { useState } from 'react';
 import { useStore } from '../store/useStore';
-import { 
-  Settings, 
-  Volume2, 
-  VolumeX, 
-  HardDrive, 
-  Folder, 
-  Palette, 
-  Power, 
+import {
+  Volume2,
+  VolumeX,
+  HardDrive,
+  Folder,
+  Power,
   RotateCcw,
   Shield,
   Activity,
   Trash2,
   CheckCircle,
   Terminal,
-  Check
+  Check,
+  AlertTriangle,
 } from 'lucide-react';
-import { NumberTicker } from '../components/ui/NumberTicker';
 
 export const SettingsScreen: React.FC = () => {
-  const { 
-    settings, 
-    updateSettings, 
+  const {
+    settings,
+    updateSettings,
     playTactileSound,
     clearShaderCache,
     verifyGameFiles,
-    addToast
+    addToast,
   } = useStore();
 
   const [isEditingDir, setIsEditingDir] = useState(false);
   const [customDir, setCustomDir] = useState(settings.downloadDirectory);
+  const [showResetConfirm, setShowResetConfirm] = useState(false);
 
-  const accentOptions = [
-    { label: 'Amber Accent', value: '#FF7A00', className: 'bg-accent' },
-  ];
+  // Runtime verification
+  const getRuntimeInfo = () => {
+    if (typeof window !== 'undefined' && (window as unknown as { electronAPI?: unknown }).electronAPI) {
+      return 'Electron / Chromium';
+    }
+    if (typeof window !== 'undefined' && '__TAURI_INTERNALS__' in window) {
+      return 'Tauri / WebKit Desktop';
+    }
+    return 'Electron / Chromium';
+  };
 
   const handleSaveDirectory = () => {
     if (customDir && customDir.trim()) {
@@ -43,95 +49,162 @@ export const SettingsScreen: React.FC = () => {
     }
   };
 
+  const handleResetDefaults = () => {
+    updateSettings({
+      launchOnStartup: true,
+      downloadDirectory: 'C:\\OneEngine\\GameLibrary',
+      primaryAccent: '#FF7A00',
+      enableTactileAudio: true,
+      hardwareAcceleration: true,
+      devTelemetryMode: false,
+      bandwidthThrottleMbps: 0,
+    });
+    addToast('Preferences reset to defaults.', 'info');
+    setShowResetConfirm(false);
+  };
+
   return (
-    <div className="flex-1 overflow-y-auto p-6 space-y-6 select-none">
+    <div className="p-8 space-y-8 max-w-7xl mx-auto w-full">
       {/* Header */}
-      <div className="flex items-center gap-3 border-b border-white/5 pb-4">
-        <div className="w-8 h-8 rounded-md bg-bg-card border border-white/10 flex items-center justify-center text-slate-300">
-          <Settings className="w-4 h-4" strokeWidth={1.5} />
-        </div>
-        <div>
-          <h1 className="text-sm font-semibold text-white">Preferences</h1>
-          <span className="text-xs text-slate-400">Local client configuration</span>
-        </div>
+      <div>
+        <h1 className="text-3xl font-bold tracking-tight text-white">
+          Settings
+        </h1>
+        <p className="text-xs text-slate-400 mt-1">
+          Manage your application preferences, storage locations, and client diagnostics
+        </p>
       </div>
 
-      {/* Two-Column Balanced Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Left Column (2 Cols): Core Settings Stack */}
-        <div className="lg:col-span-2 space-y-6">
-          {/* Group 1: General & Startup */}
-          <section className="bg-bg-card border border-white/5 border-t-white/10 rounded-md p-4 space-y-4 shadow-card">
-            <h2 className="text-[11px] font-semibold uppercase tracking-[0.06em] text-slate-400 flex items-center gap-2">
-              <Power className="w-4 h-4 text-accent" strokeWidth={1.5} /> Startup & Execution
-            </h2>
-
-            <div className="flex items-center justify-between py-2 border-b border-white/5">
-              <div>
-                <span className="text-xs font-medium text-slate-200 block">
-                  Launch on system boot
-                </span>
-                <span className="text-xs text-slate-400">
-                  Starts OneEngine Store minimized in notification tray on startup.
-                </span>
+      {/* Confirmation modal for Reset to defaults */}
+      {showResetConfirm && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-md p-4"
+          onClick={() => setShowResetConfirm(false)}
+        >
+          <div
+            className="win11-acrylic rounded-3xl p-6 w-full max-w-md shadow-modal space-y-4 animate-modal-in"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center gap-3 text-warning">
+              <div className="w-10 h-10 rounded-full bg-warning/15 flex items-center justify-center shrink-0">
+                <AlertTriangle className="w-5 h-5 text-warning" />
               </div>
-              <button
-                onClick={() => updateSettings({ launchOnStartup: !settings.launchOnStartup })}
-                className={`w-11 h-6 flex items-center rounded-full p-1 transition-[background-color] duration-150 cursor-default ${
-                  settings.launchOnStartup ? 'bg-accent justify-end' : 'bg-bg-app justify-start border border-white/10'
-                }`}
-              >
-                <div className="w-4 h-4 rounded-full bg-white shadow-sm" />
-              </button>
+              <div>
+                <h3 className="text-sm font-semibold text-white">Reset all settings to defaults?</h3>
+                <span className="text-xs text-slate-400">This will revert your customized paths and toggles.</span>
+              </div>
             </div>
 
-            <div className="flex items-center justify-between py-2">
-              <div>
-                <span className="text-xs font-medium text-slate-200 block">
-                  Hardware acceleration
-                </span>
-                <span className="text-xs text-slate-400">
-                  Utilize GPU acceleration for smooth transitions and media playback.
-                </span>
-              </div>
+            <p className="text-xs text-slate-300 leading-relaxed">
+              Your downloaded game files and account progress will not be deleted, but client preferences will return to default.
+            </p>
+
+            <div className="flex items-center gap-3 pt-2">
               <button
-                onClick={() => updateSettings({ hardwareAcceleration: !settings.hardwareAcceleration })}
-                className={`w-11 h-6 flex items-center rounded-full p-1 transition-[background-color] duration-150 cursor-default ${
-                  settings.hardwareAcceleration ? 'bg-accent justify-end' : 'bg-bg-app justify-start border border-white/10'
-                }`}
+                onClick={handleResetDefaults}
+                className="flex-1 py-2.5 rounded-full bg-danger hover:bg-danger/90 text-white font-bold text-xs transition-surface cursor-default"
               >
-                <div className="w-4 h-4 rounded-full bg-white shadow-sm" />
+                Reset to defaults
               </button>
+              <button
+                onClick={() => setShowResetConfirm(false)}
+                className="flex-1 py-2.5 rounded-full bg-white/[0.06] hover:bg-white/[0.1] text-slate-300 font-medium text-xs transition-surface cursor-default"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Two-Column Responsive Layout */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Left Column (2 Cols): Core Groups */}
+        <div className="lg:col-span-2 space-y-6">
+          {/* Group: Startup and window behavior */}
+          <section className="win11-card rounded-2xl p-6 space-y-5">
+            <h2 className="text-sm font-semibold text-white flex items-center gap-2">
+              <Power className="w-4 h-4 text-accent" /> Startup and performance
+            </h2>
+
+            <div className="divide-y divide-white/[0.06]">
+              {/* Toggle 1: Launch on startup */}
+              <div className="flex items-center justify-between py-3">
+                <div className="space-y-0.5 max-w-md">
+                  <span className="text-xs font-semibold text-slate-200 block">
+                    Launch OneEngine on system startup
+                  </span>
+                  <span className="text-xs text-slate-400 leading-relaxed block">
+                    Open the store automatically when your computer boots up.
+                  </span>
+                </div>
+                <button
+                  onClick={() => updateSettings({ launchOnStartup: !settings.launchOnStartup })}
+                  className={`w-12 h-6 flex items-center rounded-full p-1 transition-surface cursor-default ${
+                    settings.launchOnStartup
+                      ? 'bg-accent justify-end shadow-sm'
+                      : 'bg-white/[0.12] justify-start border border-white/10'
+                  }`}
+                  title="Toggle startup behavior"
+                >
+                  <div className="w-4 h-4 rounded-full bg-white shadow-sm" />
+                </button>
+              </div>
+
+              {/* Toggle 2: Hardware acceleration */}
+              <div className="flex items-center justify-between py-3">
+                <div className="space-y-0.5 max-w-md">
+                  <span className="text-xs font-semibold text-slate-200 block">
+                    Hardware acceleration
+                  </span>
+                  <span className="text-xs text-slate-400 leading-relaxed block">
+                    Use GPU rendering for fluid UI motion and 4K media playback.
+                  </span>
+                </div>
+                <button
+                  onClick={() => updateSettings({ hardwareAcceleration: !settings.hardwareAcceleration })}
+                  className={`w-12 h-6 flex items-center rounded-full p-1 transition-surface cursor-default ${
+                    settings.hardwareAcceleration
+                      ? 'bg-accent justify-end shadow-sm'
+                      : 'bg-white/[0.12] justify-start border border-white/10'
+                  }`}
+                  title="Toggle hardware acceleration"
+                >
+                  <div className="w-4 h-4 rounded-full bg-white shadow-sm" />
+                </button>
+              </div>
             </div>
           </section>
 
-          {/* Group 2: Audio & Feedback */}
-          <section className="bg-bg-card border border-white/5 border-t-white/10 rounded-md p-4 space-y-4 shadow-card">
-            <h2 className="text-[11px] font-semibold uppercase tracking-[0.06em] text-slate-400 flex items-center gap-2">
-              {settings.enableTactileAudio ? <Volume2 className="w-4 h-4 text-accent" strokeWidth={1.5} /> : <VolumeX className="w-4 h-4 text-slate-400" strokeWidth={1.5} />} 
-              Interface Audio
+          {/* Group: Audio & feedback */}
+          <section className="win11-card rounded-2xl p-6 space-y-4">
+            <h2 className="text-sm font-semibold text-white flex items-center gap-2">
+              {settings.enableTactileAudio ? <Volume2 className="w-4 h-4 text-accent" /> : <VolumeX className="w-4 h-4 text-slate-400" />}
+              Sound effects
             </h2>
 
             <div className="flex items-center justify-between py-2">
-              <div>
-                <span className="text-xs font-medium text-slate-200 block">
-                  Tactile audio feedback
+              <div className="space-y-0.5 max-w-md">
+                <span className="text-xs font-semibold text-slate-200 block">
+                  Tactile interface audio
                 </span>
-                <span className="text-xs text-slate-400">
-                  Play subtle synthetic click and launch sounds during interaction.
+                <span className="text-xs text-slate-400 leading-relaxed block">
+                  Subtle synthetic sound synthesis for clicks, navigation, and launch events.
                 </span>
               </div>
               <div className="flex items-center gap-3">
                 <button
                   onClick={() => playTactileSound('launch')}
-                  className="px-3 py-1.5 bg-bg-hover hover:bg-bg-pressed border border-white/10 rounded-md text-xs text-slate-300 transition-[background-color] duration-150 active:scale-[0.98] cursor-default"
+                  className="px-3 py-1.5 rounded-full bg-white/[0.06] hover:bg-white/[0.1] text-xs text-slate-200 transition-surface cursor-default"
                 >
-                  Test audio
+                  Test sound
                 </button>
                 <button
                   onClick={() => updateSettings({ enableTactileAudio: !settings.enableTactileAudio })}
-                  className={`w-11 h-6 flex items-center rounded-full p-1 transition-[background-color] duration-150 cursor-default ${
-                    settings.enableTactileAudio ? 'bg-accent justify-end' : 'bg-bg-app justify-start border border-white/10'
+                  className={`w-12 h-6 flex items-center rounded-full p-1 transition-surface cursor-default ${
+                    settings.enableTactileAudio
+                      ? 'bg-accent justify-end shadow-sm'
+                      : 'bg-white/[0.12] justify-start border border-white/10'
                   }`}
                 >
                   <div className="w-4 h-4 rounded-full bg-white shadow-sm" />
@@ -140,15 +213,15 @@ export const SettingsScreen: React.FC = () => {
             </div>
           </section>
 
-          {/* Group 3: Storage & Game Installation Directory */}
-          <section className="bg-bg-card border border-white/5 border-t-white/10 rounded-md p-4 space-y-4 shadow-card">
-            <h2 className="text-[11px] font-semibold uppercase tracking-[0.06em] text-slate-400 flex items-center gap-2">
-              <HardDrive className="w-4 h-4 text-accent" strokeWidth={1.5} /> Installation Directory
+          {/* Group: Storage & installation directory */}
+          <section className="win11-card rounded-2xl p-6 space-y-4">
+            <h2 className="text-sm font-semibold text-white flex items-center gap-2">
+              <HardDrive className="w-4 h-4 text-accent" /> Installation directory
             </h2>
 
-            <div className="space-y-2">
+            <div className="space-y-3">
               <label className="text-xs text-slate-400 block">
-                Default location for game installations:
+                Default folder where downloaded games are stored:
               </label>
               <div className="flex items-center gap-2">
                 <input
@@ -160,16 +233,16 @@ export const SettingsScreen: React.FC = () => {
                     if (e.key === 'Enter') handleSaveDirectory();
                     if (e.key === 'Escape') setIsEditingDir(false);
                   }}
-                  className={`flex-1 bg-bg-app border rounded-md px-3 py-1.5 text-xs text-slate-200 transition-[border-color] duration-150 select-text ${
-                    isEditingDir ? 'border-accent ring-1 ring-accent/30' : 'border-white/10'
+                  className={`flex-1 bg-bg-app border rounded-full px-4 py-2 text-xs text-slate-200 transition-surface select-text ${
+                    isEditingDir ? 'border-accent ring-2 ring-accent/30' : 'border-white/[0.08]'
                   }`}
                 />
                 {isEditingDir ? (
                   <button
                     onClick={handleSaveDirectory}
-                    className="px-3 py-1.5 bg-accent hover:bg-accent-hover text-bg-app font-semibold rounded-md text-xs flex items-center gap-1.5 transition-[background-color] duration-150 active:scale-[0.98] cursor-default"
+                    className="px-4 py-2 bg-accent hover:bg-accent-hover text-bg-app font-bold rounded-full text-xs flex items-center gap-1.5 transition-surface cursor-default"
                   >
-                    <Check className="w-3.5 h-3.5" strokeWidth={1.5} />
+                    <Check className="w-3.5 h-3.5" />
                     <span>Save</span>
                   </button>
                 ) : (
@@ -178,83 +251,37 @@ export const SettingsScreen: React.FC = () => {
                       setCustomDir(settings.downloadDirectory);
                       setIsEditingDir(true);
                     }}
-                    className="px-3 py-1.5 bg-bg-hover hover:bg-bg-pressed text-slate-200 border border-white/10 rounded-md text-xs flex items-center gap-1.5 transition-[background-color] duration-150 active:scale-[0.98] cursor-default"
+                    className="px-4 py-2 bg-white/[0.06] hover:bg-white/[0.1] text-slate-200 border border-white/[0.08] rounded-full text-xs flex items-center gap-1.5 transition-surface cursor-default"
                   >
-                    <Folder className="w-3.5 h-3.5 text-slate-400" strokeWidth={1.5} />
-                    <span>Edit path</span>
+                    <Folder className="w-3.5 h-3.5 text-slate-400" />
+                    <span>Change</span>
                   </button>
                 )}
               </div>
-              <div className="flex items-center gap-2 pt-1 text-[11px] text-slate-400">
-                <span>Presets:</span>
-                <button
-                  onClick={() => {
-                    updateSettings({ downloadDirectory: 'C:\\OneEngine\\GameLibrary' });
-                    addToast('Installation directory set to C:\\OneEngine\\GameLibrary', 'success');
-                  }}
-                  className="hover:text-slate-200 underline underline-offset-2 cursor-default"
-                >
-                  C:\OneEngine
-                </button>
-                <span>·</span>
-                <button
-                  onClick={() => {
-                    updateSettings({ downloadDirectory: 'D:\\Games\\OneEngine' });
-                    addToast('Installation directory set to D:\\Games\\OneEngine', 'success');
-                  }}
-                  className="hover:text-slate-200 underline underline-offset-2 cursor-default"
-                >
-                  D:\Games
-                </button>
-              </div>
             </div>
           </section>
 
-          {/* Group 4: Interface Theme Accent */}
-          <section className="bg-bg-card border border-white/5 border-t-white/10 rounded-md p-4 space-y-4 shadow-card">
-            <h2 className="text-[11px] font-semibold uppercase tracking-[0.06em] text-slate-400 flex items-center gap-2">
-              <Palette className="w-4 h-4 text-accent" strokeWidth={1.5} /> Accent Color
-            </h2>
-
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-              {accentOptions.map((opt) => (
-                <button
-                  key={opt.value}
-                  onClick={() => updateSettings({ primaryAccent: opt.value })}
-                  className={`p-2.5 rounded-md border text-left flex items-center gap-2.5 transition-[background-color,border-color] duration-150 active:scale-[0.98] cursor-default ${
-                    settings.primaryAccent === opt.value
-                      ? 'border-white/30 bg-bg-hover'
-                      : 'border-white/10 bg-bg-app hover:border-white/20'
-                  }`}
-                >
-                  <span className={`w-3.5 h-3.5 rounded-full ${opt.className}`} />
-                  <span className="text-xs text-slate-200 font-medium truncate">
-                    {opt.label}
-                  </span>
-                </button>
-              ))}
-            </div>
-          </section>
-
-          {/* Group 5: Developer Telemetry Mode */}
-          <section className="bg-bg-card border border-white/5 border-t-white/10 rounded-md p-4 space-y-4 shadow-card">
-            <h2 className="text-[11px] font-semibold uppercase tracking-[0.06em] text-slate-400 flex items-center gap-2">
-              <Terminal className="w-4 h-4 text-accent" strokeWidth={1.5} /> Developer Mode
+          {/* Group: Developer telemetry mode */}
+          <section className="win11-card rounded-2xl p-6 space-y-4">
+            <h2 className="text-sm font-semibold text-white flex items-center gap-2">
+              <Terminal className="w-4 h-4 text-accent" /> Developer options
             </h2>
 
             <div className="flex items-center justify-between py-1">
-              <div>
-                <span className="text-xs font-medium text-slate-200 block">
-                  Show IPC strings and session logs
+              <div className="space-y-0.5 max-w-md">
+                <span className="text-xs font-semibold text-slate-200 block">
+                  Show developer debug info
                 </span>
-                <span className="text-xs text-slate-400">
-                  Displays low-level CLI execution vectors and internal state logs in game pages.
+                <span className="text-xs text-slate-400 leading-relaxed block">
+                  Display process IDs, account switcher, and low-level CLI execution arguments.
                 </span>
               </div>
               <button
                 onClick={() => updateSettings({ devTelemetryMode: !settings.devTelemetryMode })}
-                className={`w-11 h-6 flex items-center rounded-full p-1 transition-[background-color] duration-150 cursor-default ${
-                  settings.devTelemetryMode ? 'bg-accent justify-end' : 'bg-bg-app justify-start border border-white/10'
+                className={`w-12 h-6 flex items-center rounded-full p-1 transition-surface cursor-default ${
+                  settings.devTelemetryMode
+                    ? 'bg-accent justify-end shadow-sm'
+                    : 'bg-white/[0.12] justify-start border border-white/10'
                 }`}
               >
                 <div className="w-4 h-4 rounded-full bg-white shadow-sm" />
@@ -263,98 +290,74 @@ export const SettingsScreen: React.FC = () => {
           </section>
         </div>
 
-        {/* Right Column: System & Storage Diagnostics Panel */}
+        {/* Right Column: Maintenance & About (includes moved v2.6) */}
         <div className="space-y-6">
-          <section className="bg-bg-card border border-white/5 border-t-white/10 rounded-md p-4 space-y-4 shadow-card">
-            <h2 className="text-[11px] font-semibold uppercase tracking-[0.06em] text-slate-400 flex items-center gap-2">
-              <Activity className="w-4 h-4 text-accent" strokeWidth={1.5} /> Storage & Diagnostics
+          {/* Maintenance diagnostics */}
+          <section className="win11-card rounded-2xl p-6 space-y-5">
+            <h2 className="text-sm font-semibold text-white flex items-center gap-2">
+              <Activity className="w-4 h-4 text-accent" /> Maintenance
             </h2>
 
-            <div className="space-y-2">
-              <div className="flex justify-between text-xs">
-                <span className="text-slate-400">Library disk:</span>
-                <span className="text-slate-200 font-medium tabular-nums">
-                  <NumberTicker value={142.8} decimalPlaces={1} suffix=" GB" /> / 512 GB
-                </span>
-              </div>
-              <div className="w-full h-1.5 bg-bg-app rounded-full overflow-hidden border border-white/5">
-                <div className="h-full bg-accent w-[28%]" />
-              </div>
-              <div className="flex justify-between text-[11px] text-slate-400 tabular-nums">
-                <span>
-                  Used: <NumberTicker value={142.8} decimalPlaces={1} suffix=" GB" />
-                </span>
-                <span>
-                  Available: <NumberTicker value={369.2} decimalPlaces={1} suffix=" GB" />
-                </span>
-              </div>
-            </div>
-
-            <div className="pt-3 border-t border-white/5 space-y-2 text-xs">
-              <div className="flex justify-between text-slate-400">
-                <span>Graphics adapter</span>
-                <span className="text-slate-200">NVIDIA RTX 4070</span>
-              </div>
-              <div className="flex justify-between text-slate-400">
-                <span>Driver</span>
-                <span className="text-success font-medium flex items-center gap-1">
-                  <CheckCircle className="w-3 h-3" strokeWidth={1.5} /> WHQL Certified
-                </span>
-              </div>
-              <div className="flex justify-between text-slate-400">
-                <span>Refresh rate</span>
-                <span className="text-slate-200 tabular-nums">120Hz</span>
-              </div>
-            </div>
-
-            {/* Maintenance Action Buttons */}
-            <div className="pt-3 border-t border-white/5 space-y-2">
+            <div className="space-y-3">
               <button
                 onClick={clearShaderCache}
-                className="w-full py-2 bg-bg-hover hover:bg-bg-pressed border border-white/10 text-slate-200 text-xs rounded-md flex items-center justify-center gap-2 transition-[background-color] duration-150 active:scale-[0.98] cursor-default"
+                className="w-full py-2.5 bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.08] text-slate-200 text-xs font-medium rounded-full flex items-center justify-center gap-2 transition-surface cursor-default"
               >
-                <Trash2 className="w-3.5 h-3.5 text-slate-400" strokeWidth={1.5} />
+                <Trash2 className="w-3.5 h-3.5 text-slate-400" />
                 <span>Clear shader cache (4.2 GB)</span>
               </button>
 
               <button
                 onClick={() => verifyGameFiles()}
-                className="w-full py-2 bg-bg-hover hover:bg-bg-pressed border border-white/10 text-slate-200 text-xs rounded-md flex items-center justify-center gap-2 transition-[background-color] duration-150 active:scale-[0.98] cursor-default"
+                className="w-full py-2.5 bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.08] text-slate-200 text-xs font-medium rounded-full flex items-center justify-center gap-2 transition-surface cursor-default"
               >
-                <CheckCircle className="w-3.5 h-3.5 text-slate-400" strokeWidth={1.5} />
+                <CheckCircle className="w-3.5 h-3.5 text-slate-400" />
                 <span>Verify file integrity</span>
               </button>
             </div>
+
+            <div className="pt-3 border-t border-white/[0.06] space-y-2 text-xs">
+              <div className="flex justify-between text-slate-400">
+                <span>Graphics device</span>
+                <span className="text-slate-200 font-medium">NVIDIA RTX 4070</span>
+              </div>
+              <div className="flex justify-between text-slate-400">
+                <span>Display rate</span>
+                <span className="text-slate-200 font-medium tabular-nums">120 Hz</span>
+              </div>
+            </div>
           </section>
 
-          {/* Client Versioning Card */}
-          <section className="bg-bg-card border border-white/5 border-t-white/10 rounded-md p-4 space-y-3 text-xs shadow-card">
-            <h3 className="text-[11px] font-semibold text-slate-400 uppercase tracking-[0.06em] flex items-center gap-1.5">
-              <Shield className="w-3.5 h-3.5 text-slate-400" strokeWidth={1.5} /> OneEngine Desktop Client
-            </h3>
-            <div className="space-y-1 text-slate-400 text-xs">
-              <div>Version: <span className="text-slate-200 font-medium tabular-nums">v2.6.4</span></div>
-              <div>Runtime: <span className="text-slate-200">Tauri / WebKit Desktop</span></div>
-              <div>Channel: <span className="text-slate-200">Stable release</span></div>
+          {/* About & Runtime information */}
+          <section className="win11-card rounded-2xl p-6 space-y-4">
+            <h2 className="text-sm font-semibold text-white flex items-center gap-2">
+              <Shield className="w-4 h-4 text-accent" /> About OneEngine
+            </h2>
+
+            <div className="space-y-2 text-xs text-slate-400">
+              <div className="flex justify-between">
+                <span>Client version</span>
+                <span className="text-white font-semibold tabular-nums">v2.6.4</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Desktop runtime</span>
+                <span className="text-slate-200 font-medium">{getRuntimeInfo()}</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Release branch</span>
+                <span className="text-slate-200">Stable release</span>
+              </div>
             </div>
-            <button
-              onClick={() => {
-                updateSettings({
-                  launchOnStartup: true,
-                  downloadDirectory: 'C:\\OneEngine\\GameLibrary',
-                  primaryAccent: '#FF7A00',
-                  enableTactileAudio: true,
-                  hardwareAcceleration: true,
-                  devTelemetryMode: false,
-                  bandwidthThrottleMbps: 0,
-                });
-                addToast('Preferences reset to factory defaults.', 'info');
-              }}
-              className="w-full mt-2 py-1.5 bg-bg-hover hover:bg-bg-pressed border border-white/10 text-slate-400 hover:text-white rounded-md text-xs flex items-center justify-center gap-1.5 transition-[background-color,color] duration-150 active:scale-[0.98] cursor-default"
-            >
-              <RotateCcw className="w-3 h-3" strokeWidth={1.5} />
-              <span>Reset to defaults</span>
-            </button>
+
+            <div className="pt-3 border-t border-white/[0.06]">
+              <button
+                onClick={() => setShowResetConfirm(true)}
+                className="w-full py-2 rounded-full bg-white/[0.04] hover:bg-danger/20 border border-white/[0.08] text-slate-400 hover:text-danger text-xs font-medium flex items-center justify-center gap-2 transition-surface cursor-default"
+              >
+                <RotateCcw className="w-3.5 h-3.5" />
+                <span>Reset to defaults</span>
+              </button>
+            </div>
           </section>
         </div>
       </div>

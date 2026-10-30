@@ -1,51 +1,49 @@
 import React, { useState } from 'react';
 import { useStore } from '../store/useStore';
-import { 
-  Download, 
-  Pause, 
-  Play, 
-  X, 
-  HardDrive, 
-  Activity, 
-  CheckCircle, 
-  Clock, 
-  Zap, 
-  Sliders, 
-  FileText 
+import {
+  Pause,
+  Play,
+  X,
+  HardDrive,
+  Activity,
+  CheckCircle,
+  Clock,
+  Sliders,
 } from 'lucide-react';
 import { NumberTicker } from '../components/ui/NumberTicker';
 
 export const DownloadsScreen: React.FC = () => {
-  const { 
-    downloads, 
-    pauseDownload, 
-    resumeDownload, 
-    cancelDownload, 
+  const {
+    downloads,
+    pauseDownload,
+    resumeDownload,
+    cancelDownload,
     speedTelemetryHistory,
     settings,
     isPausedAll,
     togglePauseAllDownloads,
     launchGame,
-    openArticle,
-    articles,
-    addToast
+    addToast,
+    navigate,
   } = useStore();
 
   const [showThrottleModal, setShowThrottleModal] = useState(false);
   const [throttleInput, setThrottleInput] = useState('50');
 
-  const activeDownload = downloads.find((d) => d.status === 'DOWNLOADING');
+  const activeDownloads = downloads.filter((d) => d.status === 'DOWNLOADING');
+  const isTransferring = activeDownloads.length > 0 && !isPausedAll;
+  const activeDownload = activeDownloads[0];
   const currentSpeed = activeDownload?.speedMbps || 0;
   const diskSpeed = activeDownload?.diskSpeedMbps || 0;
 
-  // Generate SVG path for live speed graph
+  // Live speed graph parameters
   const maxSpeed = 80;
   const svgWidth = 600;
-  const svgHeight = 120;
-  
+  const svgHeight = 110;
+
   const points = speedTelemetryHistory.map((val, idx) => {
     const x = (idx / (speedTelemetryHistory.length - 1)) * svgWidth;
-    const y = svgHeight - (val / maxSpeed) * (svgHeight - 20) - 10;
+    const y = svgHeight - (val / maxSpeed) * (svgHeight - 16) - 8;
     return `${x},${y}`;
   });
 
@@ -57,87 +55,81 @@ export const DownloadsScreen: React.FC = () => {
       id: 'railbound',
       title: 'Railbound: Tactical Protocol',
       patchVersion: 'Patch v2.4.0',
-      completedDate: 'Completed 12m ago',
+      completedDate: '12 minutes ago',
       size: '38.4 GB',
-      cover: '/images/railbound-theme.jpg',
+      cover: './images/railbound-theme.jpg',
     },
     {
       id: 'cyber-siege',
       title: 'Cyber Siege: Operative',
       patchVersion: 'Patch v2.1.0',
-      completedDate: 'Completed yesterday',
+      completedDate: 'Yesterday',
       size: '62.1 GB',
       cover: 'https://images.unsplash.com/photo-1542751371-adc38448a05e?q=80&w=400&auto=format&fit=crop',
-    }
+    },
   ];
-
-  const handleThrottleSettings = () => {
-    setShowThrottleModal(true);
-  };
 
   const applyThrottle = () => {
     const val = throttleInput.trim();
-    addToast(`Bandwidth limit set to ${val === '0' ? 'unlimited' : val + ' MB/s'}.`, 'info');
+    addToast(`Bandwidth limit set to ${val === '0' ? 'unlimited' : `${val} MB/s`}.`, 'info');
     setShowThrottleModal(false);
   };
 
   return (
-    <div className="flex-1 overflow-y-auto p-6 space-y-6 select-none">
-      {/* Throttle Modal */}
+    <div className="p-8 space-y-8 max-w-7xl mx-auto w-full">
+      {/* Throttle bandwidth modal */}
       {showThrottleModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-md p-4">
-          <div className="bg-bg-sidebar border border-white/10 border-t-white/15 rounded-[10px] p-6 w-84 shadow-overlay space-y-4">
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-md p-4"
+          onClick={() => setShowThrottleModal(false)}
+        >
+          <div
+            className="win11-acrylic rounded-3xl p-6 w-full max-w-md shadow-modal space-y-5 animate-modal-in"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="flex items-center justify-between">
-              <h3 className="text-sm font-semibold text-slate-100 flex items-center gap-2">
-                <Sliders className="w-4 h-4 text-accent" strokeWidth={1.5} /> Bandwidth Limit
+              <h3 className="text-sm font-semibold text-white flex items-center gap-2">
+                <Sliders className="w-4 h-4 text-accent" /> Bandwidth limit
               </h3>
-              <button 
-                onClick={() => setShowThrottleModal(false)} 
-                className="text-slate-400 hover:text-white p-1 rounded-md transition-[color] duration-150 active:scale-[0.98] cursor-default"
+              <button
+                onClick={() => setShowThrottleModal(false)}
+                className="w-8 h-8 rounded-full flex items-center justify-center text-slate-400 hover:text-white hover:bg-white/[0.08] transition-surface cursor-default"
               >
-                <X className="w-4 h-4" strokeWidth={1.5} />
+                <X className="w-4 h-4" />
               </button>
             </div>
+
             <p className="text-xs text-slate-400 leading-relaxed">
-              Set maximum download bandwidth in MB/s. Enter <span className="text-white font-medium">0</span> for unlimited.
+              Limit maximum download bandwidth in MB/s. Set to 0 to download as fast as possible.
             </p>
-            <div className="space-y-2">
-              <label className="text-[11px] font-semibold text-slate-400 uppercase tracking-[0.06em] block">
-                Max Speed (MB/s)
-              </label>
-              <input
-                type="number"
-                min="0"
-                max="1000"
-                value={throttleInput}
-                onChange={(e) => setThrottleInput(e.target.value)}
-                className="w-full bg-bg-app border border-white/10 focus:border-accent rounded-md px-3 py-1.5 text-xs text-slate-100 focus:outline-none select-text"
-                autoFocus
-                onKeyDown={(e) => e.key === 'Enter' && applyThrottle()}
-              />
+
+            <div className="space-y-3">
+              <div className="flex items-center justify-between text-xs text-slate-300">
+                <span>Maximum speed</span>
+                <span className="font-semibold text-white tabular-nums">
+                  {throttleInput === '0' ? 'Unlimited' : `${throttleInput} MB/s`}
+                </span>
+              </div>
               <input
                 type="range"
                 min="0"
                 max="200"
                 value={throttleInput}
                 onChange={(e) => setThrottleInput(e.target.value)}
-                className="w-full accent-accent"
+                className="w-full accent-accent cursor-default"
               />
-              <div className="flex justify-between text-[11px] text-slate-500 tabular-nums">
-                <span>Unlimited</span>
-                <span>200 MB/s</span>
-              </div>
             </div>
-            <div className="flex items-center gap-2 pt-2">
+
+            <div className="flex items-center gap-3 pt-2">
               <button
                 onClick={applyThrottle}
-                className="flex-1 py-2 bg-accent hover:bg-accent-hover text-bg-app font-semibold text-xs rounded-md transition-[background-color] duration-150 active:scale-[0.98] cursor-default"
+                className="flex-1 py-2.5 rounded-full bg-accent hover:bg-accent-hover text-bg-app font-bold text-xs transition-surface cursor-default"
               >
-                Apply
+                Save preferences
               </button>
               <button
                 onClick={() => setShowThrottleModal(false)}
-                className="flex-1 py-2 bg-bg-hover border border-white/10 text-slate-300 font-medium text-xs rounded-md hover:bg-bg-pressed transition-[background-color] duration-150 active:scale-[0.98] cursor-default"
+                className="flex-1 py-2.5 rounded-full bg-white/[0.06] hover:bg-white/[0.1] text-slate-300 font-medium text-xs transition-surface cursor-default"
               >
                 Cancel
               </button>
@@ -146,182 +138,232 @@ export const DownloadsScreen: React.FC = () => {
         </div>
       )}
 
-      {/* Top Telemetry Dashboard */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        {/* Real-time Transfer Speed Monitor */}
-        <div className="lg:col-span-2 bg-bg-card border border-white/5 border-t-white/10 rounded-md p-4 flex flex-col justify-between shadow-card">
-          <div className="flex items-center justify-between pb-3 border-b border-white/5">
-            <div className="flex items-center gap-2">
-              <Activity className="w-4 h-4 text-accent animate-pulse" strokeWidth={1.5} />
-              <h2 className="text-[11px] font-semibold uppercase tracking-[0.06em] text-slate-400">
-                Download Telemetry & Speed
-              </h2>
-            </div>
-            
-            <div className="flex items-center gap-2">
-              <button
-                onClick={handleThrottleSettings}
-                className="px-2.5 py-1 bg-bg-hover hover:bg-bg-pressed border border-white/10 rounded-md text-xs text-slate-300 flex items-center gap-1.5 transition-[background-color] duration-150 active:scale-[0.98] cursor-default"
-              >
-                <Sliders className="w-3.5 h-3.5 text-slate-400" strokeWidth={1.5} />
-                <span>Bandwidth limit</span>
-              </button>
-              <button
-                onClick={togglePauseAllDownloads}
-                className="px-2.5 py-1 bg-bg-hover hover:bg-bg-pressed border border-white/10 rounded-md text-xs text-slate-200 font-medium transition-[background-color] duration-150 active:scale-[0.98] cursor-default"
-              >
-                {isPausedAll ? 'Resume all' : 'Pause all'}
-              </button>
-            </div>
-          </div>
+      {/* Top Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight text-white">
+            Downloads
+          </h1>
+          <p className="text-xs text-slate-400 mt-1">
+            {isTransferring
+              ? `Transferring updates at ${currentSpeed.toFixed(1)} MB/s`
+              : 'All your games and updates are up to date'}
+          </p>
+        </div>
 
-          {/* SVG Live Speed Wave Graph */}
-          <div className="relative h-28 my-3 overflow-hidden bg-bg-app rounded-md border border-white/5">
-            <svg 
-              viewBox={`0 0 ${svgWidth} ${svgHeight}`} 
-              className="w-full h-full"
-              preserveAspectRatio="none"
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setShowThrottleModal(true)}
+            className="px-4 py-2 rounded-full bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.08] text-xs text-slate-300 hover:text-white flex items-center gap-2 transition-surface cursor-default"
+          >
+            <Sliders className="w-3.5 h-3.5 text-accent" />
+            <span>Bandwidth limit</span>
+          </button>
+          {downloads.length > 0 && (
+            <button
+              onClick={togglePauseAllDownloads}
+              className="px-4 py-2 rounded-full bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.08] text-xs text-slate-200 font-semibold transition-surface cursor-default"
             >
-              <defs>
-                <linearGradient id="speedGradient" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#FF7A00" stopOpacity="0.25" />
-                  <stop offset="100%" stopColor="#FF7A00" stopOpacity="0.0" />
-                </linearGradient>
-              </defs>
-              <path d={pathD} fill="url(#speedGradient)" />
-              <path d={lineD} fill="none" stroke="#FF7A00" strokeWidth="1.5" />
-            </svg>
-            <div className="absolute top-2 left-2 text-[11px] text-slate-400 tabular-nums">
-              Network: <span className="text-slate-200 font-medium"><NumberTicker value={currentSpeed} decimalPlaces={1} suffix=" MB/s" /></span> · Disk: <span className="text-success font-medium"><NumberTicker value={diskSpeed} decimalPlaces={1} suffix=" MB/s" /></span>
-            </div>
+              {isPausedAll ? 'Resume all' : 'Pause all'}
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* Transfer status & Storage section */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Speed transfer panel / Calm idle summary */}
+        <div className="lg:col-span-2 rounded-2xl win11-card p-6 flex flex-col justify-between">
+          <div className="flex items-center justify-between pb-3 border-b border-white/[0.06]">
+            <span className="text-xs font-semibold text-slate-200 flex items-center gap-2">
+              <Activity className="w-4 h-4 text-accent" /> Network telemetry
+            </span>
+            {isTransferring && (
+              <span className="text-xs text-slate-400 tabular-nums">
+                Network: <span className="text-white font-medium">{currentSpeed.toFixed(1)} MB/s</span> · Disk: <span className="text-success font-medium">{diskSpeed.toFixed(1)} MB/s</span>
+              </span>
+            )}
           </div>
 
-          <div className="grid grid-cols-3 gap-2 text-center text-xs pt-2 border-t border-white/5 tabular-nums">
-            <div className="p-2 bg-bg-app rounded-md border border-white/5">
+          {/* Conditional graph: only shown while actively transferring */}
+          {isTransferring ? (
+            <div className="space-y-3 py-4">
+              <div className="relative h-28 w-full rounded-thumb bg-bg-app/80 border border-white/[0.06] overflow-hidden">
+                <svg
+                  viewBox={`0 0 ${svgWidth} ${svgHeight}`}
+                  className="w-full h-full"
+                  preserveAspectRatio="none"
+                >
+                  <defs>
+                    <linearGradient id="downloadSpeedGrad" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="#FF7A00" stopOpacity="0.28" />
+                      <stop offset="100%" stopColor="#FF7A00" stopOpacity="0.0" />
+                    </linearGradient>
+                  </defs>
+                  <path d={pathD} fill="url(#downloadSpeedGrad)" />
+                  <path d={lineD} fill="none" stroke="#FF7A00" strokeWidth="2" />
+                </svg>
+              </div>
+
+              {/* Axis labels outside the plot */}
+              <div className="flex justify-between text-[11px] text-slate-500 tabular-nums px-1">
+                <span>60s ago</span>
+                <span>Peak 78.4 MB/s</span>
+                <span>Current {currentSpeed.toFixed(1)} MB/s</span>
+              </div>
+            </div>
+          ) : (
+            /* Calm Idle Summary */
+            <div className="py-8 flex flex-col items-center justify-center text-center space-y-2">
+              <div className="w-12 h-12 rounded-full bg-success/15 flex items-center justify-center text-success mb-1">
+                <CheckCircle className="w-6 h-6" strokeWidth={1.75} />
+              </div>
+              <h3 className="text-sm font-semibold text-white">Network is quiet</h3>
+              <p className="text-xs text-slate-400 max-w-sm">
+                No active downloads in progress. New game installs and patches will show live transfer telemetry here.
+              </p>
+            </div>
+          )}
+
+          <div className="grid grid-cols-3 gap-3 pt-3 border-t border-white/[0.06] text-center text-xs tabular-nums">
+            <div className="p-2.5 rounded-thumb bg-white/[0.02]">
               <span className="text-[11px] text-slate-400 block">Download speed</span>
-              <span className="text-slate-100 font-medium">
+              <span className="text-sm font-semibold text-white">
                 <NumberTicker value={currentSpeed} decimalPlaces={1} suffix=" MB/s" />
               </span>
             </div>
-            <div className="p-2 bg-bg-app rounded-md border border-white/5">
+            <div className="p-2.5 rounded-thumb bg-white/[0.02]">
               <span className="text-[11px] text-slate-400 block">Disk write</span>
-              <span className="text-success font-medium">
+              <span className="text-sm font-semibold text-success">
                 <NumberTicker value={diskSpeed} decimalPlaces={1} suffix=" MB/s" />
               </span>
             </div>
-            <div className="p-2 bg-bg-app rounded-md border border-white/5">
-              <span className="text-[11px] text-slate-400 block">Peak speed</span>
-              <span className="text-slate-200 font-medium">
+            <div className="p-2.5 rounded-thumb bg-white/[0.02]">
+              <span className="text-[11px] text-slate-400 block">Peak bandwidth</span>
+              <span className="text-sm font-semibold text-slate-200">
                 <NumberTicker value={78.4} decimalPlaces={1} suffix=" MB/s" />
               </span>
             </div>
           </div>
         </div>
 
-        {/* Disk Space Meter */}
-        <div className="bg-bg-card border border-white/5 border-t-white/10 rounded-md p-4 flex flex-col justify-between shadow-card">
-          <div>
-            <div className="flex items-center gap-2 pb-3 border-b border-white/5">
-              <HardDrive className="w-4 h-4 text-slate-400" strokeWidth={1.5} />
-              <h2 className="text-[11px] font-semibold uppercase tracking-[0.06em] text-slate-400">
-                Storage Allocation
+        {/* Storage as a rounded segmented bar with legend */}
+        <div className="rounded-2xl win11-card p-6 flex flex-col justify-between space-y-4">
+          <div className="space-y-4">
+            <div className="flex items-center gap-2 pb-3 border-b border-white/[0.06]">
+              <HardDrive className="w-4 h-4 text-slate-400" />
+              <h2 className="text-xs font-semibold text-slate-200">
+                Storage drive
               </h2>
             </div>
 
-            <div className="mt-4 space-y-2">
+            <div className="space-y-3">
               <div className="flex justify-between text-xs">
-                <span className="text-slate-400 truncate max-w-[160px]">{settings.downloadDirectory}</span>
-                <span className="text-slate-200 font-medium tabular-nums">542 / 1024 GB</span>
+                <span className="text-slate-400 truncate max-w-[150px]">{settings.downloadDirectory}</span>
+                <span className="text-white font-semibold tabular-nums">542 GB / 1,024 GB</span>
               </div>
-              <div className="w-full h-1.5 bg-bg-app rounded-full overflow-hidden border border-white/5">
-                <div className="h-full bg-accent w-[53%]" />
+
+              {/* Rounded segmented bar */}
+              <div className="w-full h-3 rounded-full bg-white/[0.06] overflow-hidden flex p-0.5 gap-0.5">
+                {/* OneEngine games segment (53%) */}
+                <div className="h-full bg-accent rounded-l-full" style={{ width: '53%' }} title="Games: 542 GB" />
+                {/* Other files & system segment (15%) */}
+                <div className="h-full bg-slate-500" style={{ width: '15%' }} title="System & other apps: 154 GB" />
+                {/* Free space segment (32%) */}
+                <div className="h-full bg-transparent" style={{ width: '32%' }} title="Free space: 328 GB" />
               </div>
-              <span className="text-[11px] text-slate-400 block pt-1">
-                482 GB available storage
-              </span>
+
+              {/* Segmented bar legend */}
+              <div className="grid grid-cols-3 gap-2 pt-1 text-[11px] text-slate-400">
+                <div className="flex items-center gap-1.5">
+                  <span className="w-2.5 h-2.5 rounded-full bg-accent" />
+                  <span>Games (542 GB)</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <span className="w-2.5 h-2.5 rounded-full bg-slate-500" />
+                  <span>Other (154 GB)</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <span className="w-2.5 h-2.5 rounded-full border border-white/20 bg-transparent" />
+                  <span>Free (328 GB)</span>
+                </div>
+              </div>
             </div>
           </div>
 
-          <div className="p-3 bg-bg-app rounded-md border border-white/5 text-xs text-slate-400 space-y-1">
-            <span className="text-slate-200 font-medium block flex items-center gap-1.5">
-              <Zap className="w-3.5 h-3.5 text-accent" strokeWidth={1.5} /> Fast pre-allocation active
-            </span>
-            <p className="leading-relaxed">Storage blocks reserved ahead of time to eliminate fragmentation during updates.</p>
+          {/* Plain language storage note (rewritten from jargon) */}
+          <div className="p-3.5 rounded-thumb bg-white/[0.02] border border-white/[0.06] text-xs text-slate-400">
+            <span className="text-slate-200 font-medium block mb-1">Smooth installs enabled</span>
+            <p className="leading-relaxed">Disk space is reserved before each download begins so updates complete without write bottlenecks.</p>
           </div>
         </div>
       </div>
 
-      {/* Active Downloads Queue Card */}
-      <div className="space-y-3">
-        <div className="flex items-center justify-between border-b border-white/5 pb-2">
-          <div className="flex items-center gap-2">
-            <Download className="w-4 h-4 text-accent" strokeWidth={1.5} />
-            <h2 className="text-[11px] font-semibold uppercase tracking-[0.06em] text-slate-400">
-              Active Downloads ({downloads.length})
-            </h2>
-          </div>
-        </div>
+      {/* Active downloads queue */}
+      <div className="space-y-4">
+        <h2 className="text-lg font-semibold text-white">
+          Active queue ({downloads.length})
+        </h2>
 
         {downloads.length === 0 ? (
-          <div className="bg-bg-card border border-white/5 rounded-md p-8 text-center text-slate-400 text-xs">
-            <CheckCircle className="w-6 h-6 text-success mx-auto mb-2 opacity-80" strokeWidth={1.5} />
-            <span>All games are fully updated and synchronized.</span>
+          <div className="rounded-card bg-bg-card border border-white/[0.06] p-8 text-center space-y-2">
+            <CheckCircle className="w-6 h-6 text-success mx-auto opacity-80" />
+            <p className="text-xs text-slate-300 font-medium">Queue is empty</p>
+            <p className="text-xs text-slate-500">Games you download or update from the store will appear here.</p>
           </div>
         ) : (
           <div className="space-y-3">
-            {downloads.map((item, index) => {
+            {downloads.map((item) => {
               const isPaused = item.status === 'PAUSED' || isPausedAll;
               const isCompleted = item.status === 'COMPLETED';
 
               return (
                 <div
                   key={item.gameId}
-                  className="relative bg-bg-card border border-white/5 border-t-white/10 rounded-md p-4 flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-card overflow-hidden animate-stagger-entry"
-                  style={{ animationDelay: `${index * 20}ms` }}
+                  className="rounded-2xl win11-card p-4 flex flex-col md:flex-row md:items-center justify-between gap-4"
                 >
                   {/* Left: Thumbnail & Name */}
-                  <div className="flex items-center gap-3.5 min-w-[240px] z-10">
-                    <img
-                      src={item.coverImage}
-                      alt={item.title}
-                      className="w-16 h-10 object-cover rounded-md border border-white/10"
-                    />
+                  <div className="flex items-center gap-3.5 min-w-[220px]">
+                    <div className="w-16 h-10 rounded-thumb overflow-hidden border border-white/10 bg-bg-app shrink-0">
+                      <img
+                        src={item.coverImage}
+                        alt=""
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
                     <div>
-                      <h3 className="text-xs font-medium text-white truncate max-w-xs">
+                      <h3
+                        onClick={() => navigate('game-detail', item.gameId)}
+                        className="text-xs font-semibold text-white hover:text-accent cursor-default transition-colors truncate max-w-xs"
+                      >
                         {item.title}
                       </h3>
                       <div className="flex items-center gap-2 text-[11px] text-slate-400 mt-0.5 tabular-nums">
-                        <span className={isCompleted ? 'text-success font-medium' : isPaused ? 'text-warning font-medium' : 'text-accent font-medium'}>
-                          {isPaused ? 'Paused' : item.status}
+                        <span className={isCompleted ? 'text-success font-semibold' : isPaused ? 'text-warning font-semibold' : 'text-accent font-semibold'}>
+                          {isPaused ? 'Paused' : isCompleted ? 'Installed' : 'Downloading'}
                         </span>
                         <span>·</span>
-                        <span>
-                          <NumberTicker value={item.downloadedGb} decimalPlaces={1} suffix=" GB" /> / {item.totalGb} GB
-                        </span>
+                        <span>{item.downloadedGb} GB of {item.totalGb} GB</span>
                       </div>
                     </div>
                   </div>
 
-                  {/* Center: Progress Bar & Stats */}
-                  <div className="flex-1 max-w-md space-y-1.5 z-10">
+                  {/* Center: Progress & ETA */}
+                  <div className="flex-1 max-w-md space-y-1.5">
                     <div className="flex items-center justify-between text-xs tabular-nums">
-                      <span className="text-slate-200 font-medium">
-                        <NumberTicker value={item.progress} suffix="%" />
+                      <span className="text-white font-semibold">
+                        {Math.round(item.progress)}%
                       </span>
                       {!isCompleted && !isPaused && (
-                        <span className="text-slate-400 flex items-center gap-1">
-                          <Clock className="w-3 h-3 text-slate-400" strokeWidth={1.5} /> ETA: ~{Math.ceil(item.etaSeconds / 60)} min
+                        <span className="text-slate-400 flex items-center gap-1 text-[11px]">
+                          <Clock className="w-3 h-3 text-slate-400" /> ~{Math.ceil(item.etaSeconds / 60)} min remaining
                         </span>
                       )}
                     </div>
-                    <div className="w-full h-1.5 bg-bg-app rounded-full overflow-hidden border border-white/5">
+                    <div className="w-full h-1.5 bg-white/[0.06] rounded-full overflow-hidden">
                       <div
                         className={`h-full transition-[width] duration-300 ${
-                          isCompleted
-                            ? 'bg-success'
-                            : isPaused
-                            ? 'bg-warning'
-                            : 'bg-accent'
+                          isCompleted ? 'bg-success' : isPaused ? 'bg-warning' : 'bg-accent'
                         }`}
                         style={{ width: `${item.progress}%` }}
                       />
@@ -329,33 +371,23 @@ export const DownloadsScreen: React.FC = () => {
                   </div>
 
                   {/* Right: Controls */}
-                  <div className="flex items-center gap-1.5 shrink-0 z-10">
+                  <div className="flex items-center gap-2 shrink-0">
                     {!isCompleted && (
-                      isPaused ? (
-                        <button
-                          onClick={() => resumeDownload(item.gameId)}
-                          className="p-2 bg-bg-hover hover:bg-bg-pressed text-accent border border-white/10 rounded-md transition-[background-color] duration-150 active:scale-[0.98] cursor-default"
-                          title="Resume"
-                        >
-                          <Play className="w-4 h-4 fill-current" strokeWidth={1.5} />
-                        </button>
-                      ) : (
-                        <button
-                          onClick={() => pauseDownload(item.gameId)}
-                          className="p-2 bg-bg-hover hover:bg-bg-pressed text-slate-300 border border-white/10 rounded-md transition-[background-color] duration-150 active:scale-[0.98] cursor-default"
-                          title="Pause"
-                        >
-                          <Pause className="w-4 h-4 fill-current" strokeWidth={1.5} />
-                        </button>
-                      )
+                      <button
+                        onClick={() => isPaused ? resumeDownload(item.gameId) : pauseDownload(item.gameId)}
+                        className="w-8 h-8 rounded-full bg-white/[0.06] hover:bg-white/[0.1] text-slate-200 flex items-center justify-center transition-surface cursor-default"
+                        title={isPaused ? 'Resume' : 'Pause'}
+                      >
+                        {isPaused ? <Play className="w-3.5 h-3.5 fill-current" /> : <Pause className="w-3.5 h-3.5 fill-current" />}
+                      </button>
                     )}
 
                     <button
                       onClick={() => cancelDownload(item.gameId)}
-                      className="p-2 bg-bg-hover hover:bg-danger/20 text-slate-400 hover:text-danger border border-white/10 rounded-md transition-[background-color,color] duration-150 active:scale-[0.98] cursor-default"
-                      title="Cancel"
+                      className="w-8 h-8 rounded-full bg-white/[0.06] hover:bg-danger/20 text-slate-400 hover:text-danger flex items-center justify-center transition-surface cursor-default"
+                      title="Cancel download"
                     >
-                      <X className="w-4 h-4" strokeWidth={1.5} />
+                      <X className="w-3.5 h-3.5" />
                     </button>
                   </div>
                 </div>
@@ -365,58 +397,44 @@ export const DownloadsScreen: React.FC = () => {
         )}
       </div>
 
-      {/* Completed Section */}
-      <div className="space-y-3 pt-2">
-        <div className="flex items-center justify-between border-b border-white/5 pb-2">
-          <div className="flex items-center gap-2">
-            <CheckCircle className="w-4 h-4 text-success" strokeWidth={1.5} />
-            <h2 className="text-[11px] font-semibold uppercase tracking-[0.06em] text-slate-400">
-              Recently Completed
-            </h2>
-          </div>
-        </div>
+      {/* Recently Completed Rows with Play CTA */}
+      <div className="space-y-4 pt-2">
+        <h2 className="text-lg font-semibold text-white">
+          Recently completed
+        </h2>
 
-        <div className="space-y-2">
+        <div className="space-y-2.5">
           {recentlyCompleted.map((item) => (
             <div
               key={item.id}
-              className="bg-bg-card border border-white/5 border-t-white/10 rounded-md p-3.5 flex items-center justify-between shadow-card"
+              className="rounded-2xl win11-card p-4 flex items-center justify-between gap-4"
             >
-              <div className="flex items-center gap-3">
-                <img src={item.cover} alt="" className="w-12 h-8 rounded-md object-cover border border-white/10" />
+              <div className="flex items-center gap-3.5">
+                <img src={item.cover} alt="" className="w-14 h-9 rounded-thumb object-cover border border-white/10" />
                 <div>
-                  <h4 className="text-xs font-medium text-slate-200">
+                  <h4
+                    onClick={() => navigate('game-detail', item.id)}
+                    className="text-xs font-semibold text-white hover:text-accent cursor-default transition-colors"
+                  >
                     {item.title}
                   </h4>
-                  <div className="flex items-center gap-2 text-[11px] text-slate-400 mt-0.5">
-                    <span className="text-slate-300">{item.patchVersion}</span>
+                  <div className="flex items-center gap-2 text-[11px] text-slate-400 mt-0.5 tabular-nums">
+                    <span>{item.patchVersion}</span>
                     <span>·</span>
-                    <span className="tabular-nums">{item.size}</span>
+                    <span>{item.size}</span>
                     <span>·</span>
-                    <span className="text-slate-400">{item.completedDate}</span>
+                    <span>{item.completedDate}</span>
                   </div>
                 </div>
               </div>
 
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => {
-                    const article = articles.find((a) => a.gameId === item.id) || articles[0];
-                    openArticle(article);
-                  }}
-                  className="px-3 py-1.5 bg-bg-hover hover:bg-bg-pressed border border-white/10 rounded-md text-xs text-slate-300 flex items-center gap-1.5 transition-[background-color] duration-150 active:scale-[0.98] cursor-default"
-                >
-                  <FileText className="w-3.5 h-3.5 text-slate-400" strokeWidth={1.5} />
-                  <span>Patch notes</span>
-                </button>
-                <button
-                  onClick={() => launchGame(item.id)}
-                  className="px-4 py-1.5 bg-accent hover:bg-accent-hover text-bg-app font-semibold text-xs rounded-md transition-[background-color] duration-150 flex items-center gap-1 active:scale-[0.98] cursor-default"
-                >
-                  <Play className="w-3.5 h-3.5 fill-current" strokeWidth={1.5} />
-                  <span>Play</span>
-                </button>
-              </div>
+              <button
+                onClick={() => launchGame(item.id)}
+                className="px-4 py-1.5 rounded-full bg-accent hover:bg-accent-hover text-bg-app font-bold text-xs flex items-center gap-1.5 transition-surface cursor-default"
+              >
+                <Play className="w-3.5 h-3.5 fill-current" />
+                <span>Play</span>
+              </button>
             </div>
           ))}
         </div>

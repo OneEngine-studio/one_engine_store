@@ -1,14 +1,10 @@
 import React, { useState } from 'react';
 import { useStore } from '../store/useStore';
-import { 
-  Radio, 
-  MessageSquare, 
-  ThumbsUp, 
-  Calendar, 
-  ArrowUpRight
+import {
+  Calendar,
+  ThumbsUp,
+  FileText,
 } from 'lucide-react';
-import { SpotlightCard } from '../components/ui/SpotlightCard';
-import { AnimatedTabs, TabItem } from '../components/ui/AnimatedTabs';
 import { NumberTicker } from '../components/ui/NumberTicker';
 
 export const CommunityScreen: React.FC = () => {
@@ -19,75 +15,78 @@ export const CommunityScreen: React.FC = () => {
     ? articles
     : articles.filter((a) => a.category === selectedCategory);
 
-  const categoryTabs: TabItem[] = [
-    { id: 'ALL', label: 'All News' },
-    { id: 'PATCH_NOTES', label: 'Patch Notes' },
-    { id: 'DEV_LOGS', label: 'Dev Logs' },
+  const categoryTabs = [
+    { id: 'ALL', label: 'All dispatches' },
+    { id: 'PATCH_NOTES', label: 'Patch notes' },
+    { id: 'DEV_LOGS', label: 'Dev logs' },
     { id: 'COMMUNITY_SPOTLIGHT', label: 'Spotlight' },
   ];
 
   return (
-    <div className="flex-1 overflow-y-auto p-6 space-y-6 select-none">
+    <div className="p-8 space-y-8 max-w-7xl mx-auto w-full">
       {/* Header & Category Filters */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-white/5 pb-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <div className="flex items-center gap-2 text-accent mb-1">
-            <Radio className="w-4 h-4" strokeWidth={1.5} />
-            <span className="text-[11px] font-semibold tracking-[0.06em] uppercase text-slate-400">
-              Community News
-            </span>
-          </div>
-          <h1 className="text-sm font-semibold text-white">
-            Dispatches & Community
+          <h1 className="text-3xl font-bold tracking-tight text-white">
+            Community
           </h1>
+          <p className="text-xs text-slate-400 mt-1">
+            Official developer dispatches, game balance logs, and engineering updates
+          </p>
         </div>
 
-        {/* Category Filter Tabs */}
-        <div className="bg-bg-card p-1 rounded-md border border-white/10">
-          <AnimatedTabs
-            tabs={categoryTabs}
-            activeTab={selectedCategory}
-            onChange={(id) => setSelectedCategory(id)}
-            orientation="horizontal"
-            activePillClassName="bg-bg-hover rounded-md border border-white/10 shadow-sm"
-          />
+        {/* Category Filter Pills */}
+        <div className="inline-flex p-1 bg-white/[0.04] border border-white/[0.08] rounded-full self-start sm:self-auto">
+          {categoryTabs.map((tab) => {
+            const isActive = selectedCategory === tab.id;
+            return (
+              <button
+                key={tab.id}
+                onClick={() => setSelectedCategory(tab.id)}
+                className={`px-4 py-1.5 rounded-full text-xs transition-surface cursor-default ${
+                  isActive
+                    ? 'bg-white/[0.12] text-white font-semibold shadow-sm'
+                    : 'text-slate-400 hover:text-slate-200'
+                }`}
+              >
+                {tab.label}
+              </button>
+            );
+          })}
         </div>
       </div>
 
       {/* Articles Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {filteredArticles.map((item, index) => (
-          <SpotlightCard
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {filteredArticles.map((item) => (
+          <div
             key={item.id}
             onClick={() => openArticle(item)}
-            className="cursor-default flex flex-col justify-between animate-stagger-entry group"
-            style={{ animationDelay: `${index * 20}ms` }}
+            className="rounded-2xl win11-card overflow-hidden cursor-default flex flex-col justify-between group"
           >
             <div>
               <div className="relative aspect-[16/9] w-full overflow-hidden bg-bg-app">
                 <img
                   src={item.cover}
                   alt={item.title}
-                  className="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-300 ease-out"
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent pointer-events-none" />
-                <div className="absolute inset-0 ring-1 ring-inset ring-white/5 pointer-events-none" />
+                <div className="absolute inset-0 bg-gradient-to-t from-bg-card via-transparent to-transparent pointer-events-none" />
                 
-                {/* Max 1 Status Badge */}
-                <div className="absolute top-2 left-2 px-2 py-0.5 rounded-md bg-bg-sidebar/90 text-[10px] text-slate-200 border border-white/10 font-medium backdrop-blur-sm z-10">
+                <span className="absolute top-2.5 left-2.5 px-2.5 py-0.5 rounded-full bg-black/60 text-slate-200 text-[10px] font-medium border border-white/10 backdrop-blur-md">
                   {item.gameTitle}
-                </div>
+                </span>
               </div>
 
-              <div className="p-4 space-y-2">
+              <div className="p-5 space-y-2.5">
                 <div className="flex items-center gap-2 text-[11px] text-slate-400">
-                  <Calendar className="w-3.5 h-3.5" strokeWidth={1.5} />
+                  <Calendar className="w-3.5 h-3.5 text-slate-400" />
                   <span>{item.date}</span>
                   <span>·</span>
                   <span>{item.author}</span>
                 </div>
 
-                <h3 className="text-[14px] font-medium text-slate-100 group-hover:text-accent transition-colors leading-snug">
+                <h3 className="text-sm font-semibold text-white group-hover:text-accent transition-colors leading-snug line-clamp-2">
                   {item.title}
                 </h3>
 
@@ -97,36 +96,28 @@ export const CommunityScreen: React.FC = () => {
               </div>
             </div>
 
-            <div className="p-4 pt-2 border-t border-white/5 flex items-center justify-between text-xs text-slate-400">
-              <div className="flex items-center gap-3">
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    toggleArticleLike(item.id);
-                  }}
-                  className={`flex items-center gap-1 transition-colors active:scale-[0.98] cursor-default ${
-                    item.hasLiked ? 'text-accent font-medium' : 'hover:text-white'
-                  }`}
-                >
-                  <ThumbsUp className={`w-3.5 h-3.5 ${item.hasLiked ? 'fill-current' : ''}`} strokeWidth={1.5} />
-                  <span className="tabular-nums">
-                    <NumberTicker value={item.likes} />
-                  </span>
-                </button>
-                <span className="flex items-center gap-1">
-                  <MessageSquare className="w-3.5 h-3.5" strokeWidth={1.5} />
-                  <span className="tabular-nums">
-                    <NumberTicker value={item.comments} />
-                  </span>
+            <div className="p-5 pt-3 border-t border-white/[0.05] flex items-center justify-between text-xs text-slate-400">
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  toggleArticleLike(item.id);
+                }}
+                className={`flex items-center gap-1.5 px-3 py-1 rounded-full transition-surface ${
+                  item.hasLiked ? 'text-accent font-semibold bg-accent/15' : 'hover:text-white'
+                }`}
+              >
+                <ThumbsUp className={`w-3.5 h-3.5 ${item.hasLiked ? 'fill-current' : ''}`} />
+                <span className="tabular-nums">
+                  <NumberTicker value={item.likes} />
                 </span>
-              </div>
+              </button>
 
-              <span className="flex items-center gap-1 text-slate-300 group-hover:text-accent text-xs font-medium transition-colors">
-                <span>Read</span>
-                <ArrowUpRight className="w-3 h-3" strokeWidth={1.5} />
+              <span className="flex items-center gap-1 text-slate-300 group-hover:text-white">
+                <FileText className="w-3.5 h-3.5 text-accent" />
+                Read dispatch
               </span>
             </div>
-          </SpotlightCard>
+          </div>
         ))}
       </div>
     </div>

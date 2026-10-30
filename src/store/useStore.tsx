@@ -75,30 +75,30 @@ const playSynthesizerSound = (type: 'click' | 'launch' | 'hover' | 'alert' | 'pu
 const INITIAL_GAMES: Game[] = [
   {
     id: 'railbound',
-    title: 'RAILBOUND: TACTICAL PROTOCOL',
+    title: 'Railbound: Tactical Protocol',
     tagline: 'High-speed tactical railway logistics & automated rail defense systems.',
     description: 'Lead an automated rail defense vanguard across hostile industrial zones. Reconfigure track matrices, repel mechanized raiders, and deploy armored rolling artillery to secure planetary resource arteries.',
     price: 29.99,
     discountPercent: 20,
-    coverImage: '/images/railbound-theme.jpg',
-    heroBanner: '/images/railbound-theme.jpg',
+    coverImage: './images/railbound-theme.jpg',
+    heroBanner: './images/railbound-theme.jpg',
     screenshots: [
-      '/images/railbound-theme.jpg',
+      './images/railbound-theme.jpg',
       'https://images.unsplash.com/photo-1511512578047-dfb367046420?q=80&w=1200&auto=format&fit=crop',
       'https://images.unsplash.com/photo-1542751371-adc38448a05e?q=80&w=1200&auto=format&fit=crop',
-      'https://images.unsplash.com/photo-1579783902614-a3fb3927b675?q=80&w=1200&auto=format&fit=crop'
+      'https://images.unsplash.com/photo-1550745165-9bc0b252726f?q=80&w=1200&auto=format&fit=crop'
     ],
-    tags: ['TACTICAL', 'AUTOMATION', 'DEFENSE', 'STRATEGY', 'SCI-FI'],
+    tags: ['Tactical', 'Automation', 'Defense', 'Strategy', 'Sci-fi'],
     rating: 96,
     ratingBreakdown: { positivePercent: 96, totalReviews: 4820 },
     developer: 'Afterburn Foundry',
     publisher: 'OneEngine Interactive',
-    releaseDate: 'OCTOBER 2026',
+    releaseDate: 'October 2026',
     installed: true,
     installSizeGb: 38.4,
     isFavorite: true,
     playHours: 42.6,
-    lastPlayed: '2 HOURS AGO',
+    lastPlayed: '2 hours ago',
     status: 'INSTALLED',
     downloadProgress: 100,
     downloadSpeedMbps: 0,
@@ -111,7 +111,7 @@ const INITIAL_GAMES: Game[] = [
     patchNotes: [
       {
         version: 'v2.4.0',
-        date: 'OCT 26, 2026',
+        date: 'Oct 26, 2026',
         notes: [
           'Direct OneEngine Store headless bypass integration (--auth-token payload).',
           'Automated GameLobby scene handoff with zero manual credential prompting.',
@@ -120,7 +120,7 @@ const INITIAL_GAMES: Game[] = [
       },
       {
         version: 'v2.3.8',
-        date: 'OCT 12, 2026',
+        date: 'Oct 12, 2026',
         notes: [
           'Resolved collision glitch on junction Switch-7.',
           'Updated shader cache for DirectX 12 render pipelines.',
@@ -146,7 +146,7 @@ const INITIAL_GAMES: Game[] = [
   },
   {
     id: 'cyber-siege',
-    title: 'CYBER SIEGE: OPERATIVE',
+    title: 'Cyber Siege: Operative',
     tagline: 'Hardcore CQB tactical extraction shooter in a neon-drenched megacity.',
     description: 'Infiltrate corporate arcologies, breach reinforced bio-vaults, and extract classified zero-day exploits before defense teams lock down the perimeter.',
     price: 39.99,
@@ -154,19 +154,21 @@ const INITIAL_GAMES: Game[] = [
     heroBanner: 'https://images.unsplash.com/photo-1542751371-adc38448a05e?q=80&w=1600&auto=format&fit=crop',
     screenshots: [
       'https://images.unsplash.com/photo-1542751371-adc38448a05e?q=80&w=1200&auto=format&fit=crop',
-      'https://images.unsplash.com/photo-1563089145-599997674d42?q=80&w=1200&auto=format&fit=crop'
+      'https://images.unsplash.com/photo-1563089145-599997674d42?q=80&w=1200&auto=format&fit=crop',
+      'https://images.unsplash.com/photo-1511512578047-dfb367046420?q=80&w=1200&auto=format&fit=crop',
+      'https://images.unsplash.com/photo-1550745165-9bc0b252726f?q=80&w=1200&auto=format&fit=crop'
     ],
-    tags: ['EXTRACTION', 'MULTIPLAYER', 'HARDCORE', 'FIRST-PERSON'],
+    tags: ['Extraction', 'Multiplayer', 'Hardcore', 'First-person'],
     rating: 91,
     ratingBreakdown: { positivePercent: 91, totalReviews: 8940 },
     developer: 'Hexagon Tactical Labs',
     publisher: 'OneEngine Interactive',
-    releaseDate: 'SEPTEMBER 2026',
+    releaseDate: 'September 2026',
     installed: true,
     installSizeGb: 62.1,
     isFavorite: false,
     playHours: 114.8,
-    lastPlayed: 'YESTERDAY',
+    lastPlayed: 'Yesterday',
     status: 'INSTALLED',
     downloadProgress: 100,
     downloadSpeedMbps: 0,
@@ -178,7 +180,7 @@ const INITIAL_GAMES: Game[] = [
     patchNotes: [
       {
         version: 'v2.1.0',
-        date: 'OCT 18, 2026',
+        date: 'Oct 18, 2026',
         notes: ['Added subterranean Sector 4 map.', 'Improved thermal sight balance.'],
       }
     ],
@@ -201,7 +203,7 @@ const INITIAL_GAMES: Game[] = [
   },
   {
     id: 'project-void',
-    title: 'PROJECT VOID: DRIFT',
+    title: 'Project Void: Drift',
     tagline: 'Zero-G Newtonian physics fighter & capital ship escort simulation.',
     description: 'Pilot next-generation vector-thrust interceptors through dense planetary debris rings and execute tactical fleet coordination in deep space.',
     price: 24.99,
@@ -210,14 +212,16 @@ const INITIAL_GAMES: Game[] = [
     heroBanner: 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?q=80&w=1600&auto=format&fit=crop',
     screenshots: [
       'https://images.unsplash.com/photo-1451187580459-43490279c0fa?q=80&w=1200&auto=format&fit=crop',
-      'https://images.unsplash.com/photo-1506703719100-a0f3a48c0f86?q=80&w=1200&auto=format&fit=crop'
+      'https://images.unsplash.com/photo-1506703719100-a0f3a48c0f86?q=80&w=1200&auto=format&fit=crop',
+      'https://images.unsplash.com/photo-1446776811953-b23d57bd21aa?q=80&w=1200&auto=format&fit=crop',
+      'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?q=80&w=1200&auto=format&fit=crop'
     ],
-    tags: ['SPACE SIM', 'PHYSICS', 'FLIGHT', 'SCI-FI'],
+    tags: ['Space sim', 'Physics', 'Flight', 'Sci-fi'],
     rating: 88,
     ratingBreakdown: { positivePercent: 88, totalReviews: 2310 },
     developer: 'AstroCore Studios',
     publisher: 'OneEngine Interactive',
-    releaseDate: 'AUGUST 2026',
+    releaseDate: 'August 2026',
     installed: false,
     installSizeGb: 28.5,
     isFavorite: false,
@@ -231,7 +235,7 @@ const INITIAL_GAMES: Game[] = [
     patchNotes: [
       {
         version: 'v1.0.4',
-        date: 'OCT 05, 2026',
+        date: 'Oct 05, 2026',
         notes: ['HOTAS joystick calibration profile updates.'],
       }
     ],
@@ -254,27 +258,29 @@ const INITIAL_GAMES: Game[] = [
   },
   {
     id: 'rust-protocol',
-    title: 'RUST PROTOCOL: MECH DIVISION',
+    title: 'Rust Protocol: Mech Division',
     tagline: 'High-lethality real-time mechanical combat & planetary warfare.',
     description: 'Assemble modular war mechs with specialized reactor cores, rail-accelerators, and active electronic countermeasures in massive 32-player battlefield engagements.',
     price: 'FREE',
-    coverImage: 'https://images.unsplash.com/photo-1579783902614-a3fb3927b675?q=80&w=800&auto=format&fit=crop',
-    heroBanner: 'https://images.unsplash.com/photo-1579783902614-a3fb3927b675?q=80&w=1600&auto=format&fit=crop',
+    coverImage: 'https://images.unsplash.com/photo-1542751110-97427bbecf20?q=80&w=800&auto=format&fit=crop',
+    heroBanner: 'https://images.unsplash.com/photo-1542751110-97427bbecf20?q=80&w=1600&auto=format&fit=crop',
     screenshots: [
-      'https://images.unsplash.com/photo-1579783902614-a3fb3927b675?q=80&w=1200&auto=format&fit=crop',
-      'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=1200&auto=format&fit=crop'
+      'https://images.unsplash.com/photo-1542751110-97427bbecf20?q=80&w=1200&auto=format&fit=crop',
+      'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=1200&auto=format&fit=crop',
+      'https://images.unsplash.com/photo-1563089145-599997674d42?q=80&w=1200&auto=format&fit=crop',
+      'https://images.unsplash.com/photo-1542751371-adc38448a05e?q=80&w=1200&auto=format&fit=crop'
     ],
-    tags: ['FREE TO PLAY', 'MECH', 'PVP', 'ACTION'],
+    tags: ['Free to play', 'Mech', 'PvP', 'Action'],
     rating: 94,
     ratingBreakdown: { positivePercent: 94, totalReviews: 14200 },
     developer: 'Vanguard Dynamics',
     publisher: 'OneEngine Interactive',
-    releaseDate: 'EARLY ACCESS',
+    releaseDate: 'Early Access',
     installed: true,
     installSizeGb: 48.0,
     isFavorite: true,
     playHours: 58.2,
-    lastPlayed: '3 DAYS AGO',
+    lastPlayed: '3 days ago',
     status: 'INSTALLED',
     downloadProgress: 100,
     downloadSpeedMbps: 0,
@@ -286,7 +292,7 @@ const INITIAL_GAMES: Game[] = [
     patchNotes: [
       {
         version: 'v0.8.9',
-        date: 'OCT 22, 2026',
+        date: 'Oct 22, 2026',
         notes: ['Added Titan-class siege walkers.'],
       }
     ],
@@ -309,7 +315,7 @@ const INITIAL_GAMES: Game[] = [
   },
   {
     id: 'ghost-recon-delta',
-    title: 'SPEC-OPS: IRONCLAD',
+    title: 'Spec-Ops: Ironclad',
     tagline: 'Cooperative stealth tactical infiltrations under harsh electromagnetic jamming.',
     description: 'Coordinate simultaneous thermal breaches and silence hostile SAM sites across black-budget mountain bases with up to four operatives in deep winter operations.',
     price: 49.99,
@@ -318,14 +324,16 @@ const INITIAL_GAMES: Game[] = [
     heroBanner: 'https://images.unsplash.com/photo-1534447677768-be436bb09401?q=80&w=1600&auto=format&fit=crop',
     screenshots: [
       'https://images.unsplash.com/photo-1534447677768-be436bb09401?q=80&w=1200&auto=format&fit=crop',
-      'https://images.unsplash.com/photo-1511512578047-dfb367046420?q=80&w=1200&auto=format&fit=crop'
+      'https://images.unsplash.com/photo-1511512578047-dfb367046420?q=80&w=1200&auto=format&fit=crop',
+      'https://images.unsplash.com/photo-1542751371-adc38448a05e?q=80&w=1200&auto=format&fit=crop',
+      'https://images.unsplash.com/photo-1550745165-9bc0b252726f?q=80&w=1200&auto=format&fit=crop'
     ],
-    tags: ['CO-OP', 'STEALTH', 'MILITARY', 'TACTICAL'],
+    tags: ['Co-op', 'Stealth', 'Military', 'Tactical'],
     rating: 89,
     ratingBreakdown: { positivePercent: 89, totalReviews: 5410 },
     developer: 'Blackwatch Software',
     publisher: 'OneEngine Interactive',
-    releaseDate: 'JULY 2026',
+    releaseDate: 'July 2026',
     installed: false,
     installSizeGb: 54.2,
     isFavorite: false,
@@ -339,7 +347,7 @@ const INITIAL_GAMES: Game[] = [
     patchNotes: [
       {
         version: 'v1.2.0',
-        date: 'SEP 28, 2026',
+        date: 'Sep 28, 2026',
         notes: ['New Night Operations loadout pack.'],
       }
     ],
@@ -362,7 +370,7 @@ const INITIAL_GAMES: Game[] = [
   },
   {
     id: 'neon-drifter',
-    title: 'KINETIC 2099: DRIFT',
+    title: 'Kinetic 2099: Drift',
     tagline: 'Anti-gravity supersonic combat racing through subterranean foundry tunnels.',
     description: 'Speeds exceeding Mach 1 on magnetic rails with onboard missile counter-batteries and dynamic tunnel collapses under cyberpunk atmospheric storm weather.',
     price: 19.99,
@@ -370,45 +378,47 @@ const INITIAL_GAMES: Game[] = [
     heroBanner: 'https://images.unsplash.com/photo-1508739773434-c26b3d09e071?q=80&w=1600&auto=format&fit=crop',
     screenshots: [
       'https://images.unsplash.com/photo-1508739773434-c26b3d09e071?q=80&w=1200&auto=format&fit=crop',
-      'https://images.unsplash.com/photo-1550745165-9bc0b252726f?q=80&w=1200&auto=format&fit=crop'
+      'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?q=80&w=1200&auto=format&fit=crop',
+      'https://images.unsplash.com/photo-1550745165-9bc0b252726f?q=80&w=1200&auto=format&fit=crop',
+      'https://images.unsplash.com/photo-1542751371-adc38448a05e?q=80&w=1200&auto=format&fit=crop'
     ],
-    tags: ['RACING', 'CYBERPUNK', 'HIGH SPEED', 'ACTION'],
+    tags: ['Racing', 'Cyberpunk', 'Drift', 'Multiplayer'],
     rating: 92,
-    ratingBreakdown: { positivePercent: 92, totalReviews: 3190 },
-    developer: 'Apex Forge',
+    ratingBreakdown: { positivePercent: 92, totalReviews: 3120 },
+    developer: 'Vector Pulse',
     publisher: 'OneEngine Interactive',
-    releaseDate: 'JUNE 2026',
+    releaseDate: 'June 2026',
     installed: true,
-    installSizeGb: 22.0,
+    installSizeGb: 22.4,
     isFavorite: false,
-    playHours: 19.4,
-    lastPlayed: '3 DAYS AGO',
+    playHours: 18.3,
+    lastPlayed: 'Last week',
     status: 'INSTALLED',
     downloadProgress: 100,
     downloadSpeedMbps: 0,
     category: 'RECOMMENDED',
-    achievements: { unlocked: 12, total: 20 },
+    achievements: { unlocked: 8, total: 20 },
     dlcs: [],
     patchNotes: [
       {
         version: 'v1.1.2',
-        date: 'AUG 14, 2026',
-        notes: ['Ultra-wide monitor support enhancement.'],
+        date: 'May 14, 2026',
+        notes: ['Improved anti-gravity handling on hairpin turns.'],
       }
     ],
     systemRequirements: {
       minimum: {
         os: 'Windows 10 64-bit',
-        processor: 'Intel Core i3-8100',
+        processor: 'Intel i5-4590',
         memory: '8 GB RAM',
         graphics: 'NVIDIA GTX 960',
         storage: '25 GB SSD',
       },
       recommended: {
         os: 'Windows 10 64-bit',
-        processor: 'Intel Core i3-10100',
-        memory: '8 GB RAM',
-        graphics: 'NVIDIA GTX 1050Ti / GTX 1650',
+        processor: 'Intel i7-8700K',
+        memory: '16 GB RAM',
+        graphics: 'NVIDIA GTX 1070',
         storage: '25 GB SSD',
       }
     },
@@ -463,7 +473,7 @@ const INITIAL_ARTICLES: Article[] = [
     category: 'DEV_LOGS',
     date: 'OCTOBER 26, 2026',
     author: 'Lead Architect @ Spectre',
-    cover: '/images/railbound-theme.jpg',
+    cover: './images/railbound-theme.jpg',
     summary: 'Today we deployed v2.4.0 containing direct OneEngine Store session injection hooks. No more in-game login prompt delays. Read the full benchmark teardown.',
     content: [
       'With patch 2.4.0, Railbound now completely transitions from desktop click to active GameLobby in under 1.2 seconds.',
@@ -661,8 +671,8 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const [downloads, setDownloads] = useState<DownloadItem[]>([
     {
       gameId: 'rust-protocol',
-      title: 'RUST PROTOCOL: MECH DIVISION',
-      coverImage: 'https://images.unsplash.com/photo-1579783902614-a3fb3927b675?q=80&w=400&auto=format&fit=crop',
+      title: 'Rust Protocol: Mech Division',
+      coverImage: 'https://images.unsplash.com/photo-1542751110-97427bbecf20?q=80&w=800&auto=format&fit=crop',
       progress: 68.4,
       downloadedGb: 32.8,
       totalGb: 48.0,
@@ -844,6 +854,13 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     });
     setHistoryIndex((prev) => prev + 1);
   };
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      (window as unknown as { __navigate?: typeof navigate; __openAuthModal?: () => void }).__navigate = navigate;
+      (window as unknown as { __navigate?: typeof navigate; __openAuthModal?: () => void }).__openAuthModal = () => setIsAuthModalOpen(true);
+    }
+  }, [navigate]);
 
   const goBack = () => {
     if (historyIndex > 0) {

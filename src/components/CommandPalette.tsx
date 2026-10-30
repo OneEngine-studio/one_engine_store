@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useStore } from '../store/useStore';
-import { Search, Radio, X, ChevronRight } from 'lucide-react';
-import { Kbd } from './ui/Kbd';
+import { Search, X } from 'lucide-react';
 
 export const CommandPalette: React.FC = () => {
   const {
@@ -18,7 +17,14 @@ export const CommandPalette: React.FC = () => {
 
   useEffect(() => {
     if (isCommandPaletteOpen) setQuery('');
-  }, [isCommandPaletteOpen]);
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && isCommandPaletteOpen) {
+        setCommandPaletteOpen(false);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isCommandPaletteOpen, setCommandPaletteOpen]);
 
   if (!isCommandPaletteOpen) return null;
 
@@ -41,37 +47,37 @@ export const CommandPalette: React.FC = () => {
 
   return (
     <div
-      className="fixed inset-0 z-[70] flex items-start justify-center pt-20 bg-black/70 backdrop-blur-md p-4 select-none"
+      className="fixed inset-0 z-[70] flex items-start justify-center pt-24 bg-black/75 backdrop-blur-md p-4 select-none"
       onClick={() => setCommandPaletteOpen(false)}
     >
       <div
-        className="w-full max-w-2xl bg-bg-sidebar border border-white/10 border-t-white/15 rounded-[10px] shadow-overlay overflow-hidden flex flex-col"
+        className="w-full max-w-2xl win11-acrylic rounded-3xl overflow-hidden flex flex-col animate-modal-in"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Search input */}
-        <div className="px-4 py-3 border-b border-white/5 flex items-center gap-3 bg-bg-card">
-          <Search className="w-4 h-4 text-slate-400 shrink-0" strokeWidth={1.5} />
+        {/* Search Input Bar */}
+        <div className="px-5 py-4 border-b border-white/[0.08] flex items-center gap-3 bg-white/[0.03]">
+          <Search className="w-5 h-5 text-accent shrink-0" strokeWidth={2} />
           <input
             type="text"
             autoFocus
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search games, tags, or updates…"
+            placeholder="Type a game title, genre tag, or update…"
             className="w-full bg-transparent text-sm text-slate-100 placeholder-slate-500 focus:outline-none select-text"
           />
           <button
             onClick={() => setCommandPaletteOpen(false)}
-            className="text-slate-400 hover:text-white p-1 rounded-md hover:bg-bg-hover transition-[background-color,color] duration-150 cursor-default"
+            className="w-7 h-7 rounded-full flex items-center justify-center text-slate-400 hover:text-white hover:bg-white/[0.08] transition-surface cursor-default"
           >
-            <X className="w-4 h-4" strokeWidth={1.5} />
+            <X className="w-4 h-4" />
           </button>
         </div>
 
         {/* Results */}
-        <div className="max-h-96 overflow-y-auto p-3 space-y-3">
+        <div className="max-h-96 overflow-y-auto p-3 space-y-4 custom-scroll">
           {filteredGames.length > 0 && (
-            <div className="space-y-0.5">
-              <span className="text-[11px] font-semibold tracking-[0.06em] uppercase text-slate-500 block px-2 pb-1">
+            <div className="space-y-1">
+              <span className="text-xs font-semibold text-slate-400 block px-3 pb-1">
                 Games
               </span>
               {filteredGames.map((game) => {
@@ -83,34 +89,34 @@ export const CommandPalette: React.FC = () => {
                       setCommandPaletteOpen(false);
                       navigate('game-detail', game.id);
                     }}
-                    className="px-3 py-2 rounded-md hover:bg-bg-hover flex items-center justify-between cursor-default border border-transparent hover:border-white/5 transition-[background-color] duration-150 group"
+                    className="px-3.5 py-2.5 rounded-2xl hover:bg-white/[0.08] flex items-center justify-between cursor-default border border-transparent hover:border-white/[0.12] transition-all duration-150 group"
                   >
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-3.5">
                       <img
                         src={game.coverImage}
                         alt=""
-                        className="w-10 h-7 rounded-md object-cover border border-white/10"
+                        className="w-12 h-8 rounded-xl object-cover border border-white/10 shadow-sm"
                       />
                       <div>
                         <div className="flex items-center gap-2">
-                          <span className="text-xs font-medium text-slate-200 group-hover:text-white transition-colors">
+                          <span className="text-xs font-semibold text-slate-200 group-hover:text-white transition-colors">
                             {game.title}
                           </span>
                           {isOwned && (
-                            <span className="text-[10px] text-success border border-success/30 bg-success/10 px-1.5 py-0.5 rounded-md leading-none">
-                              Owned
+                            <span className="text-[10px] text-success border border-success/30 bg-success/15 px-2 py-0.5 rounded-full leading-none font-medium">
+                              In library
                             </span>
                           )}
                         </div>
-                        <span className="text-[11px] text-slate-500 block line-clamp-1 mt-0.5">
-                          {game.tagline}
+                        <span className="text-[11px] text-slate-400 mt-0.5 block">
+                          {game.developer}
                         </span>
                       </div>
                     </div>
-                    <div className="flex items-center gap-2 text-xs text-slate-500 tabular-nums shrink-0">
-                      <span>{typeof game.price === 'number' ? `$${game.price}` : game.price}</span>
-                      <ChevronRight className="w-3.5 h-3.5 group-hover:text-accent transition-colors" strokeWidth={1.5} />
-                    </div>
+
+                    <span className="text-xs font-semibold text-slate-300 tabular-nums">
+                      {isOwned ? 'Installed' : typeof game.price === 'number' ? `$${game.price.toFixed(2)}` : game.price}
+                    </span>
                   </div>
                 );
               })}
@@ -118,9 +124,9 @@ export const CommandPalette: React.FC = () => {
           )}
 
           {filteredArticles.length > 0 && (
-            <div className="space-y-0.5 pt-2 border-t border-white/5">
-              <span className="text-[11px] font-semibold tracking-[0.06em] uppercase text-slate-500 block px-2 pb-1">
-                Updates
+            <div className="space-y-1 pt-1 border-t border-white/[0.06]">
+              <span className="text-xs font-semibold text-slate-400 block px-3 pt-2 pb-1">
+                Dispatches and patch notes
               </span>
               {filteredArticles.map((article) => (
                 <div
@@ -129,44 +135,20 @@ export const CommandPalette: React.FC = () => {
                     setCommandPaletteOpen(false);
                     openArticle(article);
                   }}
-                  className="px-3 py-2 rounded-md hover:bg-bg-hover flex items-center justify-between cursor-default border border-transparent hover:border-white/5 transition-[background-color] duration-150 group"
+                  className="px-3.5 py-2.5 rounded-xl hover:bg-white/[0.08] flex items-center justify-between cursor-default border border-transparent hover:border-white/[0.1] transition-all duration-150 group"
                 >
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-md bg-bg-card border border-white/10 flex items-center justify-center text-slate-400 shrink-0">
-                      <Radio className="w-4 h-4" strokeWidth={1.5} />
-                    </div>
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-[10px] bg-bg-hover px-1.5 py-0.5 rounded-md text-slate-400 border border-white/10">
-                          {article.gameTitle}
-                        </span>
-                        <span className="text-xs font-medium text-slate-200 group-hover:text-white transition-colors truncate max-w-xs">
-                          {article.title}
-                        </span>
-                      </div>
-                      <span className="text-[11px] text-slate-500 block line-clamp-1 mt-0.5">
-                        {article.summary}
-                      </span>
-                    </div>
+                  <div className="space-y-0.5">
+                    <span className="text-xs font-medium text-slate-300 group-hover:text-accent transition-colors block">
+                      {article.title}
+                    </span>
+                    <span className="text-[11px] text-slate-500">
+                      {article.gameTitle} · {article.date}
+                    </span>
                   </div>
-                  <ChevronRight className="w-3.5 h-3.5 text-slate-500 group-hover:text-accent transition-colors shrink-0" strokeWidth={1.5} />
                 </div>
               ))}
             </div>
           )}
-
-          {filteredGames.length === 0 && filteredArticles.length === 0 && (
-            <div className="py-8 text-center text-xs text-slate-500">
-              No results for "{query}"
-            </div>
-          )}
-        </div>
-
-        {/* Footer shortcuts */}
-        <div className="px-4 py-2 bg-bg-app border-t border-white/5 flex items-center justify-between text-[11px] text-slate-500">
-          <span className="flex items-center gap-1">Navigate <Kbd>↑</Kbd> <Kbd>↓</Kbd></span>
-          <span className="flex items-center gap-1">Open <Kbd>Enter</Kbd></span>
-          <span className="flex items-center gap-1">Close <Kbd>Esc</Kbd></span>
         </div>
       </div>
     </div>

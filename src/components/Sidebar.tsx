@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useStore } from '../store/useStore';
 import {
   ShoppingBag,
@@ -6,11 +6,9 @@ import {
   Download,
   Radio,
   Settings,
-  Plus,
-  Play,
+  Image as ImageIcon,
 } from 'lucide-react';
-import { NavigationTab } from '../types/store';
-import { NumberTicker } from './ui/NumberTicker';
+import { NavigationTab, Game } from '../types/store';
 
 export const Sidebar: React.FC = () => {
   const {
@@ -20,10 +18,12 @@ export const Sidebar: React.FC = () => {
     runningGameId,
     games,
     currentUser,
-    launchGame,
+    openAuthModal,
   } = useStore();
 
-  const activeDownload = downloads.find((d) => d.status === 'DOWNLOADING');
+  const [hoveredGameId, setHoveredGameId] = useState<string | null>(null);
+  const [imageErrors, setImageErrors] = useState<Record<string, boolean>>({});
+
   const activeDownloadCount = downloads.filter((d) => d.status === 'DOWNLOADING').length;
   const ownedGames = games.filter((g) => currentUser.ownedGameIds.includes(g.id));
 
@@ -37,31 +37,30 @@ export const Sidebar: React.FC = () => {
       badge: activeDownloadCount > 0 ? activeDownloadCount : undefined,
     },
     { id: 'community' as NavigationTab, label: 'Community', icon: Radio },
-    { id: 'settings' as NavigationTab, label: 'Settings', icon: Settings },
   ];
 
-  return (
-    <aside className="w-56 bg-bg-sidebar border border-white/5 border-t-white/10 rounded-md flex flex-col justify-between select-none shrink-0 z-30 overflow-hidden">
-      {/* Brand */}
-      <div className="flex flex-col">
-        <div className="px-4 py-3 flex items-center gap-3 border-b border-white/5">
-          <img
-            src="/images/logo.png"
-            alt="OneEngine"
-            className="w-5 h-5 object-contain shrink-0"
-          />
-          <div className="flex flex-col text-left">
-            <span className="text-sm font-semibold tracking-tight text-white leading-none">
-              One<span className="text-accent">Engine</span>
-            </span>
-            <span className="text-[11px] text-slate-400 mt-0.5 leading-none">
-              Desktop client
-            </span>
-          </div>
-        </div>
+  const handleImageError = (id: string) => {
+    setImageErrors((prev) => ({ ...prev, [id]: true }));
+  };
 
-        {/* Nav */}
-        <nav className="flex flex-col p-2 gap-0.5">
+  return (
+    <aside className="w-[76px] bg-bg-app flex flex-col items-center py-2 select-none shrink-0 z-30 justify-between h-full">
+      {/* Brand logo at top */}
+      <div className="flex flex-col items-center gap-3 w-full">
+        <button
+          onClick={() => navigate('store')}
+          className="w-10 h-10 rounded-full flex items-center justify-center hover:bg-white/[0.06] transition-surface cursor-default mb-1"
+          title="OneEngine Store"
+        >
+          <img
+            src="./images/logo.png"
+            alt="OneEngine"
+            className="w-6 h-6 object-contain"
+          />
+        </button>
+
+        {/* Primary nav rail */}
+        <nav className="flex flex-col items-center gap-2 w-full px-2">
           {navItems.map((item) => {
             const Icon = item.icon;
             const isActive =
@@ -72,146 +71,139 @@ export const Sidebar: React.FC = () => {
               <button
                 key={item.id}
                 onClick={() => navigate(item.id)}
-                className={`nav-item-active-wrapper relative w-full flex items-center justify-between px-3 py-2 rounded-md text-sm font-medium transition-[background-color,color] duration-150 ease-out ${
+                className={`relative w-[60px] h-[52px] rounded-full flex flex-col items-center justify-center gap-1 transition-surface cursor-default group ${
                   isActive
-                    ? 'nav-item-active bg-accent/10 text-white'
-                    : 'text-slate-400 hover:text-white hover:bg-bg-hover'
+                    ? 'bg-accent/15 text-accent border border-accent/35 shadow-sm'
+                    : 'text-slate-400 hover:text-slate-100 hover:bg-white/[0.06] border border-transparent'
                 }`}
+                title={item.label}
               >
-                <div className="flex items-center gap-3">
+                <div className="relative">
                   <Icon
-                    className={`w-4 h-4 shrink-0 ${isActive ? 'text-accent' : 'text-slate-400'}`}
-                    strokeWidth={1.5}
+                    className={`w-5 h-5 transition-colors ${
+                      isActive ? 'text-accent' : 'text-slate-400 group-hover:text-slate-200'
+                    }`}
+                    strokeWidth={isActive ? 2 : 1.75}
                   />
-                  <span>{item.label}</span>
+                  {item.badge !== undefined && (
+                    <span className="absolute -top-1 -right-2 px-1 min-w-[14px] h-3.5 flex items-center justify-center text-[9px] font-bold rounded-full bg-accent text-bg-app tabular-nums">
+                      {item.badge}
+                    </span>
+                  )}
                 </div>
-
-                {item.badge !== undefined && (
-                  <span className="px-1.5 py-0.5 text-[10px] font-semibold rounded-full bg-accent text-bg-app tabular-nums leading-none">
-                    {item.badge}
-                  </span>
-                )}
+                <span className={`text-[10px] tracking-tight leading-none ${
+                  isActive ? 'font-semibold text-accent' : 'font-medium text-slate-400 group-hover:text-slate-200'
+                }`}>
+                  {item.label}
+                </span>
               </button>
             );
           })}
         </nav>
-      </div>
 
-      {/* Library section + footer */}
-      <div className="flex-1 flex flex-col min-h-0 border-t border-white/5 overflow-hidden">
-        {/* Section label */}
-        <div className="flex items-center justify-between px-4 pt-3 pb-2">
-          <span className="text-[11px] font-semibold tracking-[0.06em] uppercase text-slate-500">
-            Library
-          </span>
-          <button
-            onClick={() => navigate('store')}
-            className="text-slate-500 hover:text-white transition-colors p-0.5 rounded-md hover:bg-bg-hover"
-            title="Browse store"
-          >
-            <Plus className="w-3.5 h-3.5" strokeWidth={1.5} />
-          </button>
-        </div>
+        {/* Divider before library quick art icons */}
+        <div className="w-8 h-px bg-white/[0.08] my-1" />
 
-        {/* Owned games list */}
-        <div className="flex-1 overflow-y-auto px-2 space-y-0.5 pb-2">
-          {ownedGames.slice(0, 6).map((game) => {
-            const isPlayingThis = runningGameId === game.id;
+        {/* Quick library games 40px rounded art icons */}
+        <div className="flex flex-col items-center gap-2 w-full px-2 overflow-y-auto max-h-[calc(100vh-380px)] custom-scroll">
+          {ownedGames.slice(0, 6).map((game: Game) => {
+            const isPlaying = runningGameId === game.id;
+            const isDownloading = downloads.some(
+              (d) => d.gameId === game.id && d.status === 'DOWNLOADING'
+            );
+            const hasError = imageErrors[game.id];
 
             return (
               <div
                 key={game.id}
-                onClick={() => navigate('game-detail', game.id)}
-                className={`group flex items-center justify-between px-2 py-1.5 rounded-md cursor-default transition-[background-color] duration-150 ${
-                  isPlayingThis
-                    ? 'bg-success/10 border border-success/20'
-                    : 'hover:bg-bg-hover border border-transparent'
-                }`}
+                className="relative group"
+                onMouseEnter={() => setHoveredGameId(game.id)}
+                onMouseLeave={() => setHoveredGameId(null)}
               >
-                <div className="flex items-center gap-2 min-w-0">
-                  <img
-                    src={game.coverImage}
-                    alt={game.title}
-                    className="w-7 h-7 rounded-md object-cover shrink-0"
-                  />
-                  <div className="flex flex-col min-w-0 text-left">
-                    <span className="text-xs text-slate-300 group-hover:text-white font-medium truncate leading-none">
-                      {game.title}
-                    </span>
-                    <span className="text-[10px] text-slate-500 truncate mt-0.5 leading-none">
-                      {isPlayingThis ? 'Running' : game.genre || 'Installed'}
+                <button
+                  onClick={() => navigate('game-detail', game.id)}
+                  className={`relative w-10 h-10 rounded-[12px] overflow-hidden border transition-surface cursor-default flex items-center justify-center bg-bg-card ${
+                    isPlaying
+                      ? 'border-success ring-2 ring-success/30'
+                      : isDownloading
+                      ? 'border-accent ring-2 ring-accent/30'
+                      : 'border-white/10 hover:border-white/30 hover:scale-105'
+                  }`}
+                >
+                  {!hasError ? (
+                    <img
+                      src={game.coverImage}
+                      alt={game.title}
+                      onError={() => handleImageError(game.id)}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex flex-col items-center justify-center bg-bg-panel text-slate-400">
+                      <ImageIcon className="w-4 h-4 opacity-60" strokeWidth={1.5} />
+                    </div>
+                  )}
+
+                  {/* Status dot badge */}
+                  {isPlaying && (
+                    <span className="absolute bottom-0.5 right-0.5 w-2 h-2 rounded-full bg-success ring-1 ring-bg-app animate-pulse" />
+                  )}
+                  {isDownloading && !isPlaying && (
+                    <span className="absolute bottom-0.5 right-0.5 w-2 h-2 rounded-full bg-accent ring-1 ring-bg-app" />
+                  )}
+                </button>
+
+                {/* Floating tooltip */}
+                {hoveredGameId === game.id && (
+                  <div className="absolute left-[52px] top-1/2 -translate-y-1/2 z-50 bg-bg-card border border-white/15 rounded-md px-2.5 py-1 text-xs text-slate-100 shadow-popover whitespace-nowrap pointer-events-none animate-soft-enter flex items-center gap-1.5">
+                    <span className="font-medium">{game.title}</span>
+                    <span className="text-[10px] text-slate-400">
+                      {isPlaying ? '(Running)' : isDownloading ? '(Updating)' : '(Installed)'}
                     </span>
                   </div>
-                </div>
-
-                {isPlayingThis ? (
-                  <span className="w-1.5 h-1.5 rounded-full bg-success animate-pulse shrink-0 mr-1" />
-                ) : (
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      launchGame(game.id);
-                    }}
-                    className="opacity-0 group-hover:opacity-100 p-1 text-slate-400 hover:text-accent rounded-md hover:bg-white/10 transition-[opacity,background-color] duration-150"
-                    title="Launch"
-                  >
-                    <Play className="w-3 h-3 fill-current" strokeWidth={1.5} />
-                  </button>
                 )}
               </div>
             );
           })}
         </div>
+      </div>
 
-        {/* Bottom: active download chip + user footer */}
-        <div className="border-t border-white/5 p-2 space-y-2">
-          {activeDownload && (
-            <div
-              onClick={() => navigate('downloads')}
-              className="bg-bg-hover border border-white/10 rounded-md px-3 py-2 space-y-1.5 cursor-default transition-[background-color] duration-150 hover:bg-bg-pressed"
-            >
-              <div className="flex items-center justify-between text-[11px]">
-                <span className="font-medium text-slate-300 flex items-center gap-1.5">
-                  <Download className="w-3 h-3 text-accent" strokeWidth={1.5} /> Downloading
-                </span>
-                <span className="text-slate-400 tabular-nums">
-                  <NumberTicker value={activeDownload.speedMbps} decimalPlaces={1} suffix=" MB/s" />
-                </span>
-              </div>
+      {/* Bottom rail: Settings & avatar */}
+      <div className="flex flex-col items-center gap-2 w-full px-2 pb-1">
+        <button
+          onClick={() => navigate('settings')}
+          className={`w-[60px] h-[52px] rounded-full flex flex-col items-center justify-center gap-1 transition-surface cursor-default group ${
+            activeTab === 'settings'
+              ? 'bg-accent/15 text-accent border border-accent/35'
+              : 'text-slate-400 hover:text-slate-100 hover:bg-white/[0.06] border border-transparent'
+          }`}
+          title="Settings"
+        >
+          <Settings
+            className={`w-5 h-5 ${
+              activeTab === 'settings' ? 'text-accent' : 'text-slate-400 group-hover:text-slate-200'
+            }`}
+            strokeWidth={activeTab === 'settings' ? 2 : 1.75}
+          />
+          <span className={`text-[10px] tracking-tight leading-none ${
+            activeTab === 'settings' ? 'font-semibold text-accent' : 'font-medium text-slate-400 group-hover:text-slate-200'
+          }`}>
+            Settings
+          </span>
+        </button>
 
-              <div className="text-[11px] text-slate-400 truncate">
-                {activeDownload.title}
-              </div>
-
-              <div className="w-full h-1 bg-bg-app rounded-full overflow-hidden">
-                <div
-                  className="h-full bg-accent transition-[width] duration-300"
-                  style={{ width: `${activeDownload.progress}%` }}
-                />
-              </div>
-            </div>
-          )}
-
-          {/* User chip */}
-          <div className="flex items-center gap-2 px-1">
-            <div className="relative shrink-0">
-              <img
-                src={currentUser.avatarUrl}
-                alt={currentUser.callsign}
-                className="w-6 h-6 rounded-full border border-white/20 object-cover"
-              />
-              <span className="absolute bottom-0 right-0 w-1.5 h-1.5 rounded-full bg-success ring-1 ring-bg-sidebar" />
-            </div>
-            <div className="flex flex-col text-left overflow-hidden">
-              <span className="text-xs text-slate-200 font-medium truncate leading-none">
-                {currentUser.callsign}
-              </span>
-              <span className="text-[10px] text-slate-500 truncate mt-0.5 leading-none">
-                Online
-              </span>
-            </div>
-          </div>
-        </div>
+        {/* User avatar with presence dot */}
+        <button
+          onClick={openAuthModal}
+          className="relative w-10 h-10 rounded-full p-0.5 border border-white/15 hover:border-accent/60 transition-surface cursor-default group"
+          title={`Signed in as ${currentUser.callsign}`}
+        >
+          <img
+            src={currentUser.avatarUrl}
+            alt={currentUser.callsign}
+            className="w-full h-full rounded-full object-cover"
+          />
+          <span className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-success ring-2 ring-bg-app" />
+        </button>
       </div>
     </aside>
   );
