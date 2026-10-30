@@ -15,10 +15,12 @@ export const CommandPalette: React.FC = () => {
   } = useStore();
 
   const [query, setQuery] = useState('');
+  const [selectedIndex, setSelectedIndex] = useState(0);
 
   useEffect(() => {
     if (isCommandPaletteOpen) {
       setQuery('');
+      setSelectedIndex(0);
     }
   }, [isCommandPaletteOpen]);
 
@@ -41,10 +43,46 @@ export const CommandPalette: React.FC = () => {
       )
     : articles.slice(0, 3);
 
+  const totalItems = filteredGames.length + filteredArticles.length;
+
+  const selectItem = (index: number) => {
+    if (index < filteredGames.length) {
+      const target = filteredGames[index];
+      if (target) {
+        setCommandPaletteOpen(false);
+        navigate('game-detail', target.id);
+      }
+    } else {
+      const target = filteredArticles[index - filteredGames.length];
+      if (target) {
+        setCommandPaletteOpen(false);
+        openArticle(target);
+      }
+    }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      setSelectedIndex((prev) => (totalItems > 0 ? (prev + 1) % totalItems : 0));
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      setSelectedIndex((prev) => (totalItems > 0 ? (prev - 1 + totalItems) % totalItems : 0));
+    } else if (e.key === 'Enter') {
+      e.preventDefault();
+      if (totalItems > 0) {
+        selectItem(selectedIndex);
+      }
+    } else if (e.key === 'Escape') {
+      setCommandPaletteOpen(false);
+    }
+  };
+
   return (
     <div 
       className="fixed inset-0 z-[70] flex items-start justify-center pt-20 bg-black/70 backdrop-blur-md p-4 select-none"
       onClick={() => setCommandPaletteOpen(false)}
+      onKeyDown={handleKeyDown}
     >
       <div 
         className="w-full max-w-2xl bg-gunmetal-slate border border-border-stroke border-t border-white/15 rounded-md shadow-2xl overflow-hidden flex flex-col transition-all duration-150"
@@ -57,7 +95,10 @@ export const CommandPalette: React.FC = () => {
             type="text"
             autoFocus
             value={query}
-            onChange={(e) => setQuery(e.target.value)}
+            onChange={(e) => {
+              setQuery(e.target.value);
+              setSelectedIndex(0);
+            }}
             placeholder="Type a game title, tag, or topic... (ESC to close)"
             className="w-full bg-transparent text-sm text-slate-100 placeholder-slate-400 focus:outline-none"
           />
@@ -78,8 +119,9 @@ export const CommandPalette: React.FC = () => {
                 Games & Library
               </span>
               <div className="space-y-1">
-                {filteredGames.map((game) => {
+                {filteredGames.map((game, i) => {
                   const isOwned = currentUser.ownedGameIds.includes(game.id);
+                  const isFocused = selectedIndex === i;
                   return (
                     <div
                       key={game.id}
@@ -87,7 +129,12 @@ export const CommandPalette: React.FC = () => {
                         setCommandPaletteOpen(false);
                         navigate('game-detail', game.id);
                       }}
-                      className="p-2.5 rounded-md hover:bg-tech-surface flex items-center justify-between cursor-pointer border border-transparent hover:border-border-stroke transition-all active:scale-[0.98] group"
+                      onMouseEnter={() => setSelectedIndex(i)}
+                      className={`p-2.5 rounded-md flex items-center justify-between cursor-pointer border transition-all active:scale-[0.98] group ${
+                        isFocused
+                          ? 'bg-tech-elevated border-primary-accent/80'
+                          : 'hover:bg-tech-surface border-transparent hover:border-border-stroke'
+                      }`}
                     >
                       <div className="flex items-center space-x-3">
                         <img 
@@ -97,7 +144,7 @@ export const CommandPalette: React.FC = () => {
                         />
                         <div>
                           <div className="flex items-center space-x-2">
-                            <span className="text-xs font-medium text-slate-200 group-hover:text-primary-accent transition-colors">
+                            <span className={`text-xs font-medium transition-colors ${isFocused ? 'text-primary-accent' : 'text-slate-200 group-hover:text-primary-accent'}`}>
                               {game.title}
                             </span>
                             {isOwned && (
@@ -130,37 +177,46 @@ export const CommandPalette: React.FC = () => {
                 Dispatches & Updates
               </span>
               <div className="space-y-1">
-                {filteredArticles.map((article) => (
-                  <div
-                    key={article.id}
-                    onClick={() => {
-                      setCommandPaletteOpen(false);
-                      openArticle(article);
-                    }}
-                    className="p-2.5 rounded-md hover:bg-tech-surface flex items-center justify-between cursor-pointer border border-transparent hover:border-border-stroke transition-all active:scale-[0.98] group"
-                  >
-                    <div className="flex items-center space-x-3">
-                      <div className="w-8 h-8 rounded-md bg-void-black border border-border-stroke flex items-center justify-center text-secondary-tech shrink-0">
-                        <Radio className="w-4 h-4" />
-                      </div>
-                      <div>
-                        <div className="flex items-center space-x-2">
-                          <span className="text-[10px] bg-tech-elevated px-1.5 py-0.5 rounded-md text-slate-300">
-                            {article.gameTitle}
-                          </span>
-                          <span className="text-xs font-medium text-slate-200 group-hover:text-primary-accent transition-colors truncate max-w-sm">
-                            {article.title}
+                {filteredArticles.map((article, j) => {
+                  const itemIndex = filteredGames.length + j;
+                  const isFocused = selectedIndex === itemIndex;
+                  return (
+                    <div
+                      key={article.id}
+                      onClick={() => {
+                        setCommandPaletteOpen(false);
+                        openArticle(article);
+                      }}
+                      onMouseEnter={() => setSelectedIndex(itemIndex)}
+                      className={`p-2.5 rounded-md flex items-center justify-between cursor-pointer border transition-all active:scale-[0.98] group ${
+                        isFocused
+                          ? 'bg-tech-elevated border-primary-accent/80'
+                          : 'hover:bg-tech-surface border-transparent hover:border-border-stroke'
+                      }`}
+                    >
+                      <div className="flex items-center space-x-3">
+                        <div className="w-8 h-8 rounded-md bg-void-black border border-border-stroke flex items-center justify-center text-secondary-tech shrink-0">
+                          <Radio className="w-4 h-4" />
+                        </div>
+                        <div>
+                          <div className="flex items-center space-x-2">
+                            <span className="text-[10px] bg-tech-elevated px-1.5 py-0.5 rounded-md text-slate-300">
+                              {article.gameTitle}
+                            </span>
+                            <span className={`text-xs font-medium transition-colors truncate max-w-sm ${isFocused ? 'text-primary-accent' : 'text-slate-200 group-hover:text-primary-accent'}`}>
+                              {article.title}
+                            </span>
+                          </div>
+                          <span className="text-[11px] text-slate-400 block line-clamp-1">
+                            {article.summary}
                           </span>
                         </div>
-                        <span className="text-[11px] text-slate-400 block line-clamp-1">
-                          {article.summary}
-                        </span>
                       </div>
-                    </div>
 
-                    <ChevronRight className="w-3.5 h-3.5 text-slate-400 group-hover:text-primary-accent shrink-0" />
-                  </div>
-                ))}
+                      <ChevronRight className="w-3.5 h-3.5 text-slate-400 group-hover:text-primary-accent shrink-0" />
+                    </div>
+                  );
+                })}
               </div>
             </div>
           )}

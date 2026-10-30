@@ -12,7 +12,7 @@ export default {
         'tech-surface': '#141921',
         'tech-elevated': '#1C232E',
         'border-stroke': '#262F3D',
-        'primary-accent': '#FF7A00',
+        'primary-accent': 'rgb(var(--primary-accent-rgb) / <alpha-value>)',
         'secondary-tech': '#00E5FF',
         'tactical-green': '#10B981',
         'tactical-danger': '#E53935',

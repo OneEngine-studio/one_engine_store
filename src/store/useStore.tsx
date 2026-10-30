@@ -9,6 +9,7 @@ import {
   ClientNotification, 
   ToastNotification 
 } from '../types/store';
+import { LauncherBridge } from '../lib/launcherBridge';
 
 // Synthetic Tactical Audio Engine via Web Audio API (zero audio files needed)
 const playSynthesizerSound = (type: 'click' | 'launch' | 'hover' | 'alert' | 'purchase', enabled: boolean) => {
@@ -427,6 +428,7 @@ const PRESET_USERS: Record<string, UserProfile> = {
     walletBalance: 149.50,
     role: 'DEVELOPER',
     ownedGameIds: ['railbound', 'cyber-siege', 'rust-protocol', 'neon-drifter'], // 4 owned
+    authToken: 'oe_jwt_spectre_07_developer_bypass_9812',
   },
   COMPETITIVE: {
     id: 'usr_valkyrie_9',
@@ -434,11 +436,12 @@ const PRESET_USERS: Record<string, UserProfile> = {
     rank: 'ELITE VANGUARD',
     level: 42,
     avatarUrl: 'https://api.dicebear.com/7.x/bottts/svg?seed=Valkyrie_9',
-    status: 'IN_GAME',
-    currentGame: 'Railbound',
+    status: 'ONLINE',
+    currentGame: undefined,
     walletBalance: 42.00,
     role: 'OPERATOR',
     ownedGameIds: ['railbound', 'cyber-siege'], // 2 owned
+    authToken: 'oe_jwt_valkyrie_9_operator_bypass_4421',
   },
   GUEST: {
     id: 'usr_guest_recon',
@@ -451,6 +454,7 @@ const PRESET_USERS: Record<string, UserProfile> = {
     walletBalance: 0.00,
     role: 'OPERATOR',
     ownedGameIds: [], // 0 owned (clean empty state)
+    authToken: 'oe_jwt_guest_recon_bypass_0001',
   }
 };
 
@@ -640,6 +644,7 @@ interface StoreContextType {
   stopGame: (gameId: string) => void;
   toggleFavorite: (gameId: string) => void;
   purchaseGame: (gameId: string) => boolean;
+  purchaseDLC: (gameId: string, dlcId: string) => boolean;
   updateSettings: (newSettings: Partial<AppSettings>) => void;
   playTactileSound: (type: 'click' | 'launch' | 'hover' | 'alert' | 'purchase') => void;
   addToast: (message: string, type?: 'info' | 'success' | 'warning') => void;
@@ -654,10 +659,30 @@ interface StoreContextType {
 
 const StoreContext = createContext<StoreContextType | null>(null);
 
+const loadFromStorage = <T,>(key: string, fallback: T): T => {
+  if (typeof window === 'undefined') return fallback;
+  try {
+    const item = localStorage.getItem(key);
+    return item ? JSON.parse(item) : fallback;
+  } catch {
+    return fallback;
+  }
+};
+
+const DEFAULT_SETTINGS: AppSettings = {
+  launchOnStartup: true,
+  downloadDirectory: 'C:\\OneEngine\\GameLibrary',
+  primaryAccent: '#FF7A00',
+  enableTactileAudio: true,
+  hardwareAcceleration: true,
+  devTelemetryMode: false,
+  bandwidthThrottleMbps: 0,
+};
+
 export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [activeTab, setActiveTab] = useState<NavigationTab>('store');
   const [selectedGameId, setSelectedGameId] = useState<string>('railbound');
-  const [games, setGames] = useState<Game[]>(INITIAL_GAMES);
+  const [games, setGames] = useState<Game[]>(() => loadFromStorage('oe_games', INITIAL_GAMES));
   const [downloads, setDownloads] = useState<DownloadItem[]>([
     {
       gameId: 'rust-protocol',
@@ -672,12 +697,13 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       etaSeconds: 210,
     }
   ]);
-  const [currentUser, setCurrentUser] = useState<UserProfile>(PRESET_USERS.DEVELOPER);
+  const [currentUser, setCurrentUser] = useState<UserProfile>(() => loadFromStorage('oe_user', PRESET_USERS.DEVELOPER));
   const [searchQuery, setSearchQuery] = useState('');
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
   const [selectedArticle, setSelectedArticle] = useState<Article | null>(null);
   const [runningGameId, setRunningGameId] = useState<string | null>(null);
+  const [runningGamePid, setRunningGamePid] = useState<number | null>(null);
   const [launchingGameId, setLaunchingGameId] = useState<string | null>(null);
   const [sessionElapsedSeconds, setSessionElapsedSeconds] = useState<number>(0);
   const [isPausedAll, setIsPausedAll] = useState(false);
@@ -696,20 +722,67 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   ]);
   const [historyIndex, setHistoryIndex] = useState(0);
 
-  const [settings, setSettings] = useState<AppSettings>({
-    launchOnStartup: true,
-    downloadDirectory: 'C:\\OneEngine\\GameLibrary',
-    primaryAccent: '#FF7A00',
-    enableTactileAudio: true,
-    hardwareAcceleration: true,
-    devTelemetryMode: false,
-    bandwidthThrottleMbps: 0,
-  });
+  const [settings, setSettings] = useState<AppSettings>(() => loadFromStorage('oe_settings', DEFAULT_SETTINGS));
 
   const settingsRef = useRef(settings);
   useEffect(() => {
     settingsRef.current = settings;
+    try {
+      localStorage.setItem('oe_settings', JSON.stringify(settings));
+    } catch {}
   }, [settings]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('oe_games', JSON.stringify(games));
+    } catch {}
+  }, [games]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('oe_user', JSON.stringify(currentUser));
+    } catch {}
+  }, [currentUser]);
+
+  // Sync primary accent CSS variable to document root
+  useEffect(() => {
+    const clean = settings.primaryAccent.replace('#', '');
+    if (clean.length === 6) {
+      const r = parseInt(clean.substring(0, 2), 16);
+      const g = parseInt(clean.substring(2, 4), 16);
+      const b = parseInt(clean.substring(4, 6), 16);
+      document.documentElement.style.setProperty('--primary-accent-rgb', `${r} ${g} ${b}`);
+    }
+  }, [settings.primaryAccent]);
+
+  // Process Exit listener from LauncherBridge (Electron / Tauri)
+  useEffect(() => {
+    let unlistenFn: (() => void) | undefined;
+    LauncherBridge.onProcessExit((payload) => {
+      console.log('[OneEngine] Game process exited:', payload);
+      setRunningGameId((currentRunning) => {
+        if (currentRunning) {
+          setGames((prev) =>
+            prev.map((g) => (g.id === currentRunning ? { ...g, status: 'INSTALLED' } : g))
+          );
+          setCurrentUser((prev) => ({
+            ...prev,
+            status: 'ONLINE',
+            currentGame: undefined,
+          }));
+          addToast(`Game process exited (Code: ${payload.code}).`, 'info');
+        }
+        return null;
+      });
+      setRunningGamePid(null);
+    }).then((cleanup) => {
+      if (typeof cleanup === 'function') unlistenFn = cleanup;
+    });
+
+    return () => {
+      if (unlistenFn) unlistenFn();
+    };
+  }, []);
 
   // Sound wrapper
   const triggerSound = (type: 'click' | 'launch' | 'hover' | 'alert' | 'purchase') => {
@@ -776,9 +849,14 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         const activeDownload = prevDownloads.find((d) => d.status === 'DOWNLOADING');
         if (!activeDownload || isPausedAll) return prevDownloads;
 
-        // Realistic bandwidth jitter around 64.8 MB/s
-        const jitter = (Math.random() - 0.48) * 6;
-        const currentSpeed = Math.max(18, Math.min(95, +(64.8 + jitter).toFixed(1)));
+        // Bandwidth calculation respecting throttle setting
+        let targetSpeed = 64.8;
+        const throttle = settingsRef.current.bandwidthThrottleMbps;
+        if (throttle > 0) {
+          targetSpeed = Math.min(throttle, targetSpeed);
+        }
+        const jitter = (Math.random() - 0.48) * (targetSpeed * 0.08);
+        const currentSpeed = Math.max(1, +(targetSpeed + jitter).toFixed(1));
         const diskSpeed = +(currentSpeed * 1.72).toFixed(1);
 
         // Update telemetry graph
@@ -786,9 +864,9 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
         return prevDownloads.map((item) => {
           if (item.status !== 'DOWNLOADING' || isPausedAll) return item;
-          const increment = 0.5;
-          const nextProgress = Math.min(100, +(item.progress + increment).toFixed(1));
-          const nextDownloadedGb = +((nextProgress / 100) * item.totalGb).toFixed(1);
+          const increment = +(currentSpeed / 1024).toFixed(3);
+          const nextDownloadedGb = Math.min(item.totalGb, +(item.downloadedGb + increment).toFixed(2));
+          const nextProgress = Math.min(100, +((nextDownloadedGb / item.totalGb) * 100).toFixed(1));
 
           if (nextProgress >= 100) {
             // Complete download
@@ -944,18 +1022,29 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     addToast(isPausedAll ? 'Resumed all downloads' : 'Paused all downloads', 'info');
   };
 
-  const launchGame = (gameId: string) => {
+  const launchGame = async (gameId: string) => {
     triggerSound('click');
     setLaunchingGameId(gameId);
 
-    // Lifecycle: INITIALIZING (1.5s) -> RUNNING
-    setTimeout(() => {
+    const target = games.find((g) => g.id === gameId);
+    const gamePath = target?.id === 'railbound' ? 'C:\\Games\\Railbound\\Railbound.exe' : `C:\\Games\\${target?.title}\\game.exe`;
+
+    try {
+      const result = await LauncherBridge.launchGame({
+        gamePath,
+        authToken: currentUser.authToken || `oe_jwt_${currentUser.id}_bypass`,
+        playerName: currentUser.callsign,
+        userId: currentUser.id,
+      });
+
       triggerSound('launch');
       setLaunchingGameId(null);
       setRunningGameId(gameId);
+      if (result && result.pid) {
+        setRunningGamePid(result.pid);
+      }
       setSessionElapsedSeconds(0);
 
-      const target = games.find((g) => g.id === gameId);
       setGames((prev) =>
         prev.map((g) => (g.id === gameId ? { ...g, status: 'RUNNING' } : g))
       );
@@ -966,11 +1055,18 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       }));
 
       addToast(`Direct headless bypass active: ${target?.title} is running.`, 'success');
-    }, 1500);
+    } catch (err) {
+      setLaunchingGameId(null);
+      addToast('Game launch failed: ' + (err as Error).message, 'warning');
+    }
   };
 
-  const stopGame = (gameId: string) => {
+  const stopGame = async (gameId: string) => {
     triggerSound('click');
+    if (runningGamePid) {
+      await LauncherBridge.killGameProcess(runningGamePid);
+      setRunningGamePid(null);
+    }
     setRunningGameId(null);
     setLaunchingGameId(null);
     setGames((prev) =>
@@ -1016,6 +1112,41 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }));
 
     addToast(`Purchase successful! Added ${target.title} to Tactical Library.`, 'success');
+    return true;
+  };
+
+  const purchaseDLC = (gameId: string, dlcId: string): boolean => {
+    const targetGame = games.find((g) => g.id === gameId);
+    if (!targetGame) return false;
+
+    const dlc = targetGame.dlcs.find((d) => d.id === dlcId);
+    if (!dlc) return false;
+
+    if (currentUser.walletBalance < dlc.price) {
+      triggerSound('alert');
+      addToast(`Insufficient wallet funds ($${currentUser.walletBalance.toFixed(2)}) for $${dlc.price.toFixed(2)} DLC.`, 'warning');
+      return false;
+    }
+
+    triggerSound('purchase');
+    const newBalance = +(currentUser.walletBalance - dlc.price).toFixed(2);
+
+    setCurrentUser((prev) => ({
+      ...prev,
+      walletBalance: newBalance,
+    }));
+
+    setGames((prev) =>
+      prev.map((g) => {
+        if (g.id !== gameId) return g;
+        return {
+          ...g,
+          dlcs: g.dlcs.map((d) => (d.id === dlcId ? { ...d, owned: true } : d)),
+        };
+      })
+    );
+
+    addToast(`Purchase successful! Added ${dlc.title} to Tactical Library.`, 'success');
     return true;
   };
 
@@ -1174,6 +1305,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         stopGame,
         toggleFavorite,
         purchaseGame,
+        purchaseDLC,
         updateSettings,
         playTactileSound: triggerSound,
         addToast,

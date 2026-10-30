@@ -37,10 +37,10 @@ const MainViewport: React.FC = () => {
 
   return (
     <div className="flex flex-col h-screen w-screen bg-[#0A0507] text-slate-100 overflow-hidden font-sans select-none relative">
-      {/* Spotify-Style Deep Ambient Atmospheric Glows */}
+      {/* Tactical Ambient Atmospheric Glows */}
       <div className="pointer-events-none absolute -top-40 -left-20 w-[32rem] h-[32rem] bg-primary-accent/8 rounded-full blur-[140px]" />
-      <div className="pointer-events-none absolute top-1/4 -right-20 w-[36rem] h-[36rem] bg-[#581c87]/12 rounded-full blur-[160px]" />
-      <div className="pointer-events-none absolute -bottom-32 left-1/3 w-[30rem] h-[30rem] bg-[#00E5FF]/6 rounded-full blur-[140px]" />
+      <div className="pointer-events-none absolute top-1/4 -right-20 w-[36rem] h-[36rem] bg-tech-elevated/40 rounded-full blur-[160px]" />
+      <div className="pointer-events-none absolute -bottom-32 left-1/3 w-[30rem] h-[30rem] bg-secondary-tech/6 rounded-full blur-[140px]" />
 
       {/* Draggable Desktop Titlebar & OS Window Controls */}
       <WindowFrame />

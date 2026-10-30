@@ -2,6 +2,10 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  --primary-accent-rgb: 255 122 0;
+}
+
 @layer base {
   * {
     box-sizing: border-box;

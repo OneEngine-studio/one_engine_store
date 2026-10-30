@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { useStore } from '../store/useStore';
 import { Bell, Check, User, Sparkles, HardDrive } from 'lucide-react';
 
@@ -9,11 +9,39 @@ interface NotificationPopoverProps {
 
 export const NotificationPopover: React.FC<NotificationPopoverProps> = ({ isOpen, onClose }) => {
   const { notifications, markAllNotificationsRead } = useStore();
+  const popoverRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleDocumentClick = (e: MouseEvent) => {
+      if (popoverRef.current && !popoverRef.current.contains(e.target as Node)) {
+        onClose();
+      }
+    };
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onClose();
+      }
+    };
+
+    // Slight delay to allow trigger click without immediately closing
+    const timer = setTimeout(() => {
+      document.addEventListener('mousedown', handleDocumentClick);
+      document.addEventListener('keydown', handleKeyDown);
+    }, 10);
+
+    return () => {
+      clearTimeout(timer);
+      document.removeEventListener('mousedown', handleDocumentClick);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isOpen, onClose]);
 
   if (!isOpen) return null;
 
   return (
     <div 
+      ref={popoverRef}
       className="absolute top-10 right-2 w-80 bg-gunmetal-slate border border-border-stroke border-t border-white/10 rounded-md shadow-2xl z-50 overflow-hidden flex flex-col select-none"
       onClick={(e) => e.stopPropagation()}
     >

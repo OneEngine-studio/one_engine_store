@@ -89,6 +89,7 @@ export interface UserProfile {
   walletBalance: number;
   role: 'OPERATOR' | 'DEVELOPER' | 'ADMIN';
   ownedGameIds: string[];
+  authToken?: string;
 }
 
 export type NavigationTab = 'store' | 'game-detail' | 'library' | 'downloads' | 'community' | 'settings';

@@ -23,6 +23,7 @@ export const DownloadsScreen: React.FC = () => {
     cancelDownload, 
     speedTelemetryHistory,
     settings,
+    updateSettings,
     isPausedAll,
     togglePauseAllDownloads,
     launchGame,
@@ -32,7 +33,9 @@ export const DownloadsScreen: React.FC = () => {
   } = useStore();
 
   const [showThrottleModal, setShowThrottleModal] = useState(false);
-  const [throttleInput, setThrottleInput] = useState('50');
+  const [throttleInput, setThrottleInput] = useState(
+    settings.bandwidthThrottleMbps > 0 ? settings.bandwidthThrottleMbps.toString() : '50'
+  );
 
   const activeDownload = downloads.find((d) => d.status === 'DOWNLOADING');
   const currentSpeed = activeDownload?.speedMbps || 0;
@@ -76,8 +79,9 @@ export const DownloadsScreen: React.FC = () => {
   };
 
   const applyThrottle = () => {
-    const val = throttleInput.trim();
-    addToast(`Bandwidth limit set to ${val === '0' ? 'unlimited' : val + ' MB/s'}.`, 'info');
+    const val = Number(throttleInput.trim()) || 0;
+    updateSettings({ bandwidthThrottleMbps: val });
+    addToast(`Bandwidth limit set to ${val === 0 ? 'unlimited' : val + ' MB/s'}.`, 'info');
     setShowThrottleModal(false);
   };
 

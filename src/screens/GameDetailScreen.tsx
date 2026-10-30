@@ -36,6 +36,7 @@ export const GameDetailScreen: React.FC = () => {
     startDownload, 
     toggleFavorite,
     purchaseGame,
+    purchaseDLC,
     currentUser,
     settings,
     navigate,
@@ -435,7 +436,7 @@ export const GameDetailScreen: React.FC = () => {
                         </span>
                       ) : (
                         <button
-                          onClick={() => alert(`DLC purchase simulated.`)}
+                          onClick={() => purchaseDLC(game.id, dlc.id)}
                           className="px-3 py-1 bg-primary-accent hover:bg-[#E66E00] text-void-black font-semibold text-xs rounded-md active:scale-[0.98]"
                         >
                           Buy DLC
