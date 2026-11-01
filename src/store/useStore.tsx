@@ -146,285 +146,6 @@ const INITIAL_GAMES: Game[] = [
       }
     },
   },
-  {
-    id: 'cyber-siege',
-    title: 'Cyber Siege: Operative',
-    tagline: 'Hardcore CQB tactical extraction shooter in a neon-drenched megacity.',
-    description: 'Infiltrate corporate arcologies, breach reinforced bio-vaults, and extract classified zero-day exploits before defense teams lock down the perimeter.',
-    price: 39.99,
-    coverImage: 'https://images.unsplash.com/photo-1542751371-adc38448a05e?q=80&w=800&auto=format&fit=crop',
-    heroBanner: 'https://images.unsplash.com/photo-1542751371-adc38448a05e?q=80&w=1600&auto=format&fit=crop',
-    screenshots: [
-      'https://images.unsplash.com/photo-1542751371-adc38448a05e?q=80&w=1200&auto=format&fit=crop',
-      'https://images.unsplash.com/photo-1563089145-599997674d42?q=80&w=1200&auto=format&fit=crop',
-      'https://images.unsplash.com/photo-1511512578047-dfb367046420?q=80&w=1200&auto=format&fit=crop',
-      'https://images.unsplash.com/photo-1550745165-9bc0b252726f?q=80&w=1200&auto=format&fit=crop'
-    ],
-    tags: ['Extraction', 'Multiplayer', 'Hardcore', 'First-person'],
-    rating: 91,
-    ratingBreakdown: { positivePercent: 91, totalReviews: 8940 },
-    developer: 'Hexagon Tactical Labs',
-    publisher: 'OneEngine Interactive',
-    releaseDate: 'September 2026',
-    installed: true,
-    installSizeGb: 62.1,
-    isFavorite: false,
-    playHours: 114.8,
-    lastPlayed: 'Yesterday',
-    status: 'INSTALLED',
-    downloadProgress: 100,
-    downloadSpeedMbps: 0,
-    category: 'TRENDING_TACTICAL',
-    achievements: { unlocked: 34, total: 50 },
-    dlcs: [
-      { id: 'cs-dlc-1', title: 'Night Infiltration Tactical Operator Pack', description: 'Thermal oculars, suppressed carbines, and carbon weave infiltration rigs.', price: 14.99, owned: false }
-    ],
-    patchNotes: [
-      {
-        version: 'v2.1.0',
-        date: 'Oct 18, 2026',
-        notes: ['Added subterranean Sector 4 map.', 'Improved thermal sight balance.'],
-      }
-    ],
-    systemRequirements: {
-      minimum: {
-        os: 'Windows 10 64-bit',
-        processor: 'Intel Core i5-8400',
-        memory: '12 GB RAM',
-        graphics: 'NVIDIA GTX 1060 6GB',
-        storage: '65 GB SSD',
-      },
-      recommended: {
-        os: 'Windows 11 64-bit',
-        processor: 'AMD Ryzen 7 5800X',
-        memory: '16 GB RAM',
-        graphics: 'NVIDIA RTX 3070 8GB',
-        storage: '65 GB NVMe SSD',
-      }
-    },
-  },
-  {
-    id: 'project-void',
-    title: 'Project Void: Drift',
-    tagline: 'Zero-G Newtonian physics fighter & capital ship escort simulation.',
-    description: 'Pilot next-generation vector-thrust interceptors through dense planetary debris rings and execute tactical fleet coordination in deep space.',
-    price: 24.99,
-    discountPercent: 15,
-    coverImage: 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?q=80&w=800&auto=format&fit=crop',
-    heroBanner: 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?q=80&w=1600&auto=format&fit=crop',
-    screenshots: [
-      'https://images.unsplash.com/photo-1451187580459-43490279c0fa?q=80&w=1200&auto=format&fit=crop',
-      'https://images.unsplash.com/photo-1506703719100-a0f3a48c0f86?q=80&w=1200&auto=format&fit=crop',
-      'https://images.unsplash.com/photo-1446776811953-b23d57bd21aa?q=80&w=1200&auto=format&fit=crop',
-      'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?q=80&w=1200&auto=format&fit=crop'
-    ],
-    tags: ['Space sim', 'Physics', 'Flight', 'Sci-fi'],
-    rating: 88,
-    ratingBreakdown: { positivePercent: 88, totalReviews: 2310 },
-    developer: 'AstroCore Studios',
-    publisher: 'OneEngine Interactive',
-    releaseDate: 'August 2026',
-    installed: false,
-    installSizeGb: 28.5,
-    isFavorite: false,
-    playHours: 0,
-    status: 'UNINSTALLED',
-    downloadProgress: 0,
-    downloadSpeedMbps: 0,
-    category: 'TRENDING_TACTICAL',
-    achievements: { unlocked: 0, total: 30 },
-    dlcs: [],
-    patchNotes: [
-      {
-        version: 'v1.0.4',
-        date: 'Oct 05, 2026',
-        notes: ['HOTAS joystick calibration profile updates.'],
-      }
-    ],
-    systemRequirements: {
-      minimum: {
-        os: 'Windows 10 64-bit',
-        processor: 'Intel i5-7400',
-        memory: '8 GB RAM',
-        graphics: 'NVIDIA GTX 1050Ti',
-        storage: '30 GB SSD',
-      },
-      recommended: {
-        os: 'Windows 10 64-bit',
-        processor: 'Intel i7-9700K',
-        memory: '16 GB RAM',
-        graphics: 'NVIDIA GTX 1080Ti / RTX 2070',
-        storage: '30 GB SSD',
-      }
-    },
-  },
-  {
-    id: 'rust-protocol',
-    title: 'Rust Protocol: Mech Division',
-    tagline: 'High-lethality real-time mechanical combat & planetary warfare.',
-    description: 'Assemble modular war mechs with specialized reactor cores, rail-accelerators, and active electronic countermeasures in massive 32-player battlefield engagements.',
-    price: 'FREE',
-    coverImage: 'https://images.unsplash.com/photo-1542751110-97427bbecf20?q=80&w=800&auto=format&fit=crop',
-    heroBanner: 'https://images.unsplash.com/photo-1542751110-97427bbecf20?q=80&w=1600&auto=format&fit=crop',
-    screenshots: [
-      'https://images.unsplash.com/photo-1542751110-97427bbecf20?q=80&w=1200&auto=format&fit=crop',
-      'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=1200&auto=format&fit=crop',
-      'https://images.unsplash.com/photo-1563089145-599997674d42?q=80&w=1200&auto=format&fit=crop',
-      'https://images.unsplash.com/photo-1542751371-adc38448a05e?q=80&w=1200&auto=format&fit=crop'
-    ],
-    tags: ['Free to play', 'Mech', 'PvP', 'Action'],
-    rating: 94,
-    ratingBreakdown: { positivePercent: 94, totalReviews: 14200 },
-    developer: 'Vanguard Dynamics',
-    publisher: 'OneEngine Interactive',
-    releaseDate: 'Early Access',
-    installed: true,
-    installSizeGb: 48.0,
-    isFavorite: true,
-    playHours: 58.2,
-    lastPlayed: '3 days ago',
-    status: 'INSTALLED',
-    downloadProgress: 100,
-    downloadSpeedMbps: 0,
-    category: 'EARLY_ACCESS',
-    achievements: { unlocked: 15, total: 40 },
-    dlcs: [
-      { id: 'rp-dlc-1', title: 'Foundry Vanguard Season Pass', description: 'Immediate unlock for 3 Heavy Titan Chassis and 20 weapon paint schemes.', price: 19.99, owned: false }
-    ],
-    patchNotes: [
-      {
-        version: 'v0.8.9',
-        date: 'Oct 22, 2026',
-        notes: ['Added Titan-class siege walkers.'],
-      }
-    ],
-    systemRequirements: {
-      minimum: {
-        os: 'Windows 10 64-bit',
-        processor: 'Intel Core i5-6500',
-        memory: '8 GB RAM',
-        graphics: 'NVIDIA GTX 970',
-        storage: '50 GB SSD',
-      },
-      recommended: {
-        os: 'Windows 11 64-bit',
-        processor: 'Intel Core i5-11400 / AMD Ryzen 5 5600',
-        memory: '16 GB RAM',
-        graphics: 'NVIDIA RTX 3060',
-        storage: '50 GB SSD',
-      }
-    },
-  },
-  {
-    id: 'ghost-recon-delta',
-    title: 'Spec-Ops: Ironclad',
-    tagline: 'Cooperative stealth tactical infiltrations under harsh electromagnetic jamming.',
-    description: 'Coordinate simultaneous thermal breaches and silence hostile SAM sites across black-budget mountain bases with up to four operatives in deep winter operations.',
-    price: 49.99,
-    discountPercent: 10,
-    coverImage: 'https://images.unsplash.com/photo-1534447677768-be436bb09401?q=80&w=800&auto=format&fit=crop',
-    heroBanner: 'https://images.unsplash.com/photo-1534447677768-be436bb09401?q=80&w=1600&auto=format&fit=crop',
-    screenshots: [
-      'https://images.unsplash.com/photo-1534447677768-be436bb09401?q=80&w=1200&auto=format&fit=crop',
-      'https://images.unsplash.com/photo-1511512578047-dfb367046420?q=80&w=1200&auto=format&fit=crop',
-      'https://images.unsplash.com/photo-1542751371-adc38448a05e?q=80&w=1200&auto=format&fit=crop',
-      'https://images.unsplash.com/photo-1550745165-9bc0b252726f?q=80&w=1200&auto=format&fit=crop'
-    ],
-    tags: ['Co-op', 'Stealth', 'Military', 'Tactical'],
-    rating: 89,
-    ratingBreakdown: { positivePercent: 89, totalReviews: 5410 },
-    developer: 'Blackwatch Software',
-    publisher: 'OneEngine Interactive',
-    releaseDate: 'July 2026',
-    installed: false,
-    installSizeGb: 54.2,
-    isFavorite: false,
-    playHours: 0,
-    status: 'UNINSTALLED',
-    downloadProgress: 0,
-    downloadSpeedMbps: 0,
-    category: 'RECOMMENDED',
-    achievements: { unlocked: 0, total: 35 },
-    dlcs: [],
-    patchNotes: [
-      {
-        version: 'v1.2.0',
-        date: 'Sep 28, 2026',
-        notes: ['New Night Operations loadout pack.'],
-      }
-    ],
-    systemRequirements: {
-      minimum: {
-        os: 'Windows 10 64-bit',
-        processor: 'AMD Ryzen 3 3100',
-        memory: '8 GB RAM',
-        graphics: 'NVIDIA GTX 1060',
-        storage: '55 GB SSD',
-      },
-      recommended: {
-        os: 'Windows 10 64-bit',
-        processor: 'AMD Ryzen 5 3600',
-        memory: '16 GB RAM',
-        graphics: 'NVIDIA GTX 1660 Super / RTX 2060',
-        storage: '55 GB SSD',
-      }
-    },
-  },
-  {
-    id: 'neon-drifter',
-    title: 'Kinetic 2099: Drift',
-    tagline: 'Anti-gravity supersonic combat racing through subterranean foundry tunnels.',
-    description: 'Speeds exceeding Mach 1 on magnetic rails with onboard missile counter-batteries and dynamic tunnel collapses under cyberpunk atmospheric storm weather.',
-    price: 19.99,
-    coverImage: 'https://images.unsplash.com/photo-1508739773434-c26b3d09e071?q=80&w=800&auto=format&fit=crop',
-    heroBanner: 'https://images.unsplash.com/photo-1508739773434-c26b3d09e071?q=80&w=1600&auto=format&fit=crop',
-    screenshots: [
-      'https://images.unsplash.com/photo-1508739773434-c26b3d09e071?q=80&w=1200&auto=format&fit=crop',
-      'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?q=80&w=1200&auto=format&fit=crop',
-      'https://images.unsplash.com/photo-1550745165-9bc0b252726f?q=80&w=1200&auto=format&fit=crop',
-      'https://images.unsplash.com/photo-1542751371-adc38448a05e?q=80&w=1200&auto=format&fit=crop'
-    ],
-    tags: ['Racing', 'Cyberpunk', 'Drift', 'Multiplayer'],
-    rating: 92,
-    ratingBreakdown: { positivePercent: 92, totalReviews: 3120 },
-    developer: 'Vector Pulse',
-    publisher: 'OneEngine Interactive',
-    releaseDate: 'June 2026',
-    installed: true,
-    installSizeGb: 22.4,
-    isFavorite: false,
-    playHours: 18.3,
-    lastPlayed: 'Last week',
-    status: 'INSTALLED',
-    downloadProgress: 100,
-    downloadSpeedMbps: 0,
-    category: 'RECOMMENDED',
-    achievements: { unlocked: 8, total: 20 },
-    dlcs: [],
-    patchNotes: [
-      {
-        version: 'v1.1.2',
-        date: 'May 14, 2026',
-        notes: ['Improved anti-gravity handling on hairpin turns.'],
-      }
-    ],
-    systemRequirements: {
-      minimum: {
-        os: 'Windows 10 64-bit',
-        processor: 'Intel i5-4590',
-        memory: '8 GB RAM',
-        graphics: 'NVIDIA GTX 960',
-        storage: '25 GB SSD',
-      },
-      recommended: {
-        os: 'Windows 10 64-bit',
-        processor: 'Intel i7-8700K',
-        memory: '16 GB RAM',
-        graphics: 'NVIDIA GTX 1070',
-        storage: '25 GB SSD',
-      }
-    },
-  }
 ];
 
 export const DEFAULT_GUEST_USER: UserProfile = {
@@ -462,63 +183,6 @@ const INITIAL_ARTICLES: Article[] = [
     comments: 184,
   },
   {
-    id: 'art-02',
-    title: 'CYBER SIEGE CQB EXTRACTION: WEAPON BALLISTICS 2.0',
-    gameTitle: 'CYBER SIEGE',
-    gameId: 'cyber-siege',
-    category: 'PATCH_NOTES',
-    date: 'OCTOBER 24, 2026',
-    author: 'Weapons Director @ Hexagon',
-    cover: 'https://images.unsplash.com/photo-1563089145-599997674d42?q=80&w=800&auto=format&fit=crop',
-    summary: 'A deep-dive on bullet penetration multipliers through reinforced polycarbonate barriers and ballistic glass in subterranean sectors.',
-    content: [
-      'Subterranean Sector 4 introduces complex multi-layer ballistic materials. Standard 5.56 AP rounds now lose 30% velocity through reinforced bulletproof glass.',
-      'Thermal optics have been re-calibrated to account for ambient steam leaks and heat dispersion pipes.',
-      'Recoil recovery curves have been tightened across all sub-machine gun platforms for improved CQB responsiveness.'
-    ],
-    likes: 842,
-    hasLiked: true,
-    comments: 92,
-  },
-  {
-    id: 'art-03',
-    title: 'COMMUNITY HIGHLIGHTS: MECH CHASSIS CUSTOM BUILDS',
-    gameTitle: 'RUST PROTOCOL',
-    gameId: 'rust-protocol',
-    category: 'COMMUNITY_SPOTLIGHT',
-    date: 'OCTOBER 20, 2026',
-    author: 'Community Vanguard',
-    cover: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=800&auto=format&fit=crop',
-    summary: 'Showcasing the top ten heaviest dual-railgun builds constructed by the competitive community during the weekend siege tournaments.',
-    content: [
-      'During last weekends Continental Siege event, pilot "IronClad_404" deployed a 72-ton dual-rail accelerator build that dominated Sector G.',
-      'We review the reactor heat efficiency ratios and passive heatsink configurations that made this loadout viable without emergency reactor shutdown.',
-      'Community blueprints will be featured in the upcoming Foundry Showcase next Tuesday.'
-    ],
-    likes: 2150,
-    hasLiked: false,
-    comments: 310,
-  },
-  {
-    id: 'art-04',
-    title: 'PATCH 1.0.4: HOTAS FLIGHT CONTROLS & NEWTONIAN STABILIZATION',
-    gameTitle: 'PROJECT VOID',
-    gameId: 'project-void',
-    category: 'PATCH_NOTES',
-    date: 'OCTOBER 15, 2026',
-    author: 'Flight Physics Team @ AstroCore',
-    cover: 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?q=80&w=800&auto=format&fit=crop',
-    summary: 'Full dual-stick HOTAS support, customized deadzones, and precision inertia damping for orbital asteroid dogfights.',
-    content: [
-      'Pilots can now independently bind 6 degrees of freedom across dual-stick flight controllers.',
-      'Vector thrust calculations now execute on high-precision physics threads with zero micro-stutter.',
-      'Enhanced cockpit holographic HUD telemetry for tracking capital ship orbital decay.'
-    ],
-    likes: 670,
-    hasLiked: false,
-    comments: 48,
-  },
-  {
     id: 'art-05',
     title: 'FOUNDRY ARCHITECTURE: REDUCING DESKTOP CLIENT OVERHEAD',
     gameTitle: 'ONEENGINE STORE',
@@ -537,25 +201,6 @@ const INITIAL_ARTICLES: Article[] = [
     hasLiked: true,
     comments: 420,
   },
-  {
-    id: 'art-06',
-    title: 'SUPERSONIC DRIFT LEAGUE: SEASON 1 CHAMPIONSHIP PREVIEW',
-    gameTitle: 'KINETIC 2099',
-    gameId: 'neon-drifter',
-    category: 'COMMUNITY_SPOTLIGHT',
-    date: 'OCTOBER 05, 2026',
-    author: 'League Coordinator @ Apex',
-    cover: 'https://images.unsplash.com/photo-1506703719100-a0f3a48c0f86?q=80&w=800&auto=format&fit=crop',
-    summary: '32 top anti-gravity drift pilots qualify for the subterranean grand finals in the magma conduit circuit.',
-    content: [
-      'The Magma Conduit track is renowned for its high-speed 45-degree banked turns and dynamic ceiling collapses.',
-      'Tune into the official live stream broadcast this Saturday at 19:00 UTC.',
-      'Viewers with linked OneEngine accounts will receive the exclusive Obsidian Drift Chassis paint scheme.'
-    ],
-    likes: 1540,
-    hasLiked: false,
-    comments: 165,
-  }
 ];
 
 const INITIAL_NOTIFICATIONS: ClientNotification[] = [
@@ -608,9 +253,10 @@ interface StoreContextType {
   isPausedAll: boolean;
   
   isAuthenticated: boolean;
-  loginWithNakama: (email: string, pass: string) => Promise<{ success: boolean; error?: string }>;
+  loginWithNakama: (email: string, pass: string, fallbackOffline?: boolean) => Promise<{ success: boolean; error?: string; offline?: boolean }>;
   registerWithNakama: (email: string, pass: string, username: string) => Promise<{ success: boolean; error?: string }>;
   loginAsGuest: (username?: string) => Promise<{ success: boolean; error?: string }>;
+  loginOffline: (email?: string, username?: string) => { success: boolean };
   logout: () => void;
   
   navigate: (tab: NavigationTab, gameId?: string) => void;
@@ -651,20 +297,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const [activeTab, setActiveTab] = useState<NavigationTab>('store');
   const [selectedGameId, setSelectedGameId] = useState<string>('railbound');
   const [games, setGames] = useState<Game[]>(INITIAL_GAMES);
-  const [downloads, setDownloads] = useState<DownloadItem[]>([
-    {
-      gameId: 'rust-protocol',
-      title: 'Rust Protocol: Mech Division',
-      coverImage: 'https://images.unsplash.com/photo-1542751110-97427bbecf20?q=80&w=800&auto=format&fit=crop',
-      progress: 68.4,
-      downloadedGb: 32.8,
-      totalGb: 48.0,
-      speedMbps: 64.8,
-      diskSpeedMbps: 112.4,
-      status: 'DOWNLOADING',
-      etaSeconds: 210,
-    }
-  ]);
+  const [downloads, setDownloads] = useState<DownloadItem[]>([]);
   const [currentUser, setCurrentUser] = useState<UserProfile>(DEFAULT_GUEST_USER);
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -1083,7 +716,40 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     return true;
   };
 
-  const loginWithNakama = async (email: string, pass: string): Promise<{ success: boolean; error?: string }> => {
+  const loginOffline = (email = '', username?: string): { success: boolean } => {
+    triggerSound('click');
+    const callsign = username?.trim() || (email ? email.split('@')[0] : 'Operative');
+    const cleanEmail = email.trim() || `${callsign.toLowerCase()}@offline.oneengine.io`;
+    const userId = `usr_${cleanEmail.replace(/[^a-zA-Z0-9]/g, '_')}`;
+    const token = `offline_jwt_${Date.now()}`;
+
+    const offlineProfile: UserProfile = {
+      id: userId,
+      callsign: callsign,
+      email: cleanEmail,
+      rank: 'TACTICAL OPERATIVE',
+      level: 14,
+      avatarUrl: `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(callsign)}`,
+      status: 'ONLINE',
+      walletBalance: 150.00,
+      role: 'OPERATOR',
+      ownedGameIds: ['railbound'],
+      nakamaToken: token,
+      nakamaRefreshToken: '',
+    };
+
+    setCurrentUser(offlineProfile);
+    setIsAuthenticated(true);
+    localStorage.setItem('oneengine_user_profile', JSON.stringify(offlineProfile));
+    addToast(`Signed in as ${offlineProfile.callsign} (Offline Mode).`, 'info');
+    return { success: true };
+  };
+
+  const loginWithNakama = async (
+    email: string,
+    pass: string,
+    fallbackOffline = true
+  ): Promise<{ success: boolean; error?: string; offline?: boolean }> => {
     triggerSound('click');
     try {
       await nakamaService.authenticateEmail(email, pass, false);
@@ -1099,6 +765,10 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     } catch (err: unknown) {
       triggerSound('alert');
       const msg = err instanceof Error ? err.message : String(err);
+      if (fallbackOffline && (msg.includes('timed out') || msg.includes('unreachable') || msg.includes('firewalled') || msg.includes('failed to fetch'))) {
+        loginOffline(email);
+        return { success: true, offline: true };
+      }
       return { success: false, error: msg };
     }
   };
@@ -1310,6 +980,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         loginWithNakama,
         registerWithNakama,
         loginAsGuest,
+        loginOffline,
         logout,
         searchQuery,
         isAuthModalOpen,
