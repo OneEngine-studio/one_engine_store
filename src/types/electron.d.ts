@@ -13,6 +13,15 @@ export interface FileIntegrityResult {
   message: string;
 }
 
+export interface SystemSpecs {
+  cpuModel: string;
+  cpuCores: number;
+  totalRamGb: number;
+  freeRamGb: number;
+  os: string;
+  arch: string;
+}
+
 export interface ElectronAPI {
   minimizeWindow: () => void;
   maximizeWindow: () => void;
@@ -30,6 +39,7 @@ export interface ElectronAPI {
   selectDirectory: (defaultPath?: string) => Promise<string | null>;
   getDiskSpace: (targetPath?: string) => Promise<DiskSpaceInfo>;
   verifyFileIntegrity: (filePath: string) => Promise<FileIntegrityResult>;
+  getSystemSpecs: () => Promise<SystemSpecs>;
 }
 
 declare global {
@@ -37,3 +47,4 @@ declare global {
     electronAPI?: ElectronAPI;
   }
 }
+

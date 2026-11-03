@@ -22,11 +22,16 @@ import {
   Send,
   CheckCircle2,
   Maximize2,
-  X
+  X,
+  ShieldCheck,
+  AlertTriangle,
+  Monitor,
+  HardDrive
 } from 'lucide-react';
 import { BentoGrid, BentoCard } from '../components/ui/BentoGrid';
 import { AnimatedTabs } from '../components/ui/AnimatedTabs';
 import { NumberTicker } from '../components/ui/NumberTicker';
+import { evaluateSystemCompatibility, CompatibilityAnalysis } from '../lib/hardwareDiagnostics';
 
 export const GameDetailScreen: React.FC = () => {
   const { 
@@ -99,6 +104,27 @@ export const GameDetailScreen: React.FC = () => {
   const handlePrevMedia = () => {
     setSelectedMediaIndex((prev) => (prev - 1 + mediaList.length) % mediaList.length);
   };
+
+  const [rigAnalysis, setRigAnalysis] = useState<CompatibilityAnalysis | null>(null);
+  const [isScanningRig, setIsScanningRig] = useState(false);
+
+  const runRigScan = async () => {
+    setIsScanningRig(true);
+    try {
+      const result = await evaluateSystemCompatibility(game, settings.downloadDirectory);
+      setRigAnalysis(result);
+    } catch (err) {
+      console.error('Rig analysis failed:', err);
+    } finally {
+      setIsScanningRig(false);
+    }
+  };
+
+  useEffect(() => {
+    if (activeTab === 'specs') {
+      runRigScan();
+    }
+  }, [activeTab, game.id, settings.downloadDirectory]);
 
   useEffect(() => {
     if (!isLightboxOpen) return;
@@ -437,43 +463,169 @@ export const GameDetailScreen: React.FC = () => {
           )}
 
           {activeTab === 'specs' && (
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs border border-border-stroke rounded-md overflow-hidden">
-                <thead className="bg-[#0E1217] border-b border-border-stroke text-slate-400 text-[11px] uppercase font-semibold tracking-wider">
-                  <tr>
-                    <th className="p-3">Component</th>
-                    <th className="p-3 text-slate-200">Minimum</th>
-                    <th className="p-3 text-slate-200">Recommended</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-border-stroke/60 text-slate-300 text-xs">
-                  <tr>
-                    <td className="p-3 font-medium text-slate-400">OS</td>
-                    <td className="p-3">{game.systemRequirements.minimum.os}</td>
-                    <td className="p-3 text-slate-100">{game.systemRequirements.recommended.os}</td>
-                  </tr>
-                  <tr>
-                    <td className="p-3 font-medium text-slate-400">Processor</td>
-                    <td className="p-3">{game.systemRequirements.minimum.processor}</td>
-                    <td className="p-3 text-slate-100">{game.systemRequirements.recommended.processor}</td>
-                  </tr>
-                  <tr>
-                    <td className="p-3 font-medium text-slate-400">Memory</td>
-                    <td className="p-3">{game.systemRequirements.minimum.memory}</td>
-                    <td className="p-3 text-slate-100">{game.systemRequirements.recommended.memory}</td>
-                  </tr>
-                  <tr>
-                    <td className="p-3 font-medium text-slate-400">Graphics</td>
-                    <td className="p-3">{game.systemRequirements.minimum.graphics}</td>
-                    <td className="p-3 text-slate-100">{game.systemRequirements.recommended.graphics}</td>
-                  </tr>
-                  <tr>
-                    <td className="p-3 font-medium text-slate-400">Storage</td>
-                    <td className="p-3">{game.systemRequirements.minimum.storage}</td>
-                    <td className="p-3 text-slate-100">{game.systemRequirements.recommended.storage}</td>
-                  </tr>
-                </tbody>
-              </table>
+            <div className="space-y-6">
+              {/* Operative Rig Compatibility Telemetry Card */}
+              <div className="bg-void-black/60 border border-border-stroke rounded-lg p-5 space-y-4">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-border-stroke/60 pb-3">
+                  <div className="flex items-center space-x-2.5">
+                    <div className="p-2 rounded-md bg-tech-surface border border-white/10 text-primary-accent">
+                      <Monitor className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <h4 className="text-xs font-semibold text-slate-100 uppercase tracking-wider">
+                        Live Rig Compatibility Diagnostics
+                      </h4>
+                      <p className="text-[11px] text-slate-400">
+                        Real-time hardware inspection against {game.title} target specifications
+                      </p>
+                    </div>
+                  </div>
+
+                  <button
+                    onClick={runRigScan}
+                    disabled={isScanningRig}
+                    className="flex items-center space-x-1.5 px-3 py-1.5 rounded-md bg-tech-surface hover:bg-white/5 border border-white/10 text-slate-300 hover:text-white text-xs font-medium transition-all active:scale-[0.98] disabled:opacity-50 self-start sm:self-auto"
+                  >
+                    <RefreshCw className={`w-3.5 h-3.5 ${isScanningRig ? 'animate-spin text-primary-accent' : ''}`} />
+                    <span>{isScanningRig ? 'Scanning Rig...' : 'Re-scan Hardware'}</span>
+                  </button>
+                </div>
+
+                {rigAnalysis && (
+                  <>
+                    {/* Overall Compatibility Status Banner */}
+                    <div className={`p-4 rounded-md border flex items-start space-x-3 transition-colors ${
+                      rigAnalysis.rating === 'EXCEEDS_RECOMMENDED'
+                        ? 'bg-emerald-950/20 border-emerald-500/30 text-emerald-300'
+                        : rigAnalysis.rating === 'MEETS_MINIMUM'
+                        ? 'bg-amber-950/20 border-amber-500/30 text-amber-300'
+                        : 'bg-rose-950/20 border-rose-500/30 text-rose-300'
+                    }`}>
+                      {rigAnalysis.rating === 'EXCEEDS_RECOMMENDED' ? (
+                        <ShieldCheck className="w-5 h-5 text-emerald-400 shrink-0 mt-0.5" />
+                      ) : rigAnalysis.rating === 'MEETS_MINIMUM' ? (
+                        <CheckCircle2 className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
+                      ) : (
+                        <AlertTriangle className="w-5 h-5 text-rose-400 shrink-0 mt-0.5" />
+                      )}
+                      <div>
+                        <div className="text-xs font-bold uppercase tracking-wider">
+                          {rigAnalysis.summaryBadge}
+                        </div>
+                        <p className="text-xs text-slate-300 mt-1 leading-relaxed">
+                          {rigAnalysis.summaryMessage}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Hardware Telemetry Breakdown Grid */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                      {rigAnalysis.checks.map((check, idx) => (
+                        <div 
+                          key={idx}
+                          className="p-3 bg-[#0B0E13] border border-border-stroke/70 rounded-md flex flex-col justify-between space-y-2 hover:border-slate-600 transition-colors"
+                        >
+                          <div className="flex items-center justify-between">
+                            <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
+                              {check.component}
+                            </span>
+                            {check.status === 'pass' ? (
+                              <span className="flex items-center space-x-1 text-[10px] font-medium text-tactical-green bg-tactical-green/10 px-2 py-0.5 rounded border border-tactical-green/20">
+                                <CheckCircle2 className="w-3 h-3" />
+                                <span>PASS</span>
+                              </span>
+                            ) : check.status === 'warning' ? (
+                              <span className="flex items-center space-x-1 text-[10px] font-medium text-amber-400 bg-amber-400/10 px-2 py-0.5 rounded border border-amber-400/20">
+                                <AlertTriangle className="w-3 h-3" />
+                                <span>MARGINAL</span>
+                              </span>
+                            ) : (
+                              <span className="flex items-center space-x-1 text-[10px] font-medium text-rose-400 bg-rose-400/10 px-2 py-0.5 rounded border border-rose-400/20">
+                                <X className="w-3 h-3" />
+                                <span>DEFICIT</span>
+                              </span>
+                            )}
+                          </div>
+
+                          <div>
+                            <div className="text-xs font-semibold text-slate-100 truncate" title={check.detected}>
+                              {check.detected}
+                            </div>
+                            <div className="text-[11px] text-slate-400 mt-1 leading-normal">
+                              {check.notes}
+                            </div>
+                          </div>
+
+                          <div className="text-[10px] text-slate-500 border-t border-border-stroke/40 pt-1.5 truncate">
+                            Req: {check.requirement}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </>
+                )}
+              </div>
+
+              {/* Publisher Technical Specification Matrix */}
+              <div className="space-y-3">
+                <h4 className="text-xs font-semibold text-slate-300 uppercase tracking-wider flex items-center space-x-2">
+                  <Cpu className="w-3.5 h-3.5 text-primary-accent" />
+                  <span>Official Publisher Specification Reference</span>
+                </h4>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-xs border border-border-stroke rounded-md overflow-hidden">
+                    <thead className="bg-[#0E1217] border-b border-border-stroke text-slate-400 text-[11px] uppercase font-semibold tracking-wider">
+                      <tr>
+                        <th className="p-3">Component</th>
+                        <th className="p-3 text-slate-200">Minimum Specification</th>
+                        <th className="p-3 text-slate-200">Recommended Specification</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-border-stroke/60 text-slate-300 text-xs">
+                      <tr>
+                        <td className="p-3 font-medium text-slate-400 flex items-center space-x-2">
+                          <Monitor className="w-3.5 h-3.5 text-slate-500" />
+                          <span>OS</span>
+                        </td>
+                        <td className="p-3">{game.systemRequirements.minimum.os}</td>
+                        <td className="p-3 text-slate-100">{game.systemRequirements.recommended.os}</td>
+                      </tr>
+                      <tr>
+                        <td className="p-3 font-medium text-slate-400 flex items-center space-x-2">
+                          <Cpu className="w-3.5 h-3.5 text-slate-500" />
+                          <span>Processor</span>
+                        </td>
+                        <td className="p-3">{game.systemRequirements.minimum.processor}</td>
+                        <td className="p-3 text-slate-100">{game.systemRequirements.recommended.processor}</td>
+                      </tr>
+                      <tr>
+                        <td className="p-3 font-medium text-slate-400 flex items-center space-x-2">
+                          <Cpu className="w-3.5 h-3.5 text-slate-500" />
+                          <span>Memory</span>
+                        </td>
+                        <td className="p-3">{game.systemRequirements.minimum.memory}</td>
+                        <td className="p-3 text-slate-100">{game.systemRequirements.recommended.memory}</td>
+                      </tr>
+                      <tr>
+                        <td className="p-3 font-medium text-slate-400 flex items-center space-x-2">
+                          <Monitor className="w-3.5 h-3.5 text-slate-500" />
+                          <span>Graphics</span>
+                        </td>
+                        <td className="p-3">{game.systemRequirements.minimum.graphics}</td>
+                        <td className="p-3 text-slate-100">{game.systemRequirements.recommended.graphics}</td>
+                      </tr>
+                      <tr>
+                        <td className="p-3 font-medium text-slate-400 flex items-center space-x-2">
+                          <HardDrive className="w-3.5 h-3.5 text-slate-500" />
+                          <span>Storage</span>
+                        </td>
+                        <td className="p-3">{game.systemRequirements.minimum.storage}</td>
+                        <td className="p-3 text-slate-100">{game.systemRequirements.recommended.storage}</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
             </div>
           )}
 

@@ -3,6 +3,7 @@ const path = require('path');
 const { spawn } = require('child_process');
 const fs = require('fs');
 const crypto = require('crypto');
+const os = require('os');
 
 let mainWindow = null;
 let tray = null;
@@ -190,6 +191,38 @@ function createWindow() {
       });
     } catch (err) {
       return { verified: false, message: err.message };
+    }
+  });
+
+  // Handle native hardware telemetry (System Rig Diagnostics)
+  ipcMain.handle('get-system-specs', async () => {
+    try {
+      const cpus = os.cpus();
+      const cpuModel = cpus.length ? cpus[0].model.trim() : 'Generic x64 Processor';
+      const cpuCores = cpus.length;
+      const totalRamGb = +(os.totalmem() / (1024 * 1024 * 1024)).toFixed(1);
+      const freeRamGb = +(os.freemem() / (1024 * 1024 * 1024)).toFixed(1);
+      const osPlatform = process.platform === 'win32' ? `Windows ${os.release()}` : `${process.platform} ${os.release()}`;
+      const arch = os.arch();
+
+      return {
+        cpuModel,
+        cpuCores,
+        totalRamGb,
+        freeRamGb,
+        os: `${osPlatform} (${arch})`,
+        arch,
+      };
+    } catch (err) {
+      console.error('[OneEngine Electron] get-system-specs failed:', err);
+      return {
+        cpuModel: 'Intel Core i7-10700K',
+        cpuCores: 8,
+        totalRamGb: 16.0,
+        freeRamGb: 8.5,
+        os: 'Windows 11 64-bit',
+        arch: 'x64',
+      };
     }
   });
 

@@ -20,4 +20,5 @@ contextBridge.exposeInMainWorld('electronAPI', {
   selectDirectory: (defaultPath) => ipcRenderer.invoke('select-directory', defaultPath),
   getDiskSpace: (targetPath) => ipcRenderer.invoke('get-disk-space', targetPath),
   verifyFileIntegrity: (filePath) => ipcRenderer.invoke('verify-file-integrity', filePath),
+  getSystemSpecs: () => ipcRenderer.invoke('get-system-specs'),
 });
