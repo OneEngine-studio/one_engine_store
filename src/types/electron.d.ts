@@ -1,3 +1,18 @@
+export interface DiskSpaceInfo {
+  freeGb: number;
+  totalGb: number;
+  usedGb: number;
+  drive: string;
+}
+
+export interface FileIntegrityResult {
+  verified: boolean;
+  simulated?: boolean;
+  hash?: string;
+  fileSizeMb?: number;
+  message: string;
+}
+
 export interface ElectronAPI {
   minimizeWindow: () => void;
   maximizeWindow: () => void;
@@ -11,6 +26,8 @@ export interface ElectronAPI {
   killGame: (pid: number) => Promise<boolean>;
   onGameExited: (callback: (data: { pid: number; code: number }) => void) => () => void;
   selectDirectory: (defaultPath?: string) => Promise<string | null>;
+  getDiskSpace: (targetPath?: string) => Promise<DiskSpaceInfo>;
+  verifyFileIntegrity: (filePath: string) => Promise<FileIntegrityResult>;
 }
 
 declare global {

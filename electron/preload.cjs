@@ -12,4 +12,6 @@ contextBridge.exposeInMainWorld('electronAPI', {
     return () => ipcRenderer.removeListener('game-exited', handler);
   },
   selectDirectory: (defaultPath) => ipcRenderer.invoke('select-directory', defaultPath),
+  getDiskSpace: (targetPath) => ipcRenderer.invoke('get-disk-space', targetPath),
+  verifyFileIntegrity: (filePath) => ipcRenderer.invoke('verify-file-integrity', filePath),
 });

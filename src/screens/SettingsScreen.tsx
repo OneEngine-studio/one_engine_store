@@ -27,7 +27,8 @@ export const SettingsScreen: React.FC = () => {
     playTactileSound,
     clearShaderCache,
     verifyGameFiles,
-    addToast
+    addToast,
+    diskSpace,
   } = useStore(
     useShallow((s) => ({
       settings: s.settings,
@@ -36,6 +37,7 @@ export const SettingsScreen: React.FC = () => {
       clearShaderCache: s.clearShaderCache,
       verifyGameFiles: s.verifyGameFiles,
       addToast: s.addToast,
+      diskSpace: s.diskSpace,
     }))
   );
 
@@ -303,26 +305,34 @@ export const SettingsScreen: React.FC = () => {
         {/* Right Column: System & Storage Diagnostics Panel */}
         <div className="space-y-6">
           <section className="bg-tech-surface border border-border-stroke border-t border-white/10 rounded-md p-5 space-y-4 shadow-subtle-card">
-            <h2 className="text-xs font-semibold uppercase tracking-wider text-slate-400 flex items-center gap-2">
-              <Activity className="w-4 h-4 text-primary-accent" /> Storage & Diagnostics
-            </h2>
+            <div className="flex items-center justify-between">
+              <h2 className="text-xs font-semibold uppercase tracking-wider text-slate-400 flex items-center gap-2">
+                <Activity className="w-4 h-4 text-primary-accent" /> Storage & Diagnostics
+              </h2>
+              <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-void-black text-slate-400 border border-white/5">
+                {diskSpace?.drive || 'C:\\'}
+              </span>
+            </div>
 
             <div className="space-y-2">
               <div className="flex justify-between text-xs">
-                <span className="text-slate-400">Library Disk:</span>
+                <span className="text-slate-400">Target Drive Space:</span>
                 <span className="text-slate-200 font-medium tabular-nums">
-                  <NumberTicker value={142.8} decimalPlaces={1} suffix=" GB" /> / 512 GB
+                  <NumberTicker value={diskSpace?.usedGb || 210.2} decimalPlaces={1} suffix=" GB" /> / <NumberTicker value={diskSpace?.totalGb || 254.5} decimalPlaces={1} suffix=" GB" />
                 </span>
               </div>
               <div className="w-full h-1.5 bg-void-black rounded-full overflow-hidden border border-white/5">
-                <div className="h-full bg-primary-accent w-[28%]" />
+                <div 
+                  className="h-full bg-primary-accent transition-all duration-500" 
+                  style={{ width: `${Math.min(100, Math.round(((diskSpace?.usedGb || 210) / (diskSpace?.totalGb || 254)) * 100))}%` }} 
+                />
               </div>
               <div className="flex justify-between text-[11px] text-slate-500 tabular-nums">
                 <span>
-                  Used: <NumberTicker value={142.8} decimalPlaces={1} suffix=" GB" />
+                  Used: <NumberTicker value={diskSpace?.usedGb || 210.2} decimalPlaces={1} suffix=" GB" />
                 </span>
-                <span>
-                  Available: <NumberTicker value={369.2} decimalPlaces={1} suffix=" GB" />
+                <span className="text-tactical-green font-medium">
+                  Available: <NumberTicker value={diskSpace?.freeGb || 44.3} decimalPlaces={1} suffix=" GB" />
                 </span>
               </div>
             </div>

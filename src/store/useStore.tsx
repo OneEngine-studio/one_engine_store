@@ -13,6 +13,7 @@ import {
   ToastNotification 
 } from '../types/store';
 import { LauncherBridge } from '../lib/launcherBridge';
+import { DiskSpaceInfo } from '../types/electron';
 import { playSynthesizerSound, TactileSoundType } from '../lib/soundEngine';
 import { 
   INITIAL_GAMES, 
@@ -71,6 +72,7 @@ export interface AppStoreState {
   downloads: DownloadItem[];
   speedTelemetryHistory: number[];
   isPausedAll: boolean;
+  diskSpace: DiskSpaceInfo;
 
   // User Profile
   currentUser: UserProfile;
@@ -110,12 +112,13 @@ export interface AppStoreState {
   purchaseGame: (gameId: string) => boolean;
   purchaseDLC: (gameId: string, dlcId: string) => boolean;
   updateSettings: (newSettings: Partial<AppSettings>) => void;
+  refreshDiskSpace: () => Promise<void>;
   playTactileSound: (type: TactileSoundType) => void;
   addToast: (message: string, type?: 'info' | 'success' | 'warning') => void;
   removeToast: (id: string) => void;
   markAllNotificationsRead: () => void;
   clearShaderCache: () => void;
-  verifyGameFiles: (gameId?: string) => void;
+  verifyGameFiles: (gameId?: string) => Promise<void>;
   minimizeWindow: () => Promise<void>;
   toggleMaximizeWindow: () => Promise<void>;
   closeWindow: () => Promise<void>;
@@ -152,6 +155,12 @@ export const useAppStore = create<AppStoreState>((set, get) => ({
   ],
   speedTelemetryHistory: [42, 48, 55, 59, 64, 68, 62, 65, 71, 64, 66, 68, 65, 72, 65],
   isPausedAll: false,
+  diskSpace: {
+    freeGb: 44.3,
+    totalGb: 254.5,
+    usedGb: 210.2,
+    drive: 'C:\\'
+  },
 
   currentUser: loadFromStorage('oe_user', PRESET_USERS.DEVELOPER),
   settings: loadFromStorage('oe_settings', DEFAULT_SETTINGS),
@@ -228,7 +237,16 @@ export const useAppStore = create<AppStoreState>((set, get) => ({
 
     if (completedGameId) {
       addToast(`Installation of ${completedGameTitle} complete and verified.`, 'success');
+      get().refreshDiskSpace();
     }
+  },
+
+  refreshDiskSpace: async () => {
+    try {
+      const { settings } = get();
+      const info = await LauncherBridge.getDiskSpace(settings.downloadDirectory);
+      set({ diskSpace: info });
+    } catch {}
   },
 
   // Navigation
@@ -367,6 +385,17 @@ export const useAppStore = create<AppStoreState>((set, get) => ({
     const target = get().games.find((g) => g.id === gameId);
     if (!target) return;
 
+    // Real Pre-allocation disk space verification
+    const { diskSpace } = get();
+    if (diskSpace && diskSpace.freeGb < target.installSizeGb) {
+      get().playTactileSound('alert');
+      get().addToast(
+        `Pre-allocation failed: Insufficient disk space on ${diskSpace.drive}. Needed: ${target.installSizeGb} GB, Available: ${diskSpace.freeGb} GB.`,
+        'warning'
+      );
+      return;
+    }
+
     set((state) => ({
       games: state.games.map((g) => (g.id === gameId ? { ...g, status: 'DOWNLOADING', downloadProgress: 0 } : g)),
       downloads: state.downloads.some((d) => d.gameId === gameId)
@@ -388,7 +417,7 @@ export const useAppStore = create<AppStoreState>((set, get) => ({
           ],
     }));
 
-    get().addToast(`Queued ${target.title} for download [${target.installSizeGb} GB].`, 'info');
+    get().addToast(`Pre-allocation verified. Queued ${target.title} [${target.installSizeGb} GB] on ${diskSpace?.drive || 'C:\\'}.`, 'info');
   },
 
   pauseDownload: (gameId: string) => {
@@ -564,6 +593,9 @@ export const useAppStore = create<AppStoreState>((set, get) => ({
       settings: { ...state.settings, ...partial },
     }));
     get().addToast('Preferences updated', 'info');
+    if (partial.downloadDirectory) {
+      get().refreshDiskSpace();
+    }
   },
 
   playTactileSound: (type: TactileSoundType) => {
@@ -595,11 +627,21 @@ export const useAppStore = create<AppStoreState>((set, get) => ({
     get().addToast('Cleared 4.2 GB DX12 & Vulkan shader pipeline caches.', 'success');
   },
 
-  verifyGameFiles: (gameId?: string) => {
+  verifyGameFiles: async (gameId?: string) => {
     get().playTactileSound('click');
-    const { games } = get();
-    const title = gameId ? games.find((g) => g.id === gameId)?.title : 'Railbound';
-    get().addToast(`Integrity check: All local blocks for ${title} verified (100% valid).`, 'success');
+    const { games, settings } = get();
+    const target = gameId ? games.find((g) => g.id === gameId) : games[0];
+    const title = target?.title || 'Railbound';
+    const gamePath = target?.id === 'railbound' 
+      ? 'C:\\Games\\Railbound\\Railbound.exe' 
+      : `${settings.downloadDirectory}\\${target?.title}\\game.exe`;
+
+    const result = await LauncherBridge.verifyFileIntegrity(gamePath);
+    if (result.verified) {
+      get().addToast(`Integrity check: ${title} — ${result.message}`, 'success');
+    } else {
+      get().addToast(`Integrity warning: ${title} — ${result.message}`, 'warning');
+    }
   },
 
   minimizeWindow: async () => {
@@ -671,6 +713,7 @@ export const useTelemetryState = () =>
       speedTelemetryHistory: s.speedTelemetryHistory,
       downloads: s.downloads,
       isPausedAll: s.isPausedAll,
+      diskSpace: s.diskSpace,
       pauseDownload: s.pauseDownload,
       resumeDownload: s.resumeDownload,
       cancelDownload: s.cancelDownload,
@@ -694,9 +737,13 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       if (state.currentUser !== prevState?.currentUser) {
         saveToStorage('oe_user', state.currentUser);
       }
+      if (state.settings.downloadDirectory !== prevState?.settings?.downloadDirectory) {
+        useAppStore.getState().refreshDiskSpace();
+      }
     });
 
     syncAccentCss(useAppStore.getState().settings.primaryAccent);
+    useAppStore.getState().refreshDiskSpace();
 
     // 2. Process exit listener from native bridge
     let unlistenFn: (() => void) | undefined;

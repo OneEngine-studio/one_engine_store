@@ -29,7 +29,8 @@ export const DownloadsScreen: React.FC = () => {
     launchGame,
     openArticle,
     articles,
-    addToast
+    addToast,
+    diskSpace,
   } = useStore(
     useShallow((s) => ({
       downloads: s.downloads,
@@ -45,6 +46,7 @@ export const DownloadsScreen: React.FC = () => {
       openArticle: s.openArticle,
       articles: s.articles,
       addToast: s.addToast,
+      diskSpace: s.diskSpace,
     }))
   );
 
@@ -251,13 +253,18 @@ export const DownloadsScreen: React.FC = () => {
             <div className="mt-4 space-y-2">
               <div className="flex justify-between text-xs">
                 <span className="text-slate-400 truncate max-w-[160px]">{settings.downloadDirectory}</span>
-                <span className="text-slate-200 font-medium tabular-nums">542 / 1024 GB</span>
+                <span className="text-slate-200 font-medium tabular-nums">
+                  <NumberTicker value={diskSpace?.usedGb || 210.2} decimalPlaces={1} suffix=" GB" /> / <NumberTicker value={diskSpace?.totalGb || 254.5} decimalPlaces={1} suffix=" GB" />
+                </span>
               </div>
               <div className="w-full h-1.5 bg-void-black rounded-full overflow-hidden border border-white/5">
-                <div className="h-full bg-primary-accent w-[53%]" />
+                <div 
+                  className="h-full bg-primary-accent transition-all duration-500" 
+                  style={{ width: `${Math.min(100, Math.round(((diskSpace?.usedGb || 210) / (diskSpace?.totalGb || 254)) * 100))}%` }} 
+                />
               </div>
-              <span className="text-[11px] text-slate-400 block pt-1">
-                482 GB Available Storage
+              <span className="text-[11px] text-tactical-green font-medium block pt-1">
+                <NumberTicker value={diskSpace?.freeGb || 44.3} decimalPlaces={1} suffix=" GB" /> Available Storage
               </span>
             </div>
           </div>
