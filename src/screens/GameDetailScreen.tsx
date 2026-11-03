@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useStore, useShallow } from '../store/useStore';
 import { 
   Play, 
@@ -20,7 +20,9 @@ import {
   ThumbsUp,
   ThumbsDown,
   Send,
-  CheckCircle2
+  CheckCircle2,
+  Maximize2,
+  X
 } from 'lucide-react';
 import { BentoGrid, BentoCard } from '../components/ui/BentoGrid';
 import { AnimatedTabs } from '../components/ui/AnimatedTabs';
@@ -69,6 +71,7 @@ export const GameDetailScreen: React.FC = () => {
 
   const game = games.find((g) => g.id === selectedGameId) || games[0];
   const [selectedMediaIndex, setSelectedMediaIndex] = useState(0);
+  const [isLightboxOpen, setIsLightboxOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<'overview' | 'specs' | 'dlc' | 'patchNotes' | 'reviews'>('overview');
 
   const [reviewContent, setReviewContent] = useState('');
@@ -96,6 +99,17 @@ export const GameDetailScreen: React.FC = () => {
   const handlePrevMedia = () => {
     setSelectedMediaIndex((prev) => (prev - 1 + mediaList.length) % mediaList.length);
   };
+
+  useEffect(() => {
+    if (!isLightboxOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'ArrowRight') handleNextMedia();
+      if (e.key === 'ArrowLeft') handlePrevMedia();
+      if (e.key === 'Escape') setIsLightboxOpen(false);
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isLightboxOpen, mediaList.length]);
 
   const effectivePrice = typeof game.price === 'number'
     ? (game.discountPercent ? +(game.price * (1 - game.discountPercent / 100)).toFixed(2) : game.price)
@@ -234,7 +248,11 @@ export const GameDetailScreen: React.FC = () => {
         {/* Left 2 Columns: Main Media Showcase & Screenshots Gallery */}
         <BentoCard colSpan={2} className="p-4 flex flex-col justify-between space-y-3">
           {/* Active Featured Visual Display */}
-          <div className="relative aspect-[16/9] w-full rounded-md overflow-hidden bg-void-black border border-border-stroke group">
+          <div 
+            onClick={() => setIsLightboxOpen(true)}
+            className="relative aspect-[16/9] w-full rounded-md overflow-hidden bg-void-black border border-border-stroke group cursor-pointer"
+            title="Click to expand high-resolution lightbox"
+          >
             <img
               src={mediaList[selectedMediaIndex] || game.heroBanner}
               alt={game.title}
@@ -244,16 +262,27 @@ export const GameDetailScreen: React.FC = () => {
             <div className="absolute inset-0 bg-gradient-to-t from-[#141921] via-transparent to-transparent pointer-events-none" />
             <div className="absolute inset-0 ring-1 ring-inset ring-white/10 pointer-events-none rounded-md" />
 
+            {/* Top-Right Expand Icon Hint */}
+            <div className="absolute top-3 right-3 p-1.5 rounded-md bg-void-black/80 border border-white/10 text-slate-300 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+              <Maximize2 className="w-3.5 h-3.5" />
+            </div>
+
             {/* Carousel Navigation Arrows */}
             <button
-              onClick={handlePrevMedia}
+              onClick={(e) => {
+                e.stopPropagation();
+                handlePrevMedia();
+              }}
               className="absolute left-3 top-1/2 -translate-y-1/2 p-2 rounded-md bg-void-black/70 hover:bg-void-black text-slate-200 border border-white/10 opacity-0 group-hover:opacity-100 transition-all active:scale-[0.98]"
               title="Previous Screenshot"
             >
               <ChevronLeft className="w-4 h-4" />
             </button>
             <button
-              onClick={handleNextMedia}
+              onClick={(e) => {
+                e.stopPropagation();
+                handleNextMedia();
+              }}
               className="absolute right-3 top-1/2 -translate-y-1/2 p-2 rounded-md bg-void-black/70 hover:bg-void-black text-slate-200 border border-white/10 opacity-0 group-hover:opacity-100 transition-all active:scale-[0.98]"
               title="Next Screenshot"
             >
@@ -683,6 +712,58 @@ export const GameDetailScreen: React.FC = () => {
           )}
         </div>
       </div>
+
+      {/* Fullscreen High-Resolution Lightbox Modal */}
+      {isLightboxOpen && (
+        <div 
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-xl p-4 select-none animate-in fade-in duration-200"
+          onClick={() => setIsLightboxOpen(false)}
+        >
+          <div 
+            className="relative max-w-6xl w-full max-h-[90vh] flex flex-col items-center"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Top Toolbar */}
+            <div className="w-full flex items-center justify-between pb-3 px-1 text-xs">
+              <span className="text-slate-300 font-medium">
+                {game.title} — Visual Intel [{selectedMediaIndex + 1} / {mediaList.length}]
+              </span>
+              <button
+                onClick={() => setIsLightboxOpen(false)}
+                className="p-1.5 rounded-md bg-void-black hover:bg-tech-surface border border-white/10 text-slate-300 hover:text-white transition-colors"
+                title="Close (ESC)"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Main Stage Image */}
+            <div className="relative w-full aspect-[16/9] max-h-[78vh] rounded-xl overflow-hidden bg-void-black border border-white/10 shadow-2xl flex items-center justify-center">
+              <img
+                src={mediaList[selectedMediaIndex]}
+                alt={`${game.title} preview`}
+                className="w-full h-full object-contain"
+              />
+
+              {/* Prev / Next Controls */}
+              <button
+                onClick={handlePrevMedia}
+                className="absolute left-4 top-1/2 -translate-y-1/2 p-3 rounded-full bg-void-black/75 hover:bg-void-black border border-white/15 text-white transition-all active:scale-[0.96]"
+                title="Previous (Left Arrow)"
+              >
+                <ChevronLeft className="w-5 h-5" />
+              </button>
+              <button
+                onClick={handleNextMedia}
+                className="absolute right-4 top-1/2 -translate-y-1/2 p-3 rounded-full bg-void-black/75 hover:bg-void-black border border-white/15 text-white transition-all active:scale-[0.96]"
+                title="Next (Right Arrow)"
+              >
+                <ChevronRight className="w-5 h-5" />
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
