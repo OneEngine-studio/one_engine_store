@@ -1,10 +1,68 @@
-const { app, BrowserWindow, ipcMain, dialog } = require('electron');
+const { app, BrowserWindow, ipcMain, dialog, Tray, Menu } = require('electron');
 const path = require('path');
 const { spawn } = require('child_process');
 const fs = require('fs');
 const crypto = require('crypto');
 
 let mainWindow = null;
+let tray = null;
+
+function createTray() {
+  const iconPath = path.join(__dirname, '../public/images/logo.png');
+  try {
+    tray = new Tray(iconPath);
+    const contextMenu = Menu.buildFromTemplate([
+      {
+        label: 'OneEngine Store v2.6.4',
+        enabled: false,
+      },
+      { type: 'separator' },
+      {
+        label: 'Open Client',
+        click: () => {
+          if (mainWindow) {
+            mainWindow.show();
+            mainWindow.focus();
+          }
+        },
+      },
+      {
+        label: 'Quick Launch: Railbound',
+        click: () => {
+          if (mainWindow) {
+            mainWindow.show();
+            mainWindow.focus();
+            mainWindow.webContents.send('tray-action', 'launch-railbound');
+          }
+        },
+      },
+      { type: 'separator' },
+      {
+        label: 'Exit OneEngine',
+        click: () => {
+          app.isQuiting = true;
+          app.quit();
+        },
+      },
+    ]);
+
+    tray.setToolTip('OneEngine Store — Desktop Gaming Platform');
+    tray.setContextMenu(contextMenu);
+
+    tray.on('click', () => {
+      if (mainWindow) {
+        if (mainWindow.isVisible()) {
+          mainWindow.focus();
+        } else {
+          mainWindow.show();
+          mainWindow.focus();
+        }
+      }
+    });
+  } catch (err) {
+    console.warn('[OneEngine Electron] System Tray initialization skipped:', err.message);
+  }
+}
 
 function createWindow() {
   mainWindow = new BrowserWindow({
@@ -48,6 +106,18 @@ function createWindow() {
 
   ipcMain.on('window-close', () => {
     if (mainWindow) mainWindow.close();
+  });
+
+  ipcMain.on('window-minimize-to-tray', () => {
+    if (mainWindow) {
+      mainWindow.hide();
+      if (tray && tray.displayBalloon) {
+        tray.displayBalloon({
+          title: 'OneEngine Store',
+          content: 'Running in the background in system tray.',
+        });
+      }
+    }
   });
 
   // Handle native directory selection dialog
@@ -190,6 +260,7 @@ function createWindow() {
 
 app.whenReady().then(() => {
   createWindow();
+  createTray();
 
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow();

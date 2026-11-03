@@ -120,6 +120,7 @@ export interface AppStoreState {
   clearShaderCache: () => void;
   verifyGameFiles: (gameId?: string) => Promise<void>;
   minimizeWindow: () => Promise<void>;
+  minimizeToTray: () => Promise<void>;
   toggleMaximizeWindow: () => Promise<void>;
   closeWindow: () => Promise<void>;
 }
@@ -656,6 +657,11 @@ export const useAppStore = create<AppStoreState>((set, get) => ({
     }
   },
 
+  minimizeToTray: async () => {
+    get().playTactileSound('click');
+    await LauncherBridge.minimizeToTray();
+  },
+
   toggleMaximizeWindow: async () => {
     get().playTactileSound('click');
     if (typeof window !== 'undefined' && window.electronAPI) {
@@ -768,6 +774,16 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       if (typeof cleanup === 'function') unlistenFn = cleanup;
     });
 
+    // 2b. Tray quick-launch action listener
+    let unlistenTrayFn: (() => void) | undefined;
+    LauncherBridge.onTrayAction((action) => {
+      if (action === 'launch-railbound') {
+        useAppStore.getState().launchGame('railbound');
+      }
+    }).then((cleanup) => {
+      if (typeof cleanup === 'function') unlistenTrayFn = cleanup;
+    });
+
     // 3. Global keyboard shortcut listener
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
@@ -802,6 +818,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     return () => {
       unsubAccent();
       if (unlistenFn) unlistenFn();
+      if (unlistenTrayFn) unlistenTrayFn();
       window.removeEventListener('keydown', handleKeyDown);
       clearInterval(downloadInterval);
       clearInterval(sessionInterval);

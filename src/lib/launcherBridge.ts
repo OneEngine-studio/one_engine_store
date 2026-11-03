@@ -59,6 +59,24 @@ export const LauncherBridge = {
     return () => {};
   },
 
+  async onTrayAction(callback: (action: string) => void) {
+    if (typeof window !== 'undefined' && window.electronAPI?.onTrayAction) {
+      return window.electronAPI.onTrayAction(callback);
+    }
+    return () => {};
+  },
+
+  async minimizeToTray(): Promise<void> {
+    if (typeof window !== 'undefined' && window.electronAPI?.minimizeToTray) {
+      window.electronAPI.minimizeToTray();
+      return;
+    }
+    if (typeof window !== 'undefined' && '__TAURI_INTERNALS__' in window) {
+      const { getCurrentWindow } = await import('@tauri-apps/api/window');
+      await getCurrentWindow().hide();
+    }
+  },
+
   async selectDirectory(defaultPath?: string): Promise<string | null> {
     if (typeof window !== 'undefined' && window.electronAPI?.selectDirectory) {
       return window.electronAPI.selectDirectory(defaultPath);
