@@ -22,6 +22,12 @@ export interface SystemSpecs {
   arch: string;
 }
 
+export interface RichPresencePayload {
+  gameTitle: string;
+  details?: string;
+  startTimestamp?: number;
+}
+
 export interface ElectronAPI {
   minimizeWindow: () => void;
   maximizeWindow: () => void;
@@ -40,6 +46,7 @@ export interface ElectronAPI {
   getDiskSpace: (targetPath?: string) => Promise<DiskSpaceInfo>;
   verifyFileIntegrity: (filePath: string) => Promise<FileIntegrityResult>;
   getSystemSpecs: () => Promise<SystemSpecs>;
+  updateRichPresence: (payload: RichPresencePayload | null) => Promise<{ success: boolean }>;
 }
 
 declare global {

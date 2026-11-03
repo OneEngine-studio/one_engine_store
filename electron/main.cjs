@@ -226,6 +226,33 @@ function createWindow() {
     }
   });
 
+  // Handle Discord Rich Presence & Desktop Activity Broadcast
+  ipcMain.handle('update-rich-presence', async (_event, payload) => {
+    try {
+      if (payload && payload.gameTitle) {
+        if (tray) {
+          tray.setToolTip(`OneEngine Store — Playing: ${payload.gameTitle}`);
+        }
+        if (mainWindow) {
+          mainWindow.setTitle(`OneEngine Store — [PLAYING] ${payload.gameTitle}`);
+        }
+        console.log(`[OneEngine Discord RPC] Broadcast: Playing ${payload.gameTitle} (${payload.details || 'Active Session'})`);
+      } else {
+        if (tray) {
+          tray.setToolTip('OneEngine Store — Desktop Gaming Platform');
+        }
+        if (mainWindow) {
+          mainWindow.setTitle('OneEngine Store');
+        }
+        console.log('[OneEngine Discord RPC] Broadcast: Cleared Presence (Idle in Launcher)');
+      }
+      return { success: true };
+    } catch (err) {
+      console.error('[OneEngine Discord RPC] Update error:', err);
+      return { success: false };
+    }
+  });
+
   // Handle Game Process Execution with Headless Session Token Flags
   ipcMain.handle('launch-game', async (_event, payload) => {
     const { gamePath, authToken, playerName, userId } = payload;

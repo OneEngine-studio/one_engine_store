@@ -21,4 +21,5 @@ contextBridge.exposeInMainWorld('electronAPI', {
   getDiskSpace: (targetPath) => ipcRenderer.invoke('get-disk-space', targetPath),
   verifyFileIntegrity: (filePath) => ipcRenderer.invoke('verify-file-integrity', filePath),
   getSystemSpecs: () => ipcRenderer.invoke('get-system-specs'),
+  updateRichPresence: (payload) => ipcRenderer.invoke('update-rich-presence', payload),
 });

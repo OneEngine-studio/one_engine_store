@@ -489,6 +489,12 @@ export const useAppStore = create<AppStoreState>((set, get) => ({
         },
       }));
 
+      LauncherBridge.updateRichPresence({
+        gameTitle: target?.title || 'Tactical Title',
+        details: 'In Combat Operation',
+        startTimestamp: Date.now(),
+      });
+
       get().addToast(`Direct headless bypass active: ${target?.title} is running.`, 'success');
     } catch (err) {
       set({ launchingGameId: null });
@@ -502,6 +508,8 @@ export const useAppStore = create<AppStoreState>((set, get) => ({
     if (runningGamePid) {
       await LauncherBridge.killGameProcess(runningGamePid);
     }
+
+    LauncherBridge.updateRichPresence(null);
 
     set((state) => ({
       runningGameId: null,
@@ -825,6 +833,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       console.log('[OneEngine] Game process exited:', payload);
       const { runningGameId, addToast } = useAppStore.getState();
       if (runningGameId) {
+        LauncherBridge.updateRichPresence(null);
         useAppStore.setState((prev) => ({
           runningGameId: null,
           runningGamePid: null,

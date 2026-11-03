@@ -1,5 +1,5 @@
 import { LaunchGamePayload, LaunchResult } from '../types/launcher';
-import { DiskSpaceInfo, FileIntegrityResult, SystemSpecs } from '../types/electron';
+import { DiskSpaceInfo, FileIntegrityResult, SystemSpecs, RichPresencePayload } from '../types/electron';
 
 // Dynamic invoke helper that checks if running inside Tauri runtime
 async function tauriInvoke<T>(cmd: string, args?: Record<string, unknown>): Promise<T> {
@@ -123,5 +123,13 @@ export const LauncherBridge = {
       os: typeof navigator !== 'undefined' && navigator.userAgent.includes('Windows') ? 'Windows 11 64-bit' : 'Compatible Desktop OS',
       arch: 'x64'
     };
+  },
+
+  async updateRichPresence(payload: RichPresencePayload | null): Promise<{ success: boolean }> {
+    if (typeof window !== 'undefined' && window.electronAPI?.updateRichPresence) {
+      return window.electronAPI.updateRichPresence(payload);
+    }
+    console.log('[Dev Rich Presence]', payload);
+    return { success: true };
   }
 };
