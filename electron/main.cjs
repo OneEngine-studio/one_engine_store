@@ -65,6 +65,42 @@ function createTray() {
   }
 }
 
+// Register default protocol client for deep linking (oneengine://)
+if (process.defaultApp) {
+  if (process.argv.length >= 2) {
+    app.setAsDefaultProtocolClient('oneengine', process.execPath, [path.resolve(process.argv[1])]);
+  }
+} else {
+  app.setAsDefaultProtocolClient('oneengine');
+}
+
+const gotTheLock = app.requestSingleInstanceLock();
+if (!gotTheLock) {
+  app.quit();
+} else {
+  app.on('second-instance', (_event, commandLine) => {
+    if (mainWindow) {
+      if (mainWindow.isMinimized()) mainWindow.restore();
+      mainWindow.show();
+      mainWindow.focus();
+    }
+    const deepLinkUrl = commandLine.find((arg) => typeof arg === 'string' && arg.startsWith('oneengine://'));
+    if (deepLinkUrl && mainWindow) {
+      mainWindow.webContents.send('deep-link-navigation', deepLinkUrl);
+    }
+  });
+}
+
+app.on('open-url', (event, url) => {
+  event.preventDefault();
+  if (mainWindow) {
+    if (mainWindow.isMinimized()) mainWindow.restore();
+    mainWindow.show();
+    mainWindow.focus();
+    mainWindow.webContents.send('deep-link-navigation', url);
+  }
+});
+
 function createWindow() {
   mainWindow = new BrowserWindow({
     width: 1240,

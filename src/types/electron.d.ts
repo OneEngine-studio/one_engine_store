@@ -47,6 +47,7 @@ export interface ElectronAPI {
   verifyFileIntegrity: (filePath: string) => Promise<FileIntegrityResult>;
   getSystemSpecs: () => Promise<SystemSpecs>;
   updateRichPresence: (payload: RichPresencePayload | null) => Promise<{ success: boolean }>;
+  onDeepLink: (callback: (url: string) => void) => () => void;
 }
 
 declare global {

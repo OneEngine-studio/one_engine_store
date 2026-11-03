@@ -66,6 +66,13 @@ export const LauncherBridge = {
     return () => {};
   },
 
+  async onDeepLink(callback: (url: string) => void) {
+    if (typeof window !== 'undefined' && window.electronAPI?.onDeepLink) {
+      return window.electronAPI.onDeepLink(callback);
+    }
+    return () => {};
+  },
+
   async minimizeToTray(): Promise<void> {
     if (typeof window !== 'undefined' && window.electronAPI?.minimizeToTray) {
       window.electronAPI.minimizeToTray();

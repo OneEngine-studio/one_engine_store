@@ -22,4 +22,9 @@ contextBridge.exposeInMainWorld('electronAPI', {
   verifyFileIntegrity: (filePath) => ipcRenderer.invoke('verify-file-integrity', filePath),
   getSystemSpecs: () => ipcRenderer.invoke('get-system-specs'),
   updateRichPresence: (payload) => ipcRenderer.invoke('update-rich-presence', payload),
+  onDeepLink: (callback) => {
+    const handler = (_event, url) => callback(url);
+    ipcRenderer.on('deep-link-navigation', handler);
+    return () => ipcRenderer.removeListener('deep-link-navigation', handler);
+  },
 });

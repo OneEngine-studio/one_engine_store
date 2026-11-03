@@ -27,6 +27,9 @@ jobs:
       - name: TypeScript Static Typecheck
         run: npx tsc --noEmit
 
+      - name: Run Automated Vitest Suite
+        run: npm test
+
       - name: Vite Production Build
         run: npm run build
 

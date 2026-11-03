@@ -26,7 +26,8 @@ import {
   ShieldCheck,
   AlertTriangle,
   Monitor,
-  HardDrive
+  HardDrive,
+  Trash2
 } from 'lucide-react';
 import { BentoGrid, BentoCard } from '../components/ui/BentoGrid';
 import { AnimatedTabs } from '../components/ui/AnimatedTabs';
@@ -51,7 +52,8 @@ export const GameDetailScreen: React.FC = () => {
     navigate,
     addToast,
     submitGameReview,
-    voteReviewHelpful
+    voteReviewHelpful,
+    uninstallGame
   } = useStore(
     useShallow((s) => ({
       selectedGameId: s.selectedGameId,
@@ -59,6 +61,7 @@ export const GameDetailScreen: React.FC = () => {
       goBack: s.goBack,
       launchGame: s.launchGame,
       stopGame: s.stopGame,
+      uninstallGame: s.uninstallGame,
       runningGameId: s.runningGameId,
       launchingGameId: s.launchingGameId,
       startDownload: s.startDownload,
@@ -195,13 +198,22 @@ export const GameDetailScreen: React.FC = () => {
 
     if (isInstalled) {
       return (
-        <button
-          onClick={() => launchGame(game.id)}
-          className="w-full flex items-center justify-center space-x-2 px-5 py-2.5 bg-primary-accent hover:bg-[#E66E00] text-void-black font-semibold text-xs rounded-md shadow-lg shadow-primary-accent/20 transition-all active:scale-[0.98]"
-        >
-          <Play className="w-4 h-4 fill-current" />
-          <span>Launch Title</span>
-        </button>
+        <div className="flex items-center space-x-2 w-full">
+          <button
+            onClick={() => launchGame(game.id)}
+            className="flex-1 flex items-center justify-center space-x-2 px-5 py-2.5 bg-primary-accent hover:bg-[#E66E00] text-void-black font-semibold text-xs rounded-md shadow-lg shadow-primary-accent/20 transition-all active:scale-[0.98]"
+          >
+            <Play className="w-4 h-4 fill-current" />
+            <span>Launch Title</span>
+          </button>
+          <button
+            onClick={() => uninstallGame(game.id)}
+            className="p-2.5 bg-tech-surface hover:bg-tactical-danger/20 border border-border-stroke hover:border-tactical-danger/40 text-slate-400 hover:text-tactical-danger rounded-md transition-colors active:scale-[0.98]"
+            title={`Uninstall ${game.title} (Frees ${game.installSizeGb} GB)`}
+          >
+            <Trash2 className="w-4 h-4" />
+          </button>
+        </div>
       );
     }
 

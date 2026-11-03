@@ -16,7 +16,8 @@ import {
   FileText, 
   ShoppingBag, 
   RefreshCw, 
-  ExternalLink 
+  ExternalLink,
+  Trash2 
 } from 'lucide-react';
 import { SpotlightCard } from '../components/ui/SpotlightCard';
 import { AnimatedTabs, TabItem } from '../components/ui/AnimatedTabs';
@@ -34,7 +35,8 @@ export const LibraryScreen: React.FC = () => {
     toggleFavorite, 
     navigate, 
     openArticle, 
-    articles 
+    articles,
+    uninstallGame 
   } = useStore(
     useShallow((s) => ({
       games: s.games,
@@ -48,6 +50,7 @@ export const LibraryScreen: React.FC = () => {
       navigate: s.navigate,
       openArticle: s.openArticle,
       articles: s.articles,
+      uninstallGame: s.uninstallGame,
     }))
   );
 
@@ -403,17 +406,26 @@ export const LibraryScreen: React.FC = () => {
                   <span>Starting...</span>
                 </div>
               ) : inspectedGame.installed ? (
+                <div className="flex items-center space-x-2 w-full">
                 <button
                   onClick={() => launchGame(inspectedGame.id)}
-                  className="w-full py-2.5 bg-primary-accent hover:bg-orange-400 active:scale-95 text-void-black font-semibold text-xs rounded-full flex items-center justify-center space-x-2 transition-all shadow-lg shadow-orange-500/20"
+                  className="flex-1 py-2.5 bg-primary-accent hover:bg-orange-400 active:scale-95 text-void-black font-semibold text-xs rounded-full flex items-center justify-center space-x-2 transition-all shadow-lg shadow-orange-500/20"
                 >
                   <Play className="w-3.5 h-3.5 fill-current" />
                   <span>Play</span>
                 </button>
+                <button
+                  onClick={() => uninstallGame(inspectedGame.id)}
+                  className="p-2.5 bg-white/5 hover:bg-tactical-danger/20 border border-white/10 hover:border-tactical-danger/40 text-slate-400 hover:text-tactical-danger rounded-full transition-colors active:scale-95 shrink-0"
+                  title={`Uninstall ${inspectedGame.title}`}
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                </button>
+              </div>
               ) : (
                 <button
                   onClick={() => startDownload(inspectedGame.id)}
-                  className="w-full py-2.5 bg-primary-accent hover:bg-orange-400 active:scale-95 text-void-black font-semibold text-xs rounded-full flex items-center justify-center space-x-2 transition-all shadow-lg shadow-orange-500/20"
+                  className="flex-1 py-2.5 bg-primary-accent hover:bg-orange-400 active:scale-95 text-void-black font-semibold text-xs rounded-full flex items-center justify-center space-x-2 transition-all shadow-lg shadow-orange-500/20"
                 >
                   <Download className="w-3.5 h-3.5" />
                   <span>Install ({inspectedGame.installSizeGb} GB)</span>

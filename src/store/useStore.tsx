@@ -109,6 +109,7 @@ export interface AppStoreState {
   togglePauseAllDownloads: () => void;
   launchGame: (gameId: string) => Promise<void>;
   stopGame: (gameId: string) => Promise<void>;
+  uninstallGame: (gameId: string) => Promise<void>;
   toggleFavorite: (gameId: string) => void;
   purchaseGame: (gameId: string) => boolean;
   purchaseDLC: (gameId: string, dlcId: string) => boolean;
@@ -527,6 +528,29 @@ export const useAppStore = create<AppStoreState>((set, get) => ({
     get().addToast('Game process terminated.', 'info');
   },
 
+  uninstallGame: async (gameId: string) => {
+    const { games, runningGameId, stopGame, playTactileSound, addToast, refreshDiskSpace } = get();
+    const target = games.find((g) => g.id === gameId);
+    if (!target) return;
+
+    if (runningGameId === gameId) {
+      await stopGame(gameId);
+    }
+
+    playTactileSound('alert');
+    set((state) => ({
+      games: state.games.map((g) =>
+        g.id === gameId
+          ? { ...g, installed: false, status: 'UNINSTALLED', downloadProgress: 0 }
+          : g
+      ),
+      downloads: state.downloads.filter((d) => d.gameId !== gameId),
+    }));
+
+    addToast(`Uninstalled ${target.title}. Local packages and cache purged.`, 'info');
+    await refreshDiskSpace();
+  },
+
   toggleFavorite: (gameId: string) => {
     get().playTactileSound('click');
     set((state) => ({
@@ -861,6 +885,30 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       if (typeof cleanup === 'function') unlistenTrayFn = cleanup;
     });
 
+    // 2c. Deep-link protocol listener (oneengine://)
+    let unlistenDeepLinkFn: (() => void) | undefined;
+    LauncherBridge.onDeepLink((rawUrl) => {
+      console.log('[OneEngine] Deep link received:', rawUrl);
+      try {
+        const urlStr = rawUrl.replace(/^oneengine:\/\//i, '');
+        const segments = urlStr.split('/').filter(Boolean);
+        const route = segments[0]?.toLowerCase();
+        const param = segments[1];
+
+        if (route === 'game' && param) {
+          useAppStore.getState().navigate('game-detail', param);
+        } else if (route === 'launch' && param) {
+          useAppStore.getState().launchGame(param);
+        } else if (route === 'library' || route === 'downloads' || route === 'settings' || route === 'community' || route === 'store') {
+          useAppStore.getState().navigate(route as NavigationTab);
+        }
+      } catch (err) {
+        console.error('[OneEngine] Failed to parse deep-link URL:', err);
+      }
+    }).then((cleanup) => {
+      if (typeof cleanup === 'function') unlistenDeepLinkFn = cleanup;
+    });
+
     // 3. Global keyboard shortcut listener
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
@@ -896,6 +944,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       unsubAccent();
       if (unlistenFn) unlistenFn();
       if (unlistenTrayFn) unlistenTrayFn();
+      if (unlistenDeepLinkFn) unlistenDeepLinkFn();
       window.removeEventListener('keydown', handleKeyDown);
       clearInterval(downloadInterval);
       clearInterval(sessionInterval);
