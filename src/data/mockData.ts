@@ -71,6 +71,32 @@ export const INITIAL_GAMES: Game[] = [
         storage: '40 GB NVMe PCIe 4.0 SSD space',
       }
     },
+    reviews: [
+      {
+        id: 'rev-rb-1',
+        gameId: 'railbound',
+        author: 'Valkyrie_9',
+        avatarUrl: 'https://api.dicebear.com/7.x/bottts/svg?seed=Valkyrie_9',
+        role: 'ELITE VANGUARD',
+        isRecommended: true,
+        content: 'The low-latency headless session injection in patch 2.4.0 is phenomenal. Zero lag, seamless transitions into high-density rail battles. Best strategy sim this year.',
+        date: 'OCT 27, 2026',
+        playHours: 42.6,
+        helpfulCount: 84,
+      },
+      {
+        id: 'rev-rb-2',
+        gameId: 'railbound',
+        author: 'Spectre_07',
+        avatarUrl: 'https://api.dicebear.com/7.x/bottts/svg?seed=Spectre_07',
+        role: 'LEAD SYSTEMS ARCHITECT',
+        isRecommended: true,
+        content: 'Superb puzzle mechanics and rock-solid 128Hz mechanical simulation. Heavy artillery rolling stock DLC is totally worth picking up.',
+        date: 'OCT 25, 2026',
+        playHours: 114.2,
+        helpfulCount: 52,
+      }
+    ],
   },
   {
     id: 'cyber-siege',
@@ -126,6 +152,20 @@ export const INITIAL_GAMES: Game[] = [
         storage: '65 GB NVMe SSD',
       }
     },
+    reviews: [
+      {
+        id: 'rev-cs-1',
+        gameId: 'cyber-siege',
+        author: 'Apex_Lead',
+        avatarUrl: 'https://api.dicebear.com/7.x/bottts/svg?seed=Apex_Lead',
+        role: 'OPERATOR',
+        isRecommended: true,
+        content: 'Tight CQB gunplay, ruthless extraction penalties, and gorgeous neo-noir aesthetics. Make sure you bring thermal oculars into Sector 4.',
+        date: 'OCT 26, 2026',
+        playHours: 88.5,
+        helpfulCount: 61,
+      }
+    ],
   },
   {
     id: 'project-void',

@@ -8,6 +8,20 @@ export interface GameDLC {
   owned: boolean;
 }
 
+export interface UserReview {
+  id: string;
+  gameId: string;
+  author: string;
+  avatarUrl: string;
+  role: string;
+  isRecommended: boolean;
+  content: string;
+  date: string;
+  playHours: number;
+  helpfulCount: number;
+  hasVotedHelpful?: boolean;
+}
+
 export interface Game {
   id: string;
   title: string;
@@ -47,6 +61,7 @@ export interface Game {
     date: string;
     notes: string[];
   }>;
+  reviews?: UserReview[];
   systemRequirements: {
     minimum: {
       os: string;

@@ -10,7 +10,8 @@ import {
   AppSettings, 
   Article, 
   ClientNotification, 
-  ToastNotification 
+  ToastNotification,
+  UserReview 
 } from '../types/store';
 import { LauncherBridge } from '../lib/launcherBridge';
 import { DiskSpaceInfo } from '../types/electron';
@@ -119,6 +120,8 @@ export interface AppStoreState {
   markAllNotificationsRead: () => void;
   clearShaderCache: () => void;
   verifyGameFiles: (gameId?: string) => Promise<void>;
+  submitGameReview: (gameId: string, isRecommended: boolean, content: string) => void;
+  voteReviewHelpful: (gameId: string, reviewId: string) => void;
   minimizeWindow: () => Promise<void>;
   minimizeToTray: () => Promise<void>;
   toggleMaximizeWindow: () => Promise<void>;
@@ -643,6 +646,71 @@ export const useAppStore = create<AppStoreState>((set, get) => ({
     } else {
       get().addToast(`Integrity warning: ${title} — ${result.message}`, 'warning');
     }
+  },
+
+  submitGameReview: (gameId: string, isRecommended: boolean, content: string) => {
+    get().playTactileSound('click');
+    const { currentUser, games } = get();
+    const target = games.find((g) => g.id === gameId);
+    if (!target) return;
+
+    const newReview: UserReview = {
+      id: 'rev_' + Date.now(),
+      gameId,
+      author: currentUser.callsign,
+      avatarUrl: currentUser.avatarUrl,
+      role: currentUser.rank || currentUser.role,
+      isRecommended,
+      content: content.trim(),
+      date: 'JUST NOW',
+      playHours: target.playHours || 2.5,
+      helpfulCount: 0,
+      hasVotedHelpful: false,
+    };
+
+    set((state) => ({
+      games: state.games.map((g) => {
+        if (g.id !== gameId) return g;
+        const currentReviews = g.reviews || [];
+        const nextReviews = [newReview, ...currentReviews];
+        const positiveCount = nextReviews.filter((r) => r.isRecommended).length;
+        const total = nextReviews.length;
+        const positivePercent = Math.round((positiveCount / total) * 100);
+
+        return {
+          ...g,
+          rating: positivePercent,
+          ratingBreakdown: {
+            positivePercent,
+            totalReviews: g.ratingBreakdown.totalReviews + 1,
+          },
+          reviews: nextReviews,
+        };
+      }),
+    }));
+
+    get().addToast('Operational review submitted to Tactical Network.', 'success');
+  },
+
+  voteReviewHelpful: (gameId: string, reviewId: string) => {
+    get().playTactileSound('click');
+    set((state) => ({
+      games: state.games.map((g) => {
+        if (g.id !== gameId || !g.reviews) return g;
+        return {
+          ...g,
+          reviews: g.reviews.map((r) => {
+            if (r.id !== reviewId) return r;
+            const nextVoted = !r.hasVotedHelpful;
+            return {
+              ...r,
+              hasVotedHelpful: nextVoted,
+              helpfulCount: nextVoted ? r.helpfulCount + 1 : r.helpfulCount - 1,
+            };
+          }),
+        };
+      }),
+    }));
   },
 
   minimizeWindow: async () => {
