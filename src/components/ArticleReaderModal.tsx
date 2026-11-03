@@ -1,5 +1,5 @@
 import React from 'react';
-import { useStore } from '../store/useStore';
+import { useStore, useShallow } from '../store/useStore';
 import {
   X,
   ThumbsUp,
@@ -12,7 +12,15 @@ import { Kbd } from './ui/Kbd';
 import { NumberTicker } from './ui/NumberTicker';
 
 export const ArticleReaderModal: React.FC = () => {
-  const { selectedArticle, closeArticle, toggleArticleLike, addToast, navigate } = useStore();
+  const { selectedArticle, closeArticle, toggleArticleLike, addToast, navigate } = useStore(
+    useShallow((s) => ({
+      selectedArticle: s.selectedArticle,
+      closeArticle: s.closeArticle,
+      toggleArticleLike: s.toggleArticleLike,
+      addToast: s.addToast,
+      navigate: s.navigate,
+    }))
+  );
 
   if (!selectedArticle) return null;
 

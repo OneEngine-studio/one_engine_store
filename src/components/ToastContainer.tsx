@@ -3,7 +3,8 @@ import { useStore } from '../store/useStore';
 import { AlertCircle, CheckCircle, Info, X } from 'lucide-react';
 
 export const ToastContainer: React.FC = () => {
-  const { toasts, removeToast } = useStore();
+  const toasts = useStore((s) => s.toasts);
+  const removeToast = useStore((s) => s.removeToast);
 
   if (toasts.length === 0) return null;
 

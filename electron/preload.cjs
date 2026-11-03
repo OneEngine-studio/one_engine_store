@@ -10,5 +10,6 @@ contextBridge.exposeInMainWorld('electronAPI', {
     const handler = (_event, data) => callback(data);
     ipcRenderer.on('game-exited', handler);
     return () => ipcRenderer.removeListener('game-exited', handler);
-  }
+  },
+  selectDirectory: (defaultPath) => ipcRenderer.invoke('select-directory', defaultPath),
 });

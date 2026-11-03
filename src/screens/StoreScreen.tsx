@@ -1,5 +1,5 @@
 import React, { useRef } from 'react';
-import { useStore } from '../store/useStore';
+import { useStore, useShallow } from '../store/useStore';
 import { Game } from '../types/store';
 import { 
   Play, 
@@ -20,7 +20,29 @@ import { NumberTicker } from '../components/ui/NumberTicker';
 import { BentoGrid, BentoCard } from '../components/ui/BentoGrid';
 
 export const StoreScreen: React.FC = () => {
-  const { games, navigate, searchQuery, setSearchQuery, launchGame, launchingGameId, runningGameId, currentUser, toggleFavorite } = useStore();
+  const {
+    games,
+    navigate,
+    searchQuery,
+    setSearchQuery,
+    launchGame,
+    launchingGameId,
+    runningGameId,
+    currentUser,
+    toggleFavorite,
+  } = useStore(
+    useShallow((s) => ({
+      games: s.games,
+      navigate: s.navigate,
+      searchQuery: s.searchQuery,
+      setSearchQuery: s.setSearchQuery,
+      launchGame: s.launchGame,
+      launchingGameId: s.launchingGameId,
+      runningGameId: s.runningGameId,
+      currentUser: s.currentUser,
+      toggleFavorite: s.toggleFavorite,
+    }))
+  );
 
   const carouselRef = useRef<HTMLDivElement>(null);
 

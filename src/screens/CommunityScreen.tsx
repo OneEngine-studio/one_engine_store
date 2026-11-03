@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useStore } from '../store/useStore';
+import { useStore, useShallow } from '../store/useStore';
 import { 
   Radio, 
   MessageSquare, 
@@ -12,7 +12,13 @@ import { AnimatedTabs, TabItem } from '../components/ui/AnimatedTabs';
 import { NumberTicker } from '../components/ui/NumberTicker';
 
 export const CommunityScreen: React.FC = () => {
-  const { articles, openArticle, toggleArticleLike } = useStore();
+  const { articles, openArticle, toggleArticleLike } = useStore(
+    useShallow((s) => ({
+      articles: s.articles,
+      openArticle: s.openArticle,
+      toggleArticleLike: s.toggleArticleLike,
+    }))
+  );
   const [selectedCategory, setSelectedCategory] = useState<string>('ALL');
 
   const filteredArticles = selectedCategory === 'ALL'

@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain } = require('electron');
+const { app, BrowserWindow, ipcMain, dialog } = require('electron');
 const path = require('path');
 const { spawn } = require('child_process');
 const fs = require('fs');
@@ -47,6 +47,24 @@ function createWindow() {
 
   ipcMain.on('window-close', () => {
     if (mainWindow) mainWindow.close();
+  });
+
+  // Handle native directory selection dialog
+  ipcMain.handle('select-directory', async (_event, defaultPath) => {
+    try {
+      const result = await dialog.showOpenDialog(mainWindow, {
+        title: 'Select Game Installation Directory',
+        defaultPath: defaultPath || undefined,
+        properties: ['openDirectory', 'createDirectory'],
+      });
+      if (result.canceled || !result.filePaths.length) {
+        return null;
+      }
+      return result.filePaths[0];
+    } catch (err) {
+      console.error('[OneEngine Electron] Directory selection failed:', err);
+      return null;
+    }
   });
 
   // Handle Game Process Execution with Headless Session Token Flags

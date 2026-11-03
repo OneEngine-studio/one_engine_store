@@ -14,7 +14,7 @@ import { CommunityScreen } from './screens/CommunityScreen';
 import { SettingsScreen } from './screens/SettingsScreen';
 
 const MainViewport: React.FC = () => {
-  const { activeTab } = useStore();
+  const activeTab = useStore((s) => s.activeTab);
 
   const renderActiveScreen = () => {
     switch (activeTab) {

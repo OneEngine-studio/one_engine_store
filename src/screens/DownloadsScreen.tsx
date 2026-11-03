@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useStore } from '../store/useStore';
+import { useStore, useShallow } from '../store/useStore';
 import { 
   Download, 
   Pause, 
@@ -30,7 +30,23 @@ export const DownloadsScreen: React.FC = () => {
     openArticle,
     articles,
     addToast
-  } = useStore();
+  } = useStore(
+    useShallow((s) => ({
+      downloads: s.downloads,
+      pauseDownload: s.pauseDownload,
+      resumeDownload: s.resumeDownload,
+      cancelDownload: s.cancelDownload,
+      speedTelemetryHistory: s.speedTelemetryHistory,
+      settings: s.settings,
+      updateSettings: s.updateSettings,
+      isPausedAll: s.isPausedAll,
+      togglePauseAllDownloads: s.togglePauseAllDownloads,
+      launchGame: s.launchGame,
+      openArticle: s.openArticle,
+      articles: s.articles,
+      addToast: s.addToast,
+    }))
+  );
 
   const [showThrottleModal, setShowThrottleModal] = useState(false);
   const [throttleInput, setThrottleInput] = useState(

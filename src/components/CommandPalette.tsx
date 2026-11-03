@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useStore } from '../store/useStore';
+import { useStore, useShallow } from '../store/useStore';
 import { Search, Radio, X, ChevronRight } from 'lucide-react';
 import { Kbd } from './ui/Kbd';
 
@@ -12,7 +12,17 @@ export const CommandPalette: React.FC = () => {
     navigate, 
     openArticle,
     currentUser 
-  } = useStore();
+  } = useStore(
+    useShallow((s) => ({
+      isCommandPaletteOpen: s.isCommandPaletteOpen,
+      setCommandPaletteOpen: s.setCommandPaletteOpen,
+      games: s.games,
+      articles: s.articles,
+      navigate: s.navigate,
+      openArticle: s.openArticle,
+      currentUser: s.currentUser,
+    }))
+  );
 
   const [query, setQuery] = useState('');
   const [selectedIndex, setSelectedIndex] = useState(0);

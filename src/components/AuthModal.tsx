@@ -1,11 +1,19 @@
 import React from 'react';
-import { useStore } from '../store/useStore';
+import { useStore, useShallow } from '../store/useStore';
 import { Shield, X, UserCheck, Terminal, Award, Zap } from 'lucide-react';
 import { Kbd } from './ui/Kbd';
 import { NumberTicker } from './ui/NumberTicker';
 
 export const AuthModal: React.FC = () => {
-  const { isAuthModalOpen, closeAuthModal, switchUserPreset, currentUser, settings } = useStore();
+  const { isAuthModalOpen, closeAuthModal, switchUserPreset, currentUser, settings } = useStore(
+    useShallow((s) => ({
+      isAuthModalOpen: s.isAuthModalOpen,
+      closeAuthModal: s.closeAuthModal,
+      switchUserPreset: s.switchUserPreset,
+      currentUser: s.currentUser,
+      settings: s.settings,
+    }))
+  );
 
   if (!isAuthModalOpen) return null;
 

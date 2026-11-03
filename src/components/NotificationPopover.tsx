@@ -8,7 +8,8 @@ interface NotificationPopoverProps {
 }
 
 export const NotificationPopover: React.FC<NotificationPopoverProps> = ({ isOpen, onClose }) => {
-  const { notifications, markAllNotificationsRead } = useStore();
+  const notifications = useStore((s) => s.notifications);
+  const markAllNotificationsRead = useStore((s) => s.markAllNotificationsRead);
   const popoverRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {

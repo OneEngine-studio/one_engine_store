@@ -1,5 +1,5 @@
 import React from 'react';
-import { useStore } from '../store/useStore';
+import { useStore, useShallow } from '../store/useStore';
 import { 
   ShoppingBag, 
   Gamepad2, 
@@ -22,7 +22,17 @@ export const Sidebar: React.FC = () => {
     games,
     currentUser,
     launchGame
-  } = useStore();
+  } = useStore(
+    useShallow((s) => ({
+      activeTab: s.activeTab,
+      navigate: s.navigate,
+      downloads: s.downloads,
+      runningGameId: s.runningGameId,
+      games: s.games,
+      currentUser: s.currentUser,
+      launchGame: s.launchGame,
+    }))
+  );
 
   const activeDownload = downloads.find((d) => d.status === 'DOWNLOADING');
   const activeDownloadCount = downloads.filter((d) => d.status === 'DOWNLOADING').length;

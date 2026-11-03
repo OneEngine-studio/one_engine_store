@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useStore } from '../store/useStore';
+import { useStore, useShallow } from '../store/useStore';
 import { 
   Minus, 
   Square, 
@@ -30,7 +30,24 @@ export const WindowFrame: React.FC = () => {
     minimizeWindow, 
     toggleMaximizeWindow, 
     closeWindow 
-  } = useStore();
+  } = useStore(
+    useShallow((s) => ({
+      currentUser: s.currentUser,
+      openAuthModal: s.openAuthModal,
+      canGoBack: s.canGoBack,
+      canGoForward: s.canGoForward,
+      goBack: s.goBack,
+      goForward: s.goForward,
+      setCommandPaletteOpen: s.setCommandPaletteOpen,
+      notifications: s.notifications,
+      runningGameId: s.runningGameId,
+      games: s.games,
+      sessionElapsedSeconds: s.sessionElapsedSeconds,
+      minimizeWindow: s.minimizeWindow,
+      toggleMaximizeWindow: s.toggleMaximizeWindow,
+      closeWindow: s.closeWindow,
+    }))
+  );
 
   const [isNotifOpen, setIsNotifOpen] = useState(false);
 

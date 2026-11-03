@@ -15,6 +15,9 @@ async function tauriInvoke<T>(cmd: string, args?: Record<string, unknown>): Prom
   if (cmd === 'check_game_installed') {
     return true as T;
   }
+  if (cmd === 'select_directory') {
+    return null as T;
+  }
   return null as T;
 }
 
@@ -53,5 +56,16 @@ export const LauncherBridge = {
       });
     }
     return () => {};
+  },
+
+  async selectDirectory(defaultPath?: string): Promise<string | null> {
+    if (typeof window !== 'undefined' && window.electronAPI?.selectDirectory) {
+      return window.electronAPI.selectDirectory(defaultPath);
+    }
+    if (typeof window !== 'undefined' && '__TAURI_INTERNALS__' in window) {
+      return tauriInvoke<string | null>('select_directory', { defaultPath });
+    }
+    // Browser fallback simulation
+    return null;
   }
 };

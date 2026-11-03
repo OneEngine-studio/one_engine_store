@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useStore } from '../store/useStore';
+import { useStore, useShallow } from '../store/useStore';
 import { 
   Play, 
   Square, 
@@ -35,7 +35,21 @@ export const LibraryScreen: React.FC = () => {
     navigate, 
     openArticle, 
     articles 
-  } = useStore();
+  } = useStore(
+    useShallow((s) => ({
+      games: s.games,
+      currentUser: s.currentUser,
+      launchGame: s.launchGame,
+      stopGame: s.stopGame,
+      runningGameId: s.runningGameId,
+      launchingGameId: s.launchingGameId,
+      startDownload: s.startDownload,
+      toggleFavorite: s.toggleFavorite,
+      navigate: s.navigate,
+      openArticle: s.openArticle,
+      articles: s.articles,
+    }))
+  );
 
   const [filter, setFilter] = useState<'ALL' | 'INSTALLED' | 'FAVORITES'>('ALL');
   const [viewMode, setViewMode] = useState<'GRID' | 'TABLE'>('GRID');

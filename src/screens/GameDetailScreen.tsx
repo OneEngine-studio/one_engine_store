@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useStore } from '../store/useStore';
+import { useStore, useShallow } from '../store/useStore';
 import { 
   Play, 
   Download, 
@@ -41,7 +41,25 @@ export const GameDetailScreen: React.FC = () => {
     settings,
     navigate,
     addToast
-  } = useStore();
+  } = useStore(
+    useShallow((s) => ({
+      selectedGameId: s.selectedGameId,
+      games: s.games,
+      goBack: s.goBack,
+      launchGame: s.launchGame,
+      stopGame: s.stopGame,
+      runningGameId: s.runningGameId,
+      launchingGameId: s.launchingGameId,
+      startDownload: s.startDownload,
+      toggleFavorite: s.toggleFavorite,
+      purchaseGame: s.purchaseGame,
+      purchaseDLC: s.purchaseDLC,
+      currentUser: s.currentUser,
+      settings: s.settings,
+      navigate: s.navigate,
+      addToast: s.addToast,
+    }))
+  );
 
   const game = games.find((g) => g.id === selectedGameId) || games[0];
   const [selectedMediaIndex, setSelectedMediaIndex] = useState(0);

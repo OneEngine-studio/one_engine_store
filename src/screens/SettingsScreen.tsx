@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
-import { useStore } from '../store/useStore';
+import { useStore, useShallow } from '../store/useStore';
+import { LauncherBridge } from '../lib/launcherBridge';
 import { 
   Settings, 
   Volume2, 
   VolumeX, 
   HardDrive, 
-  Folder, 
+  Folder,
+  FolderOpen,
   Palette, 
   Power, 
   RotateCcw,
@@ -26,7 +28,16 @@ export const SettingsScreen: React.FC = () => {
     clearShaderCache,
     verifyGameFiles,
     addToast
-  } = useStore();
+  } = useStore(
+    useShallow((s) => ({
+      settings: s.settings,
+      updateSettings: s.updateSettings,
+      playTactileSound: s.playTactileSound,
+      clearShaderCache: s.clearShaderCache,
+      verifyGameFiles: s.verifyGameFiles,
+      addToast: s.addToast,
+    }))
+  );
 
   const [isEditingDir, setIsEditingDir] = useState(false);
   const [customDir, setCustomDir] = useState(settings.downloadDirectory);
@@ -43,6 +54,17 @@ export const SettingsScreen: React.FC = () => {
       updateSettings({ downloadDirectory: customDir.trim() });
       addToast(`Installation directory set to ${customDir.trim()}`, 'success');
       setIsEditingDir(false);
+    }
+  };
+
+  const handleBrowseDirectory = async () => {
+    playTactileSound('click');
+    const selected = await LauncherBridge.selectDirectory(settings.downloadDirectory);
+    if (selected) {
+      updateSettings({ downloadDirectory: selected });
+      setCustomDir(selected);
+      setIsEditingDir(false);
+      addToast(`Installation directory set to ${selected}`, 'success');
     }
   };
 
@@ -171,6 +193,14 @@ export const SettingsScreen: React.FC = () => {
                     isEditingDir ? 'border-primary-accent ring-1 ring-primary-accent/30' : 'border-border-stroke'
                   }`}
                 />
+                <button
+                  onClick={handleBrowseDirectory}
+                  className="px-3.5 py-1.5 bg-tech-elevated hover:bg-[#232B38] text-slate-200 border border-border-stroke hover:border-slate-500 rounded-md text-xs flex items-center gap-1.5 transition-colors active:scale-[0.98]"
+                  title="Choose folder using native OS dialog"
+                >
+                  <FolderOpen className="w-3.5 h-3.5 text-primary-accent" />
+                  <span>Browse...</span>
+                </button>
                 {isEditingDir ? (
                   <button
                     onClick={handleSaveDirectory}
@@ -185,7 +215,7 @@ export const SettingsScreen: React.FC = () => {
                       setCustomDir(settings.downloadDirectory);
                       setIsEditingDir(true);
                     }}
-                    className="px-3.5 py-1.5 bg-tech-elevated hover:bg-[#232B38] text-slate-200 border border-border-stroke rounded-md text-xs flex items-center gap-1.5 transition-colors active:scale-[0.98]"
+                    className="px-3.5 py-1.5 bg-tech-surface hover:bg-tech-elevated text-slate-300 border border-border-stroke rounded-md text-xs flex items-center gap-1.5 transition-colors active:scale-[0.98]"
                   >
                     <Folder className="w-3.5 h-3.5 text-slate-400" />
                     <span>Edit Path</span>
