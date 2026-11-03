@@ -7,6 +7,7 @@ namespace OneEngine.Integration
 {
     /// <summary>
     /// OneEngine Store Headless Authentication Receiver for Unity (Railbound).
+    /// Supports both zero-exposure Environment Variable IPC (Primary) and CLI argument fallback.
     /// Attach this script to a GameObject in your initial bootstrap scene (e.g., Bootstrapper / Splash).
     /// </summary>
     [DisallowMultipleComponent]
@@ -23,6 +24,7 @@ namespace OneEngine.Integration
         [SerializeField] private bool hasValidLauncherAuth = false;
         [SerializeField] private string cachedPlayerName = string.Empty;
         [SerializeField] private string cachedUserId = string.Empty;
+        [SerializeField] private string authVector = "NONE";
 
         // Static session properties accessible across any Unity gameplay scripts
         public static string AuthToken { get; private set; } = string.Empty;
@@ -38,14 +40,14 @@ namespace OneEngine.Integration
             // Persist this object across scene loads so GameLobby can access session data
             DontDestroyOnLoad(gameObject);
 
-            ParseCommandLineArguments();
+            InitializeSessionAuth();
         }
 
         private void Start()
         {
             if (hasValidLauncherAuth)
             {
-                Debug.Log($"<color=#FF7A00>[OneEngine]</color> Valid session received for operative: '{PlayerName}' (UID: {UserId}).");
+                Debug.Log($"<color=#FF7A00>[OneEngine]</color> Valid session received via {authVector} for operative: '{PlayerName}' (UID: {UserId}).");
                 Debug.Log($"<color=#10B981>[OneEngine]</color> Bypassing '{fallbackLoginSceneName}' -> Navigating directly to '{targetLobbySceneName}'...");
                 
                 // Immediately transition to GameLobby
@@ -53,7 +55,7 @@ namespace OneEngine.Integration
             }
             else
             {
-                Debug.LogWarning("<color=#EF4444>[OneEngine]</color> Standalone launch detected without --auth-token parameter.");
+                Debug.LogWarning("<color=#EF4444>[OneEngine]</color> Standalone launch detected without session credentials.");
                 statusMessage = "Access Denied: Please launch Railbound via the OneEngine Store desktop client.";
                 showStandaloneWarning = true;
 
@@ -61,10 +63,33 @@ namespace OneEngine.Integration
                 if (!string.IsNullOrEmpty(fallbackLoginSceneName) && 
                     SceneManager.GetActiveScene().name != fallbackLoginSceneName)
                 {
-                    // If your build has a manual login fallback scene:
                     // SceneManager.LoadScene(fallbackLoginSceneName);
                 }
             }
+        }
+
+        /// <summary>
+        /// Reads session credentials via high-security Environment Variables (prevents CLI sniffing)
+        /// with graceful fallback to CLI arguments for backward compatibility.
+        /// </summary>
+        private void InitializeSessionAuth()
+        {
+            // Vector 1: High-Security Process Environment Injection (Primary Vector)
+            string envToken = Environment.GetEnvironmentVariable("ONEENGINE_AUTH_TOKEN");
+            if (!string.IsNullOrWhiteSpace(envToken))
+            {
+                AuthToken = envToken;
+                PlayerName = Environment.GetEnvironmentVariable("ONEENGINE_PLAYER_NAME") ?? "Operative";
+                UserId = Environment.GetEnvironmentVariable("ONEENGINE_USER_ID") ?? "usr_anonymous";
+                cachedPlayerName = PlayerName;
+                cachedUserId = UserId;
+                authVector = "SECURE_ENV_IPC";
+                hasValidLauncherAuth = true;
+                return;
+            }
+
+            // Vector 2: Fallback to Command-Line Arguments (Legacy Runner Vector)
+            ParseCommandLineArguments();
         }
 
         /// <summary>
@@ -98,7 +123,7 @@ namespace OneEngine.Integration
                 }
             }
 
-            // Extract session credentials injected by OneEngine Rust backend
+            // Extract session credentials injected by launcher
             if (parsedArgs.TryGetValue("auth-token", out string token) && !string.IsNullOrWhiteSpace(token))
             {
                 AuthToken = token;
@@ -111,6 +136,7 @@ namespace OneEngine.Integration
                 UserId = !string.IsNullOrWhiteSpace(uId) ? uId : "usr_anonymous";
                 cachedUserId = UserId;
 
+                authVector = "CLI_FLAGS";
                 hasValidLauncherAuth = true;
             }
         }

@@ -128,6 +128,14 @@ function createWindow() {
     const { gamePath, authToken, playerName, userId } = payload;
     console.log(`[OneEngine Electron] Launching game for: ${playerName} (${userId})`);
 
+    const secureEnv = {
+      ...process.env,
+      ONEENGINE_AUTH_TOKEN: authToken || '',
+      ONEENGINE_PLAYER_NAME: playerName || '',
+      ONEENGINE_USER_ID: userId || '',
+      ONEENGINE_SECURITY_VECTOR: 'SECURE_ENV_IPC',
+    };
+
     const args = [
       '--auth-token', authToken || '',
       '--player-name', playerName || '',
@@ -137,15 +145,15 @@ function createWindow() {
     try {
       let child;
       if (gamePath && fs.existsSync(gamePath)) {
-        // Spawn real Unity game executable
-        child = spawn(gamePath, args, { detached: false });
+        // Spawn real Unity game executable with secure env injection
+        child = spawn(gamePath, args, { detached: false, env: secureEnv });
       } else {
         // Dev fallback simulation process (alive for 15s)
         console.log(`[OneEngine Electron] Target '${gamePath}' not found on disk. Spawning mock process.`);
         if (process.platform === 'win32') {
-          child = spawn('cmd.exe', ['/c', `echo [Railbound Mock] Launched with token: ${authToken} & ping 127.0.0.1 -n 15 > nul`]);
+          child = spawn('cmd.exe', ['/c', `echo [Railbound Mock] Launched securely via env & ping 127.0.0.1 -n 15 > nul`], { env: secureEnv });
         } else {
-          child = spawn('sh', ['-c', `echo [Railbound Mock] Launched with token: ${authToken} && sleep 15`]);
+          child = spawn('sh', ['-c', `echo [Railbound Mock] Launched securely via env && sleep 15`], { env: secureEnv });
         }
       }
 

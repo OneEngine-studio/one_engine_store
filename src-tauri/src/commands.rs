@@ -44,6 +44,9 @@ pub async fn launch_game(
     // Check if real executable exists. If absent in dev environment, fall back to simulated process
     let mut cmd = if path_ref.exists() {
         let mut c = Command::new(&game_path);
+        c.env("ONEENGINE_AUTH_TOKEN", &auth_token);
+        c.env("ONEENGINE_PLAYER_NAME", &player_name);
+        c.env("ONEENGINE_USER_ID", &user_id);
         c.args([
             "--auth-token",
             &auth_token,
