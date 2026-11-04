@@ -212,8 +212,8 @@ export const StoreScreen: React.FC = () => {
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
           {recentArticles.map((a) => (
-            <div key={a.id} onClick={() => openArticle(a)}
-              className="group rounded-2xl bg-bg-card border border-white/[0.07] hover:border-accent/50 overflow-hidden cursor-default transition-colors">
+            <button key={a.id} onClick={() => openArticle(a)}
+              className="group text-left rounded-2xl bg-bg-card border border-white/[0.07] hover:border-accent/50 overflow-hidden cursor-default transition-colors">
               <div className="relative aspect-[16/9] overflow-hidden bg-black">
                 <img src={a.cover} alt={a.title} className="w-full h-full object-cover opacity-80 group-hover:opacity-100 group-hover:scale-105 transition duration-300" />
                 <span className="absolute top-2.5 left-2.5 engine-label bg-black/60 px-2 py-1 rounded">{a.gameTitle}</span>
@@ -226,7 +226,7 @@ export const StoreScreen: React.FC = () => {
                   <span className="flex items-center gap-1 text-slate-300"><FileText className="w-3 h-3 text-accent" />Read notes</span>
                 </div>
               </div>
-            </div>
+            </button>
           ))}
         </div>
       </section>

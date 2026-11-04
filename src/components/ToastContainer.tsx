@@ -12,7 +12,7 @@ export const ToastContainer: React.FC = () => {
       {toasts.map((t) => (
         <div
           key={t.id}
-          className={`pointer-events-auto p-3 rounded-lg border shadow-2xl flex items-start space-x-3 transition-all duration-200 animate-in slide-in-from-bottom-2 ${
+          className={`pointer-events-auto p-3 rounded-lg border shadow-2xl flex items-start space-x-3 transition-[opacity,transform] duration-200 animate-in slide-in-from-bottom-2 ${
             t.type === 'success'
               ? 'bg-gunmetal-slate border-tactical-green/60 text-slate-100'
               : t.type === 'warning'

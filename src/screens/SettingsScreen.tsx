@@ -18,6 +18,7 @@ import {
   RefreshCw,
 } from 'lucide-react';
 import { nakamaService } from '../lib/nakama';
+import { Switch } from '../components/ui/Switch';
 
 export const SettingsScreen: React.FC = () => {
   const {
@@ -159,17 +160,11 @@ export const SettingsScreen: React.FC = () => {
                     Open the store automatically when your computer boots up.
                   </span>
                 </div>
-                <button
-                  onClick={() => updateSettings({ launchOnStartup: !settings.launchOnStartup })}
-                  className={`w-12 h-6 flex items-center rounded-full p-1 transition-surface cursor-default ${
-                    settings.launchOnStartup
-                      ? 'bg-accent justify-end shadow-sm'
-                      : 'bg-white/[0.12] justify-start border border-white/10'
-                  }`}
-                  title="Toggle startup behavior"
-                >
-                  <div className="w-4 h-4 rounded-full bg-white shadow-sm" />
-                </button>
+                <Switch
+                  checked={settings.launchOnStartup}
+                  onChange={(v) => updateSettings({ launchOnStartup: v })}
+                  label="Launch on system startup"
+                />
               </div>
 
               {/* Toggle 2: Hardware acceleration */}
@@ -182,17 +177,11 @@ export const SettingsScreen: React.FC = () => {
                     Use GPU rendering for fluid UI motion and 4K media playback.
                   </span>
                 </div>
-                <button
-                  onClick={() => updateSettings({ hardwareAcceleration: !settings.hardwareAcceleration })}
-                  className={`w-12 h-6 flex items-center rounded-full p-1 transition-surface cursor-default ${
-                    settings.hardwareAcceleration
-                      ? 'bg-accent justify-end shadow-sm'
-                      : 'bg-white/[0.12] justify-start border border-white/10'
-                  }`}
-                  title="Toggle hardware acceleration"
-                >
-                  <div className="w-4 h-4 rounded-full bg-white shadow-sm" />
-                </button>
+                <Switch
+                  checked={settings.hardwareAcceleration}
+                  onChange={(v) => updateSettings({ hardwareAcceleration: v })}
+                  label="Hardware acceleration"
+                />
               </div>
             </div>
           </section>
@@ -220,16 +209,11 @@ export const SettingsScreen: React.FC = () => {
                 >
                   Test sound
                 </button>
-                <button
-                  onClick={() => updateSettings({ enableTactileAudio: !settings.enableTactileAudio })}
-                  className={`w-12 h-6 flex items-center rounded-full p-1 transition-surface cursor-default ${
-                    settings.enableTactileAudio
-                      ? 'bg-accent justify-end shadow-sm'
-                      : 'bg-white/[0.12] justify-start border border-white/10'
-                  }`}
-                >
-                  <div className="w-4 h-4 rounded-full bg-white shadow-sm" />
-                </button>
+                <Switch
+                  checked={settings.enableTactileAudio}
+                  onChange={(v) => updateSettings({ enableTactileAudio: v })}
+                  label="Tactile interface audio"
+                />
               </div>
             </div>
           </section>
@@ -344,16 +328,11 @@ export const SettingsScreen: React.FC = () => {
                   <span className="text-xs font-medium text-slate-200 block">Use SSL / TLS</span>
                   <span className="text-[11px] text-slate-400 block">Enable for HTTPS / WSS</span>
                 </div>
-                <button
-                  onClick={() => updateSettings({ nakamaUseSsl: !settings.nakamaUseSsl })}
-                  className={`w-12 h-6 flex items-center rounded-full p-1 transition-surface cursor-default ${
-                    settings.nakamaUseSsl
-                      ? 'bg-accent justify-end shadow-sm'
-                      : 'bg-white/[0.12] justify-start border border-white/10'
-                  }`}
-                >
-                  <div className="w-4 h-4 rounded-full bg-white shadow-sm" />
-                </button>
+                <Switch
+                  checked={settings.nakamaUseSsl}
+                  onChange={(v) => updateSettings({ nakamaUseSsl: v })}
+                  label="Use SSL for Nakama connection"
+                />
               </div>
             </div>
 
@@ -388,16 +367,11 @@ export const SettingsScreen: React.FC = () => {
                   Display process IDs, account switcher, and low-level CLI execution arguments.
                 </span>
               </div>
-              <button
-                onClick={() => updateSettings({ devTelemetryMode: !settings.devTelemetryMode })}
-                className={`w-12 h-6 flex items-center rounded-full p-1 transition-surface cursor-default ${
-                  settings.devTelemetryMode
-                    ? 'bg-accent justify-end shadow-sm'
-                    : 'bg-white/[0.12] justify-start border border-white/10'
-                }`}
-              >
-                <div className="w-4 h-4 rounded-full bg-white shadow-sm" />
-              </button>
+              <Switch
+                checked={settings.devTelemetryMode}
+                onChange={(v) => updateSettings({ devTelemetryMode: v })}
+                label="Developer telemetry mode"
+              />
             </div>
           </section>
         </div>

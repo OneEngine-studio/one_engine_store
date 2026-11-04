@@ -87,7 +87,7 @@ export const WindowFrame: React.FC = () => {
       >
         <button
           onClick={() => setCommandPaletteOpen(true)}
-          className="w-full bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.09] hover:border-white/[0.18] backdrop-blur-md rounded-full px-4 py-1.5 flex items-center justify-between text-xs text-slate-300 hover:text-white transition-all cursor-default shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06)]"
+          className="w-full bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.09] hover:border-white/[0.18] backdrop-blur-md rounded-full px-4 py-1.5 flex items-center justify-between text-xs text-slate-300 hover:text-white transition-surface cursor-default shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06)]"
         >
           <div className="flex items-center gap-2.5">
             <Search className="w-3.5 h-3.5 text-slate-400 shrink-0" strokeWidth={1.75} />
@@ -128,7 +128,7 @@ export const WindowFrame: React.FC = () => {
         <div className="relative">
           <button
             onClick={() => setIsNotifOpen((prev) => !prev)}
-            className="w-8 h-8 flex items-center justify-center text-slate-300 hover:text-white bg-white/[0.04] hover:bg-white/[0.08] backdrop-blur-md border border-white/[0.09] shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06)] rounded-full transition-all cursor-default relative"
+            className="w-8 h-8 flex items-center justify-center text-slate-300 hover:text-white bg-white/[0.04] hover:bg-white/[0.08] backdrop-blur-md border border-white/[0.09] shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06)] rounded-full transition-surface cursor-default relative"
             title="Notifications"
           >
             <Bell className="w-3.5 h-3.5" strokeWidth={1.75} />
@@ -147,7 +147,7 @@ export const WindowFrame: React.FC = () => {
         {currentUser.id ? (
           <button
             onClick={openAuthModal}
-            className="flex items-center gap-2 pl-1 pr-3 py-1 bg-white/[0.04] hover:bg-white/[0.08] backdrop-blur-md border border-white/[0.09] hover:border-white/[0.18] shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06)] rounded-full text-xs transition-all cursor-default"
+            className="flex items-center gap-2 pl-1 pr-3 py-1 bg-white/[0.04] hover:bg-white/[0.08] backdrop-blur-md border border-white/[0.09] hover:border-white/[0.18] shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06)] rounded-full text-xs transition-surface cursor-default"
             title="Account & Nakama session"
           >
             <div className="relative">

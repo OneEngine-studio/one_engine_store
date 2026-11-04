@@ -89,7 +89,7 @@ export const CommandPalette: React.FC = () => {
                       setCommandPaletteOpen(false);
                       navigate('game-detail', game.id);
                     }}
-                    className="px-3.5 py-2.5 rounded-2xl hover:bg-white/[0.08] flex items-center justify-between cursor-default border border-transparent hover:border-white/[0.12] transition-all duration-150 group"
+                    className="px-3.5 py-2.5 rounded-2xl hover:bg-white/[0.08] flex items-center justify-between cursor-default border border-transparent hover:border-white/[0.12] transition-surface duration-150 group"
                   >
                     <div className="flex items-center gap-3.5">
                       <img
@@ -135,7 +135,7 @@ export const CommandPalette: React.FC = () => {
                     setCommandPaletteOpen(false);
                     openArticle(article);
                   }}
-                  className="px-3.5 py-2.5 rounded-xl hover:bg-white/[0.08] flex items-center justify-between cursor-default border border-transparent hover:border-white/[0.1] transition-all duration-150 group"
+                  className="px-3.5 py-2.5 rounded-xl hover:bg-white/[0.08] flex items-center justify-between cursor-default border border-transparent hover:border-white/[0.1] transition-surface duration-150 group"
                 >
                   <div className="space-y-0.5">
                     <span className="text-xs font-medium text-slate-300 group-hover:text-accent transition-colors block">

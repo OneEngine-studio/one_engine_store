@@ -43,7 +43,7 @@ export const NotificationPopover: React.FC<NotificationPopoverProps> = ({ isOpen
           notifications.map((item) => (
             <div
               key={item.id}
-              className={`p-3 rounded-xl space-y-1 transition-all duration-150 border cursor-default ${
+              className={`p-3 rounded-xl space-y-1 transition-surface duration-150 border cursor-default ${
                 !item.read
                   ? 'bg-accent/[0.08] border-accent/20 hover:bg-accent/[0.12]'
                   : 'bg-white/[0.02] border-transparent hover:bg-white/[0.06] hover:border-white/[0.06]'

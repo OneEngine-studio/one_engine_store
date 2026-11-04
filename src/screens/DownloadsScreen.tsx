@@ -377,6 +377,7 @@ export const DownloadsScreen: React.FC = () => {
                         onClick={() => isPaused ? resumeDownload(item.gameId) : pauseDownload(item.gameId)}
                         className="w-8 h-8 rounded-full bg-white/[0.06] hover:bg-white/[0.1] text-slate-200 flex items-center justify-center transition-surface cursor-default"
                         title={isPaused ? 'Resume' : 'Pause'}
+                        aria-label={isPaused ? 'Resume download' : 'Pause download'}
                       >
                         {isPaused ? <Play className="w-3.5 h-3.5 fill-current" /> : <Pause className="w-3.5 h-3.5 fill-current" />}
                       </button>
@@ -386,6 +387,7 @@ export const DownloadsScreen: React.FC = () => {
                       onClick={() => cancelDownload(item.gameId)}
                       className="w-8 h-8 rounded-full bg-white/[0.06] hover:bg-danger/20 text-slate-400 hover:text-danger flex items-center justify-center transition-surface cursor-default"
                       title="Cancel download"
+                      aria-label="Cancel download"
                     >
                       <X className="w-3.5 h-3.5" />
                     </button>
