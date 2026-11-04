@@ -120,6 +120,7 @@ const MainViewport: React.FC = () => {
           }
         >
           {/* Functional ambient tint derived from current artwork */}
+          <div className="absolute inset-0 blueprint-grid z-0" />
           <div className="absolute inset-x-0 top-0 h-96 panel-ambient-glow transition-opacity duration-700 pointer-events-none z-0" />
 
           {/* Scrollable content container inside the panel */}

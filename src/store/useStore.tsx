@@ -84,12 +84,7 @@ const INITIAL_GAMES: Game[] = [
     discountPercent: 20,
     coverImage: './images/railbound-theme.jpg',
     heroBanner: './images/railbound-theme.jpg',
-    screenshots: [
-      './images/railbound-theme.jpg',
-      'https://images.unsplash.com/photo-1511512578047-dfb367046420?q=80&w=1200&auto=format&fit=crop',
-      'https://images.unsplash.com/photo-1542751371-adc38448a05e?q=80&w=1200&auto=format&fit=crop',
-      'https://images.unsplash.com/photo-1550745165-9bc0b252726f?q=80&w=1200&auto=format&fit=crop'
-    ],
+    screenshots: [],
     tags: ['Tactical', 'Automation', 'Defense', 'Strategy', 'Sci-fi'],
     rating: 96,
     ratingBreakdown: { positivePercent: 96, totalReviews: 4820 },

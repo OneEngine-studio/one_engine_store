@@ -1,3 +1,5 @@
+import colors from 'tailwindcss/colors'
+
 /** @type {import('tailwindcss').Config} */
 export default {
   content: [
@@ -8,20 +10,25 @@ export default {
     extend: {
       colors: {
         // Deep obsidian layered surfaces
-        'bg-app':      '#07090C', // Root window background
-        'bg-panel':    '#0D1117', // Floating main content panel
-        'bg-sidebar':  '#090C10', // Left navigation rail
-        'bg-card':     '#131922', // Cards, tiles, panels
+        'bg-app':      '#0C0A08', // Root window background
+        'bg-panel':    '#15120F', // Floating main content panel
+        'bg-sidebar':  '#0F0D0A', // Left navigation rail
+        'bg-card':     '#1D1914', // Cards, tiles, panels
         'bg-hover':    'rgba(255, 255, 255, 0.06)', // 6% white interaction hover
         'bg-pressed':  'rgba(255, 255, 255, 0.10)',
-        'bg-dock':     '#10151E', // Floating bottom dock
+        'bg-dock':     '#1A1612', // Floating bottom dock
 
         // Backward-compat aliases
-        'void-black':    '#07090C',
-        'gunmetal-slate':'#090C10',
-        'tech-surface':  '#131922',
-        'tech-elevated': '#18202C',
+        'void-black':    '#0C0A08',
+        'gunmetal-slate':'#0F0D0A',
+        'tech-surface':  '#1D1914',
+        'tech-elevated': '#262019',
         'border-stroke': 'rgba(255, 255, 255, 0.08)',
+
+        // Workshop palette: cool slate greys become warm stone
+        slate: colors.stone,
+        cream:  '#F2E8D5',
+        brass:  '#C9A24B',
 
         // Brand accent (only for primary actions, active state and focus)
         'accent':       '#FF7A00',
@@ -37,6 +44,7 @@ export default {
         'tactical-danger': '#E53935',
       },
       fontFamily: {
+        display: ['"Bricolage Grotesque"', 'Inter', 'sans-serif'],
         sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', '"Segoe UI"', 'Roboto', 'sans-serif'],
         mono: ['"JetBrains Mono"', 'Menlo', 'Consolas', 'monospace'],
       },
