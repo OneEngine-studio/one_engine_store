@@ -47,7 +47,7 @@ export const CommandPalette: React.FC = () => {
 
   return (
     <div
-      className="fixed inset-0 z-[70] flex items-start justify-center pt-24 bg-black/75 backdrop-blur-md p-4 select-none"
+      className="fixed inset-0 z-[70] flex items-start justify-center pt-24 bg-black/75 p-4 select-none"
       onClick={() => setCommandPaletteOpen(false)}
     >
       <div

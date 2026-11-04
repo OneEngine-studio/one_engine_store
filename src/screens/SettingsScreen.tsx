@@ -100,7 +100,7 @@ export const SettingsScreen: React.FC = () => {
       {/* Confirmation modal for Reset to defaults */}
       {showResetConfirm && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-md p-4"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 p-4"
           onClick={() => setShowResetConfirm(false)}
         >
           <div

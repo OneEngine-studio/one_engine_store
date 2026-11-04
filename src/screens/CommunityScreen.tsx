@@ -73,7 +73,7 @@ export const CommunityScreen: React.FC = () => {
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-bg-card via-transparent to-transparent pointer-events-none" />
                 
-                <span className="absolute top-2.5 left-2.5 px-2.5 py-0.5 rounded-full bg-black/60 text-slate-200 text-[10px] font-medium border border-white/10 backdrop-blur-md">
+                <span className="absolute top-2.5 left-2.5 px-2.5 py-0.5 rounded-full bg-black/60 text-slate-200 text-[10px] font-medium border border-white/10">
                   {item.gameTitle}
                 </span>
               </div>

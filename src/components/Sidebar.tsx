@@ -105,7 +105,7 @@ export const Sidebar: React.FC = () => {
         <div className="w-8 h-px bg-white/[0.08] my-1" />
 
         {/* Quick library games 40px rounded art icons */}
-        <div className="flex flex-col items-center gap-2 w-full px-2 overflow-y-auto max-h-[calc(100vh-380px)] custom-scroll">
+        <div className="flex flex-col items-center gap-2.5 w-full py-1.5 overflow-y-auto overflow-x-hidden max-h-[calc(100vh-380px)] no-scrollbar">
           {ownedGames.slice(0, 6).map((game: Game) => {
             const isPlaying = runningGameId === game.id;
             const isDownloading = downloads.some(

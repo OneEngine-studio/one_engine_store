@@ -29,7 +29,7 @@ export const ArticleReaderModal: React.FC = () => {
 
   return (
     <div
-      className="fixed inset-0 z-[60] flex items-center justify-center bg-black/75 backdrop-blur-md p-4 select-none"
+      className="fixed inset-0 z-[60] flex items-center justify-center bg-black/75 p-4 select-none"
       onClick={closeArticle}
     >
       <div

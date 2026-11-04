@@ -1,21 +1,46 @@
 import React, { useState, useEffect } from 'react';
 import { useStore } from '../store/useStore';
-import {
-  X,
-  Mail,
-  Lock,
-  User,
-  ShieldCheck,
-  Server,
-  LogOut,
-  AlertCircle,
-  Eye,
-  EyeOff,
-  Copy,
-  Check,
-  Sparkles,
-} from 'lucide-react';
+import { X, LogOut, AlertCircle, Eye, EyeOff, Copy, Check } from 'lucide-react';
 import { nakamaService } from '../lib/nakama';
+
+type Mode = 'LOGIN' | 'REGISTER';
+type ServerStatus = 'CHECKING' | 'ONLINE' | 'OFFLINE';
+
+const inputClass =
+  'w-full px-3 py-2.5 rounded-input bg-bg-app border border-white/[0.1] focus:border-accent text-sm text-cream placeholder-slate-600 outline-none transition-surface select-text';
+
+/** Cartridge sliding into a console slot. Purely decorative. */
+const SlotArt: React.FC = () => (
+  <svg viewBox="0 0 220 260" className="w-full h-auto" aria-hidden="true">
+    <g style={{ animation: 'cartDrop 700ms cubic-bezier(0.23, 1, 0.32, 1) both' }}>
+      <path d="M62 20h96l10 12v118H52V32z" fill="#9a4a14" />
+      <path d="M62 20h96l10 12v118H52V32z" fill="url(#shine)" />
+      <rect x="68" y="30" width="84" height="8" rx="2" fill="rgba(0,0,0,0.35)" />
+      <rect x="64" y="48" width="92" height="70" rx="5" fill="#F2E8D5" />
+      <rect x="70" y="54" width="80" height="40" rx="3" fill="#1d1914" />
+      <path d="M70 84l20-18 14 10 18-14 28 22v10H70z" fill="#FF7A00" opacity="0.85" />
+      <rect x="72" y="100" width="46" height="5" rx="1" fill="#1b1510" />
+      <rect x="72" y="108" width="28" height="3" rx="1" fill="#1b1510" opacity="0.5" />
+      {Array.from({ length: 9 }).map((_, i) => (
+        <rect key={i} x={72 + i * 9.5} y="136" width="4" height="14" fill="#C9A24B" />
+      ))}
+    </g>
+    {/* console slot */}
+    <rect x="34" y="150" width="152" height="86" rx="10" fill="#241e17" />
+    <rect x="34" y="150" width="152" height="86" rx="10" fill="none" stroke="rgba(242,232,213,0.12)" />
+    <rect x="46" y="150" width="128" height="14" rx="3" fill="#0C0A08" />
+    <rect x="46" y="164" width="128" height="3" fill="#C9A24B" opacity="0.7" />
+    <circle cx="58" cy="214" r="4" fill="#FF7A00" />
+    <rect x="72" y="211" width="60" height="6" rx="3" fill="rgba(242,232,213,0.1)" />
+    <defs>
+      <linearGradient id="shine" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0" stopColor="#fff" stopOpacity="0.22" />
+        <stop offset="0.5" stopColor="#fff" stopOpacity="0" />
+        <stop offset="1" stopColor="#000" stopOpacity="0.3" />
+      </linearGradient>
+    </defs>
+  </svg>
+);
 
 export const AuthModal: React.FC = () => {
   const {
@@ -32,18 +57,17 @@ export const AuthModal: React.FC = () => {
     addToast,
   } = useStore();
 
-  const [mode, setMode] = useState<'LOGIN' | 'REGISTER'>('LOGIN');
+  const [mode, setMode] = useState<Mode>('LOGIN');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [username, setUsername] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [serverStatus, setServerStatus] = useState<'CHECKING' | 'ONLINE' | 'OFFLINE'>('CHECKING');
+  const [serverStatus, setServerStatus] = useState<ServerStatus>('CHECKING');
   const [copiedToken, setCopiedToken] = useState(false);
   const [showServerDetails, setShowServerDetails] = useState(false);
 
-  // Esc key listener
   useEffect(() => {
     if (!isAuthModalOpen) return;
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -53,18 +77,13 @@ export const AuthModal: React.FC = () => {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isAuthModalOpen, closeAuthModal]);
 
-  // Check server connectivity status whenever modal opens
   useEffect(() => {
     if (!isAuthModalOpen) return;
     let isMounted = true;
     setServerStatus('CHECKING');
-
     nakamaService.testConnection().then((res) => {
-      if (isMounted) {
-        setServerStatus(res.ok ? 'ONLINE' : 'OFFLINE');
-      }
+      if (isMounted) setServerStatus(res.ok ? 'ONLINE' : 'OFFLINE');
     });
-
     return () => {
       isMounted = false;
     };
@@ -72,12 +91,17 @@ export const AuthModal: React.FC = () => {
 
   if (!isAuthModalOpen) return null;
 
+  const recheck = () => {
+    setServerStatus('CHECKING');
+    nakamaService.testConnection().then((r) => setServerStatus(r.ok ? 'ONLINE' : 'OFFLINE'));
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMessage(null);
 
     if (!email.trim() || !password.trim()) {
-      setErrorMessage('Please fill in both email and password.');
+      setErrorMessage('Enter both your email and password.');
       return;
     }
 
@@ -85,23 +109,16 @@ export const AuthModal: React.FC = () => {
     try {
       if (mode === 'LOGIN') {
         const res = await loginWithNakama(email.trim(), password);
-        if (res.success) {
-          closeAuthModal();
-        } else {
-          setErrorMessage(res.error || 'Failed to authenticate with Nakama.');
-        }
+        if (res.success) closeAuthModal();
+        else setErrorMessage(res.error || 'Could not sign in to Nakama.');
       } else {
         if (!username.trim()) {
-          setErrorMessage('Please choose a callsign / username.');
-          setLoading(false);
+          setErrorMessage('Choose a callsign to create your account.');
           return;
         }
         const res = await registerWithNakama(email.trim(), password, username.trim());
-        if (res.success) {
-          closeAuthModal();
-        } else {
-          setErrorMessage(res.error || 'Registration failed. Username or email may already be taken.');
-        }
+        if (res.success) closeAuthModal();
+        else setErrorMessage(res.error || 'Could not create the account. The callsign or email may already be taken.');
       }
     } finally {
       setLoading(false);
@@ -113,360 +130,327 @@ export const AuthModal: React.FC = () => {
     setErrorMessage(null);
     try {
       const res = await loginAsGuest(username.trim() || 'Operative_Guest');
-      if (res.success) {
-        closeAuthModal();
-      }
+      if (res.success) closeAuthModal();
     } finally {
       setLoading(false);
     }
   };
 
+  const isOfflineSession = !!currentUser.nakamaToken?.startsWith('offline_jwt');
+
   const handleCopyToken = () => {
-    if (currentUser.nakamaToken) {
+    if (currentUser.nakamaToken && !isOfflineSession) {
       navigator.clipboard.writeText(currentUser.nakamaToken);
       setCopiedToken(true);
       setTimeout(() => setCopiedToken(false), 2000);
-      addToast('Nakama JWT copied to clipboard.', 'info');
+      addToast('Launcher key copied.', 'info');
     }
   };
 
+  const statusLabel =
+    serverStatus === 'ONLINE' ? 'Server online' : serverStatus === 'OFFLINE' ? 'Server unreachable' : 'Checking server…';
+  const statusDot =
+    serverStatus === 'ONLINE' ? 'bg-success' : serverStatus === 'OFFLINE' ? 'bg-amber-400' : 'bg-slate-500 led-pulse';
+
+  const closeButton = (
+    <button
+      onClick={closeAuthModal}
+      aria-label="Close"
+      title="Close (Esc)"
+      className="absolute top-4 right-4 w-8 h-8 rounded-full flex items-center justify-center text-slate-400 hover:text-white hover:bg-white/[0.08] transition-surface cursor-default z-10"
+    >
+      <X className="w-4 h-4" strokeWidth={1.75} />
+    </button>
+  );
+
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-md p-4 select-none animate-fade-in"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 p-4 select-none"
       onClick={closeAuthModal}
     >
-      <div
-        className="w-full max-w-md bg-bg-panel border border-white/[0.08] rounded-panel p-6 relative shadow-modal animate-modal-in flex flex-col gap-5 text-slate-200"
-        onClick={(e) => e.stopPropagation()}
-      >
-        {/* Header bar */}
-        <div className="flex items-center justify-between pb-3 border-b border-white/[0.06]">
-          <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-full bg-accent/15 border border-accent/30 flex items-center justify-center text-accent">
-              <ShieldCheck className="w-5 h-5" />
+      {isAuthenticated && currentUser.id ? (
+        /* Signed in: an operator pass */
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="auth-title"
+          onClick={(e) => e.stopPropagation()}
+          className="relative w-full max-w-sm animate-modal-in"
+        >
+          {closeButton}
+          <div className="rounded-panel bg-cream text-[#1b1510] overflow-hidden shadow-modal">
+            <div className="h-10 flex items-end justify-center bg-[#1b1510]">
+              <span className="mb-2 w-16 h-2.5 rounded-full bg-bg-app ring-1 ring-white/10" />
             </div>
-            <div>
-              <h2 className="text-sm font-semibold text-white tracking-tight">
-                {isAuthenticated ? 'Active operative' : 'OneEngine identification'}
-              </h2>
-              <div className="flex items-center gap-1.5 text-[11px] text-slate-400">
-                <span
-                  className={`w-1.5 h-1.5 rounded-full ${
-                    serverStatus === 'ONLINE'
-                      ? 'bg-success animate-pulse'
-                      : serverStatus === 'OFFLINE'
-                      ? 'bg-amber-400'
-                      : 'bg-slate-400 animate-ping'
-                  }`}
-                />
-                <span>
-                  Nakama ({settings.nakamaHost}:{settings.nakamaPort}) ·{' '}
-                  {serverStatus === 'ONLINE'
-                    ? 'Online'
-                    : serverStatus === 'OFFLINE'
-                    ? 'Standby'
-                    : 'Verifying...'}
-                </span>
-              </div>
-            </div>
-          </div>
-          <button
-            onClick={closeAuthModal}
-            className="w-7 h-7 rounded-full flex items-center justify-center text-slate-400 hover:text-white hover:bg-white/[0.08] transition-surface cursor-default"
-            title="Close (Esc)"
-          >
-            <X className="w-4 h-4" strokeWidth={1.75} />
-          </button>
-        </div>
-
-        {/* Authenticated State Display */}
-        {isAuthenticated && currentUser.id ? (
-          <div className="space-y-4">
-            {/* User Profile Card */}
-            <div className="p-4 rounded-card bg-bg-card border border-white/[0.06] flex items-center gap-3.5">
-              <div className="relative w-12 h-12 rounded-full overflow-hidden border border-accent/40 shadow-sm shrink-0">
+            <div className="p-6 pt-5 space-y-5">
+              <div className="flex items-center gap-4">
                 <img
                   src={currentUser.avatarUrl}
-                  alt={currentUser.callsign}
-                  className="w-full h-full object-cover"
+                  alt=""
+                  className="w-16 h-16 rounded-2xl object-cover bg-[#1b1510]/10 ring-2 ring-[#1b1510]/20"
                 />
-                <span className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-success ring-1 ring-bg-panel" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center justify-between gap-2">
-                  <span className="text-sm font-semibold text-white truncate">
+                <div className="min-w-0">
+                  <h2 id="auth-title" className="font-display text-2xl font-extrabold leading-tight truncate">
                     {currentUser.callsign}
-                  </span>
-                  <span className="text-xs text-accent font-semibold tabular-nums">
-                    ${currentUser.walletBalance.toFixed(2)}
-                  </span>
-                </div>
-                <p className="text-xs text-slate-400 truncate mt-0.5">
-                  {currentUser.email || 'Verified Operative'}
-                </p>
-                <div className="flex items-center gap-2 mt-1">
-                  <span className="px-2 py-0.5 rounded-full bg-white/[0.06] text-[10px] text-slate-300 font-medium">
-                    {currentUser.rank}
-                  </span>
-                  <span className="text-[10px] text-slate-500 tabular-nums">
-                    UID: {currentUser.id.slice(0, 12)}…
-                  </span>
+                  </h2>
+                  <p className="text-xs text-[#1b1510]/60 truncate">{currentUser.email || 'Verified account'}</p>
                 </div>
               </div>
-            </div>
 
-            {/* Session Token Card */}
-            <div className="p-3.5 rounded-card bg-white/[0.03] border border-white/[0.06] flex items-center justify-between gap-2">
-              <div className="min-w-0 flex-1">
-                <div className="flex items-center gap-1.5 text-xs text-slate-300 font-medium">
-                  <Server className="w-3.5 h-3.5 text-slate-400" />
-                  <span>Nakama launcher handoff</span>
+              <dl className="grid grid-cols-2 gap-x-4 gap-y-3 text-xs">
+                <div>
+                  <dt className="text-[#1b1510]/50">Rank</dt>
+                  <dd className="font-semibold capitalize">{currentUser.rank.toLowerCase()}</dd>
                 </div>
-                <p className="text-[11px] text-slate-400 font-mono truncate mt-0.5">
-                  {currentUser.nakamaToken ? `${currentUser.nakamaToken.slice(0, 32)}…` : 'Session ready'}
-                </p>
+                <div>
+                  <dt className="text-[#1b1510]/50">Wallet</dt>
+                  <dd className="font-semibold tabular-nums">${currentUser.walletBalance.toFixed(2)}</dd>
+                </div>
+                <div className="col-span-2">
+                  <dt className="text-[#1b1510]/50">Account ID</dt>
+                  <dd className="font-mono text-[11px] truncate">{currentUser.id}</dd>
+                </div>
+              </dl>
+
+              <div className="rounded-xl bg-[#1b1510]/[0.07] p-3.5 flex items-center justify-between gap-3">
+                <div className="min-w-0">
+                  <div className="text-xs font-semibold">
+                    {isOfflineSession ? 'Offline pass' : 'Launcher key'}
+                  </div>
+                  <p className="text-[11px] text-[#1b1510]/60 leading-snug mt-0.5">
+                    {isOfflineSession
+                      ? 'Not verified by Nakama. Games start in local mode.'
+                      : 'Hands your session to the game when it starts.'}
+                  </p>
+                </div>
+                {!isOfflineSession && currentUser.nakamaToken && (
+                  <button
+                    onClick={handleCopyToken}
+                    className="shrink-0 px-3 h-8 rounded-full bg-[#1b1510] text-cream text-xs font-semibold flex items-center gap-1.5 cursor-default active:scale-[0.97] transition-transform"
+                  >
+                    {copiedToken ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+                    {copiedToken ? 'Copied' : 'Copy'}
+                  </button>
+                )}
               </div>
-              {currentUser.nakamaToken && (
+
+              <div className="flex items-center justify-between gap-3 pt-1">
                 <button
-                  onClick={handleCopyToken}
-                  className="px-2.5 py-1 rounded-full bg-white/[0.06] hover:bg-white/[0.12] text-xs text-slate-300 flex items-center gap-1 transition-surface"
-                  title="Copy session token"
+                  onClick={logout}
+                  className="px-3 h-10 rounded-full text-sm font-semibold text-[#b3261e] hover:bg-[#b3261e]/10 flex items-center gap-2 cursor-default transition-surface"
                 >
-                  {copiedToken ? (
-                    <>
-                      <Check className="w-3 h-3 text-success" />
-                      <span>Copied</span>
-                    </>
-                  ) : (
-                    <>
-                      <Copy className="w-3 h-3" />
-                      <span>Copy</span>
-                    </>
-                  )}
+                  <LogOut className="w-4 h-4" />
+                  Sign out
                 </button>
-              )}
-            </div>
-
-            {/* Actions */}
-            <div className="pt-2 flex items-center justify-between gap-3">
-              <button
-                onClick={logout}
-                className="px-4 py-2 rounded-full bg-danger/15 hover:bg-danger/25 border border-danger/30 text-xs font-medium text-danger flex items-center gap-1.5 transition-surface"
-              >
-                <LogOut className="w-3.5 h-3.5" />
-                <span>Sign out</span>
-              </button>
-
-              <button
-                onClick={closeAuthModal}
-                className="px-6 py-2 rounded-full bg-accent hover:bg-accent-hover text-xs font-semibold text-bg-app transition-surface"
-              >
-                Done
-              </button>
+                <button
+                  onClick={closeAuthModal}
+                  className="px-7 h-10 rounded-full bg-accent hover:bg-accent-hover text-sm font-bold text-[#1b1510] cursor-default active:scale-[0.97] transition-[background-color,transform]"
+                >
+                  Done
+                </button>
+              </div>
             </div>
           </div>
-        ) : (
-          /* Login & Registration Form */
-          <form onSubmit={handleSubmit} className="space-y-4">
-            {/* Segmented Mode Selector */}
-            <div className="flex p-1 rounded-full bg-white/[0.04] border border-white/[0.06]">
-              <button
-                type="button"
-                onClick={() => {
-                  setMode('LOGIN');
-                  setErrorMessage(null);
-                }}
-                className={`flex-1 py-1.5 rounded-full text-xs font-medium transition-surface ${
-                  mode === 'LOGIN'
-                    ? 'bg-accent text-bg-app font-semibold shadow-sm'
-                    : 'text-slate-400 hover:text-white'
-                }`}
-              >
-                Sign in
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setMode('REGISTER');
-                  setErrorMessage(null);
-                }}
-                className={`flex-1 py-1.5 rounded-full text-xs font-medium transition-surface ${
-                  mode === 'REGISTER'
-                    ? 'bg-accent text-bg-app font-semibold shadow-sm'
-                    : 'text-slate-400 hover:text-white'
-                }`}
-              >
-                Create account
-              </button>
+        </div>
+      ) : (
+        /* Signed out: slot-in screen */
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="auth-title"
+          onClick={(e) => e.stopPropagation()}
+          className="relative w-full max-w-3xl grid md:grid-cols-[270px_1fr] rounded-panel overflow-hidden bg-bg-panel border border-white/[0.08] shadow-modal animate-modal-in"
+        >
+          {closeButton}
+          <aside className="hidden md:flex flex-col justify-between p-7 bg-bg-app border-r border-white/[0.06]">
+            <div>
+              <p className="font-display text-3xl font-extrabold text-cream leading-[1.05]">
+                Slot in.
+              </p>
+              <p className="text-xs text-slate-400 mt-2 leading-relaxed">
+                Sign in to sync your library and launch Railbound with your account.
+              </p>
             </div>
+            <SlotArt />
+          </aside>
 
-            {/* Error Message Alert */}
+          <form onSubmit={handleSubmit} className="p-7 space-y-5">
+            <div role="tablist" className="flex gap-6 border-b border-white/[0.08]">
+              {(
+                [
+                  ['LOGIN', 'Sign in'],
+                  ['REGISTER', 'Create account'],
+                ] as const
+              ).map(([id, label]) => (
+                <button
+                  key={id}
+                  type="button"
+                  role="tab"
+                  aria-selected={mode === id}
+                  onClick={() => {
+                    setMode(id);
+                    setErrorMessage(null);
+                  }}
+                  className={`-mb-px pb-3 text-sm font-semibold cursor-default border-b-2 transition-surface ${
+                    mode === id ? 'border-accent text-cream' : 'border-transparent text-slate-500 hover:text-slate-300'
+                  }`}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+            <h2 id="auth-title" className="sr-only">
+              {mode === 'LOGIN' ? 'Sign in to OneEngine' : 'Create a OneEngine account'}
+            </h2>
+
             {errorMessage && (
-              <div className="p-3 rounded-thumb bg-danger/10 border border-danger/30 text-danger text-xs flex items-start gap-2 animate-fade-in">
-                <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
-                <div className="flex-1 leading-relaxed">
+              <div role="alert" className="p-3 rounded-input bg-danger/10 border border-danger/30 text-xs flex items-start gap-2.5">
+                <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-danger" />
+                <div className="leading-relaxed text-slate-200">
                   <span>{errorMessage}</span>
                   {serverStatus === 'OFFLINE' && (
-                    <p className="mt-1 text-[11px] text-slate-300">
-                      Tip: If behind a firewall/proxy, you can click &quot;Continue as guest&quot; below to launch games in local simulation mode.
+                    <p className="mt-1 text-slate-400">
+                      You can still continue as a guest to play in local mode.
                     </p>
                   )}
                 </div>
               </div>
             )}
 
-            {/* Form Fields */}
-            <div className="space-y-3">
+            <div className="space-y-4">
               {mode === 'REGISTER' && (
                 <div>
-                  <label className="block text-xs font-medium text-slate-300 mb-1.5">
-                    Callsign / Username
+                  <label htmlFor="auth-username" className="block text-xs font-medium text-slate-300 mb-1.5">
+                    Callsign
                   </label>
-                  <div className="relative">
-                    <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                    <input
-                      type="text"
-                      value={username}
-                      onChange={(e) => setUsername(e.target.value)}
-                      placeholder="e.g. Spectre_01"
-                      className="w-full pl-9 pr-3 py-2 rounded-thumb bg-white/[0.04] border border-white/[0.08] focus:border-accent text-xs text-white placeholder-slate-500 outline-none transition-surface"
-                      required={mode === 'REGISTER'}
-                    />
-                  </div>
-                </div>
-              )}
-
-              <div>
-                <label className="block text-xs font-medium text-slate-300 mb-1.5">
-                  Email address
-                </label>
-                <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                   <input
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="player@example.com"
-                    className="w-full pl-9 pr-3 py-2 rounded-thumb bg-white/[0.04] border border-white/[0.08] focus:border-accent text-xs text-white placeholder-slate-500 outline-none transition-surface"
+                    id="auth-username"
+                    type="text"
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
+                    placeholder="Spectre_01"
+                    autoComplete="username"
+                    className={inputClass}
                     required
                   />
                 </div>
-              </div>
-
+              )}
               <div>
-                <label className="block text-xs font-medium text-slate-300 mb-1.5">
+                <label htmlFor="auth-email" className="block text-xs font-medium text-slate-300 mb-1.5">
+                  Email
+                </label>
+                <input
+                  id="auth-email"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="you@example.com"
+                  autoComplete="email"
+                  autoFocus
+                  className={inputClass}
+                  required
+                />
+              </div>
+              <div>
+                <label htmlFor="auth-password" className="block text-xs font-medium text-slate-300 mb-1.5">
                   Password
                 </label>
                 <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                   <input
+                    id="auth-password"
                     type={showPassword ? 'text' : 'password'}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    placeholder="••••••••••••"
-                    className="w-full pl-9 pr-10 py-2 rounded-thumb bg-white/[0.04] border border-white/[0.08] focus:border-accent text-xs text-white placeholder-slate-500 outline-none transition-surface"
+                    autoComplete={mode === 'LOGIN' ? 'current-password' : 'new-password'}
+                    className={`${inputClass} pr-11`}
                     required
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword((prev) => !prev)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white"
+                    aria-label={showPassword ? 'Hide password' : 'Show password'}
+                    className="absolute right-1.5 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full flex items-center justify-center text-slate-400 hover:text-white cursor-default"
                   >
-                    {showPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                   </button>
                 </div>
               </div>
             </div>
 
-            {/* Submit Primary CTA */}
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-2.5 rounded-full bg-accent hover:bg-accent-hover text-bg-app text-xs font-semibold shadow-md transition-surface flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
+              className="w-full h-11 rounded-full bg-accent hover:bg-accent-hover text-[#1b1510] text-sm font-bold transition-[background-color,transform] active:scale-[0.98] flex items-center justify-center gap-2 disabled:opacity-60 cursor-default"
             >
               {loading ? (
                 <>
-                  <span className="w-3.5 h-3.5 border-2 border-bg-app border-t-transparent rounded-full animate-spin" />
-                  <span>Connecting to Nakama…</span>
+                  <span className="w-4 h-4 border-2 border-[#1b1510] border-t-transparent rounded-full animate-spin" />
+                  Connecting…
                 </>
               ) : mode === 'LOGIN' ? (
-                <span>Sign in to store</span>
+                'Sign in'
               ) : (
-                <span>Create operative account</span>
+                'Create account'
               )}
             </button>
 
-            {/* Offline / Guest Fallback Option */}
-            <div className="pt-2 border-t border-white/[0.06] flex items-center justify-between text-xs">
+            <div className="flex items-center justify-between text-xs pt-1">
               <button
                 type="button"
                 onClick={handleGuestLogin}
-                className="text-slate-400 hover:text-white transition-colors flex items-center gap-1.5"
+                disabled={loading}
+                className="text-slate-400 hover:text-cream cursor-default transition-colors"
               >
-                <Sparkles className="w-3.5 h-3.5 text-accent" />
-                <span>Continue as guest</span>
+                Continue as guest
               </button>
-
               <button
                 type="button"
                 onClick={() => setShowServerDetails((prev) => !prev)}
-                className="text-slate-400 hover:text-slate-200 text-[11px] underline"
+                aria-expanded={showServerDetails}
+                className="flex items-center gap-2 text-slate-400 hover:text-cream cursor-default transition-colors"
               >
-                {showServerDetails ? 'Hide server info' : 'Server details'}
+                <span className={`w-1.5 h-1.5 rounded-full ${statusDot}`} />
+                {statusLabel}
               </button>
             </div>
 
-            {/* Server details dropdown */}
             {showServerDetails && (
-              <div className="p-3.5 rounded-card bg-bg-card border border-white/[0.08] text-xs space-y-2.5 animate-soft-enter">
-                <div className="flex items-center justify-between text-[11px] font-semibold text-slate-300">
-                  <span>Backend connection settings</span>
-                  <span className={`px-2 py-0.5 rounded-full text-[10px] font-mono ${
-                    serverStatus === 'ONLINE' ? 'bg-success/20 text-success' : 'bg-amber-400/20 text-amber-300'
-                  }`}>
-                    {serverStatus === 'ONLINE' ? 'ONLINE' : 'UNREACHABLE'}
-                  </span>
-                </div>
-
-                <div className="grid grid-cols-3 gap-2">
-                  <div className="col-span-2">
-                    <label className="text-[10px] text-slate-400 block mb-0.5">Host / IP</label>
+              <div className="rounded-input border border-white/[0.08] p-3.5 text-xs space-y-3 animate-soft-enter">
+                <div className="grid grid-cols-[1fr_88px] gap-2.5">
+                  <div>
+                    <label htmlFor="nk-host" className="text-[11px] text-slate-400 block mb-1">Host</label>
                     <input
+                      id="nk-host"
                       type="text"
                       value={settings.nakamaHost}
                       onChange={(e) => updateSettings({ nakamaHost: e.target.value.trim() })}
-                      onBlur={() => {
-                        setServerStatus('CHECKING');
-                        nakamaService.testConnection().then((r) => setServerStatus(r.ok ? 'ONLINE' : 'OFFLINE'));
-                      }}
-                      className="w-full bg-white/[0.04] border border-white/[0.08] focus:border-accent rounded-thumb px-2.5 py-1 text-xs text-slate-200 outline-none font-mono"
+                      onBlur={recheck}
+                      className={`${inputClass} font-mono text-xs py-1.5`}
                     />
                   </div>
                   <div>
-                    <label className="text-[10px] text-slate-400 block mb-0.5">Port</label>
+                    <label htmlFor="nk-port" className="text-[11px] text-slate-400 block mb-1">Port</label>
                     <input
+                      id="nk-port"
                       type="text"
                       value={settings.nakamaPort}
                       onChange={(e) => updateSettings({ nakamaPort: e.target.value.trim() })}
-                      onBlur={() => {
-                        setServerStatus('CHECKING');
-                        nakamaService.testConnection().then((r) => setServerStatus(r.ok ? 'ONLINE' : 'OFFLINE'));
-                      }}
-                      className="w-full bg-white/[0.04] border border-white/[0.08] focus:border-accent rounded-thumb px-2.5 py-1 text-xs text-slate-200 outline-none font-mono tabular-nums"
+                      onBlur={recheck}
+                      className={`${inputClass} font-mono text-xs py-1.5 tabular-nums`}
                     />
                   </div>
                 </div>
-
                 {serverStatus === 'OFFLINE' && (
-                  <p className="text-[11px] text-amber-300/90 leading-tight">
-                    Port 7350 timed out. If running on Oracle Cloud/VPS, verify that TCP 7350 is allowed in Oracle VCN Ingress Rules and Linux firewall (`sudo ufw allow 7350/tcp`).
+                  <p className="text-[11px] text-slate-400 leading-snug">
+                    No reply from {settings.nakamaHost}:{settings.nakamaPort}. Check that Nakama is running and that TCP{' '}
+                    {settings.nakamaPort} is open in the cloud firewall and on the server.
                   </p>
                 )}
               </div>
             )}
           </form>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 };
