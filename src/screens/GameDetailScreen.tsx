@@ -226,18 +226,21 @@ export const GameDetailScreen: React.FC = () => {
               {/* Soft subtle gradient at bottom of media */}
               <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent pointer-events-none" />
 
-              {/* Navigation arrows (appear on hover) */}
+              {/* Navigation arrows (appear on hover or focus), only with more than one image */}
+              {mediaList.length > 1 && (<>
               <button
                 onClick={handlePrevMedia}
-                className="absolute left-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-black/60 hover:bg-black/90 text-white border border-white/10 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-surface cursor-default"
+                className="absolute left-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-black/60 hover:bg-black/90 text-white border border-white/10 flex items-center justify-center opacity-0 group-hover:opacity-100 focus-visible:opacity-100 transition-surface cursor-default"
                 title="Previous image (Left arrow)"
+                aria-label="Previous image"
               >
                 <ChevronLeft className="w-5 h-5" />
               </button>
               <button
                 onClick={handleNextMedia}
-                className="absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-black/60 hover:bg-black/90 text-white border border-white/10 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-surface cursor-default"
+                className="absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-black/60 hover:bg-black/90 text-white border border-white/10 flex items-center justify-center opacity-0 group-hover:opacity-100 focus-visible:opacity-100 transition-surface cursor-default"
                 title="Next image (Right arrow)"
+                aria-label="Next image"
               >
                 <ChevronRight className="w-5 h-5" />
               </button>
@@ -246,9 +249,11 @@ export const GameDetailScreen: React.FC = () => {
               <div className="absolute bottom-3 right-3 px-3 py-1 rounded-full bg-black/75 text-xs text-slate-200 border border-white/10 tabular-nums">
                 {selectedMediaIndex + 1} / {mediaList.length}
               </div>
+              </>)}
             </div>
 
             {/* Thumbnails track directly underneath the media player */}
+            {mediaList.length > 1 && (
             <div className="grid grid-cols-5 gap-2.5">
               {mediaList.map((imgUrl, idx) => (
                 <button
@@ -275,6 +280,7 @@ export const GameDetailScreen: React.FC = () => {
                 </button>
               ))}
             </div>
+            )}
           </div>
 
           {/* Pill segmented tabs control below media */}
@@ -418,7 +424,7 @@ export const GameDetailScreen: React.FC = () => {
         <div className="w-full lg:w-[360px] xl:w-[380px] shrink-0 sticky top-4 space-y-5 win11-card p-6 rounded-2xl shadow-none">
           {/* Title in title case, max 2 lines at 28-32px */}
           <div className="space-y-2">
-            <h1 className="text-[28px] font-bold text-white leading-tight tracking-tight line-clamp-2">
+            <h1 className="font-display text-[34px] font-extrabold tracking-tight text-cream leading-tight line-clamp-2">
               {game.title}
             </h1>
             <p className="text-xs text-slate-400 leading-relaxed">

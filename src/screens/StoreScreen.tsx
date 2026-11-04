@@ -125,7 +125,6 @@ export const StoreScreen: React.FC = () => {
       <section className="grid grid-cols-1 lg:grid-cols-[1fr_auto] gap-10 items-center">
         <div className="space-y-7">
           <div>
-            <div className="engine-label mb-2">One Engine · Workshop</div>
             <h1 className="font-display text-5xl font-extrabold tracking-tight text-cream leading-[1.05]">
               {greeting},<br />
               <span className="text-accent">{currentUser.callsign}</span>
@@ -139,7 +138,6 @@ export const StoreScreen: React.FC = () => {
 
         {spotlight && (
           <div className="relative mx-auto lg:mr-6 pb-3">
-            <div className="absolute -inset-10 rounded-full bg-accent/10 blur-3xl pointer-events-none" />
             <div className="relative">
               <Cartridge {...cartProps(spotlight)} size="hero" caption={spotlight.tagline} />
             </div>

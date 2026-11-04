@@ -88,7 +88,7 @@ export const SettingsScreen: React.FC = () => {
     <div className="p-8 space-y-8 max-w-7xl mx-auto w-full">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold tracking-tight text-white">
+        <h1 className="font-display text-4xl font-extrabold tracking-tight text-cream">
           Settings
         </h1>
         <p className="text-xs text-slate-400 mt-1">

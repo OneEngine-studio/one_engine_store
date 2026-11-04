@@ -189,7 +189,7 @@
 }
 
 /* ── Workshop system ───────────────────────────────────── */
-.font-display { font-family: 'Bricolage Grotesque', 'Inter', sans-serif; }
+.font-display { font-family: 'Bricolage Grotesque Variable', 'Inter', sans-serif; }
 
 .blueprint-grid {
   background-image: radial-gradient(rgba(242, 232, 213, 0.07) 1px, transparent 1px);
@@ -212,11 +212,6 @@
   color: rgba(242, 232, 213, 0.5);
 }
 
-@keyframes beltMove { to { background-position: 28px 0; } }
-.conveyor {
-  background-image: repeating-linear-gradient(90deg, rgba(255,255,255,0.14) 0 6px, transparent 6px 14px);
-  animation: beltMove 0.8s linear infinite;
-}
 
 @keyframes ledPulse { 0%,100% { opacity: 1; } 50% { opacity: 0.35; } }
 .led-pulse { animation: ledPulse 1.4s ease-in-out infinite; }

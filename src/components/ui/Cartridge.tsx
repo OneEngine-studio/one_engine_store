@@ -71,7 +71,6 @@ export const Cartridge: React.FC<CartridgeProps> = ({
           ref={ref}
           onMouseMove={onMove}
           onMouseLeave={onLeave}
-          onClick={onOpen}
           className="group relative w-full cursor-default"
           style={
             {
@@ -83,10 +82,21 @@ export const Cartridge: React.FC<CartridgeProps> = ({
             } as React.CSSProperties
           }
           onMouseEnter={(e) => e.currentTarget.style.setProperty('--lift', '-10px')}
+          onFocus={(e) => e.currentTarget.style.setProperty('--lift', '-10px')}
+          onBlur={(e) => {
+            if (!e.currentTarget.contains(e.relatedTarget as Node)) e.currentTarget.style.setProperty('--lift', '0px');
+          }}
           onMouseOut={(e) => {
             if (!e.currentTarget.contains(e.relatedTarget as Node)) e.currentTarget.style.setProperty('--lift', '0px');
           }}
         >
+          {/* keyboard + screen-reader entry point; the visible lever sits above it */}
+          <button
+            onClick={onOpen}
+            aria-label={`Open ${game.title}`}
+            className="absolute inset-0 z-10 rounded-md cursor-default"
+          />
+
           {/* plastic shell */}
           <div
             className="absolute inset-0"
@@ -179,7 +189,7 @@ export const Cartridge: React.FC<CartridgeProps> = ({
               else if (action === 'stop') onStop?.();
               else onInstall?.();
             }}
-            className="absolute -bottom-3 left-1/2 -translate-x-1/2 translate-y-2 opacity-0 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-200 px-3.5 h-8 rounded-full flex items-center gap-1.5 text-xs font-bold shadow-lg cursor-default"
+            className="absolute z-20 -bottom-3 left-1/2 -translate-x-1/2 translate-y-2 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 group-hover:translate-y-0 group-focus-within:translate-y-0 transition-[opacity,transform] duration-200 active:scale-[0.97] px-3.5 h-8 rounded-full flex items-center gap-1.5 text-xs font-bold shadow-lg cursor-default"
             style={{
               background: action === 'stop' ? '#E53935' : '#FF7A00',
               color: action === 'stop' ? '#fff' : '#1b1510',

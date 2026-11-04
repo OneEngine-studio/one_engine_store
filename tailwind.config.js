@@ -44,7 +44,7 @@ export default {
         'tactical-danger': '#E53935',
       },
       fontFamily: {
-        display: ['"Bricolage Grotesque"', 'Inter', 'sans-serif'],
+        display: ['"Bricolage Grotesque Variable"', 'Inter', 'sans-serif'],
         sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', '"Segoe UI"', 'Roboto', 'sans-serif'],
         mono: ['"JetBrains Mono"', 'Menlo', 'Consolas', 'monospace'],
       },
