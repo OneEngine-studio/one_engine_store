@@ -108,6 +108,7 @@ export interface AppSettings {
   nakamaPort: string;
   nakamaUseSsl: boolean;
   nakamaServerKey: string;
+  nakamaBasePath: string;
 }
 
 export interface Article {

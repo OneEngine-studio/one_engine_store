@@ -248,10 +248,9 @@ interface StoreContextType {
   isPausedAll: boolean;
   
   isAuthenticated: boolean;
-  loginWithNakama: (email: string, pass: string, fallbackOffline?: boolean) => Promise<{ success: boolean; error?: string; offline?: boolean }>;
+  loginWithNakama: (email: string, pass: string) => Promise<{ success: boolean; error?: string }>;
   registerWithNakama: (email: string, pass: string, username: string) => Promise<{ success: boolean; error?: string }>;
   loginAsGuest: (username?: string) => Promise<{ success: boolean; error?: string }>;
-  loginOffline: (email?: string, username?: string) => { success: boolean };
   logout: () => void;
   
   navigate: (tab: NavigationTab, gameId?: string) => void;
@@ -332,6 +331,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       nakamaPort: cfg.port,
       nakamaUseSsl: cfg.useSsl,
       nakamaServerKey: cfg.serverKey,
+      nakamaBasePath: cfg.basePath,
     };
   });
 
@@ -371,18 +371,8 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
             return;
           }
         }
-        const cached = localStorage.getItem('oneengine_user_profile');
-        if (cached && active) {
-          try {
-            const parsed = JSON.parse(cached);
-            if (parsed && parsed.id) {
-              setCurrentUser(parsed);
-              setIsAuthenticated(true);
-            }
-          } catch {
-            // ignore
-          }
-        }
+        // Profiles cached by older builds (including offline passes) are never trusted.
+        localStorage.removeItem('oneengine_user_profile');
       } catch (e) {
         console.warn('[OneEngine] Session restore check:', e);
       }
@@ -618,11 +608,17 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   const launchGame = async (gameId: string) => {
     triggerSound('click');
+    if (!isAuthenticated || !currentUser.nakamaToken) {
+      triggerSound('alert');
+      addToast('Sign in with your OneEngine account to play.', 'warning');
+      setIsAuthModalOpen(true);
+      return;
+    }
     setLaunchingGameId(gameId);
 
     const target = games.find((g) => g.id === gameId);
     const exePath = `${settings.downloadDirectory}\\${gameId}\\${gameId}.exe`;
-    const token = currentUser.nakamaToken || 'nakama_session_active';
+    const token = currentUser.nakamaToken;
     const refreshToken = currentUser.nakamaRefreshToken || '';
 
     // Invoke OS process launcher with session handoff
@@ -711,40 +707,10 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     return true;
   };
 
-  const loginOffline = (email = '', username?: string): { success: boolean } => {
-    triggerSound('click');
-    const callsign = username?.trim() || (email ? email.split('@')[0] : 'Operative');
-    const cleanEmail = email.trim() || `${callsign.toLowerCase()}@offline.oneengine.io`;
-    const userId = `usr_${cleanEmail.replace(/[^a-zA-Z0-9]/g, '_')}`;
-    const token = `offline_jwt_${Date.now()}`;
-
-    const offlineProfile: UserProfile = {
-      id: userId,
-      callsign: callsign,
-      email: cleanEmail,
-      rank: 'TACTICAL OPERATIVE',
-      level: 14,
-      avatarUrl: `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(callsign)}`,
-      status: 'ONLINE',
-      walletBalance: 150.00,
-      role: 'OPERATOR',
-      ownedGameIds: ['railbound'],
-      nakamaToken: token,
-      nakamaRefreshToken: '',
-    };
-
-    setCurrentUser(offlineProfile);
-    setIsAuthenticated(true);
-    localStorage.setItem('oneengine_user_profile', JSON.stringify(offlineProfile));
-    addToast(`Signed in as ${offlineProfile.callsign} (Offline Mode).`, 'info');
-    return { success: true };
-  };
-
   const loginWithNakama = async (
     email: string,
-    pass: string,
-    fallbackOffline = true
-  ): Promise<{ success: boolean; error?: string; offline?: boolean }> => {
+    pass: string
+  ): Promise<{ success: boolean; error?: string }> => {
     triggerSound('click');
     try {
       await nakamaService.authenticateEmail(email, pass, false);
@@ -752,19 +718,13 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       if (profile) {
         setCurrentUser(profile);
         setIsAuthenticated(true);
-        localStorage.setItem('oneengine_user_profile', JSON.stringify(profile));
-        addToast(`Welcome back, ${profile.callsign}! Nakama session active.`, 'success');
+        addToast(`Welcome back, ${profile.callsign}!`, 'success');
         return { success: true };
       }
-      return { success: false, error: 'Failed to retrieve Nakama user profile.' };
+      return { success: false, error: 'Signed in, but the profile could not be loaded.' };
     } catch (err: unknown) {
       triggerSound('alert');
-      const msg = err instanceof Error ? err.message : String(err);
-      if (fallbackOffline && (msg.includes('timed out') || msg.includes('unreachable') || msg.includes('firewalled') || msg.includes('failed to fetch'))) {
-        loginOffline(email);
-        return { success: true, offline: true };
-      }
-      return { success: false, error: msg };
+      return { success: false, error: err instanceof Error ? err.message : String(err) };
     }
   };
 
@@ -780,58 +740,43 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       if (profile) {
         setCurrentUser(profile);
         setIsAuthenticated(true);
-        localStorage.setItem('oneengine_user_profile', JSON.stringify(profile));
-        addToast(`Operative registration complete. Welcome, ${profile.callsign}!`, 'success');
+        addToast(`Account created. Welcome, ${profile.callsign}!`, 'success');
         return { success: true };
       }
-      return { success: false, error: 'Registration succeeded but profile could not be loaded.' };
+      return { success: false, error: 'Account created, but the profile could not be loaded.' };
     } catch (err: unknown) {
       triggerSound('alert');
-      const msg = err instanceof Error ? err.message : String(err);
-      return { success: false, error: msg };
+      return { success: false, error: err instanceof Error ? err.message : String(err) };
     }
   };
 
   const loginAsGuest = async (username = 'Guest_Operative'): Promise<{ success: boolean; error?: string }> => {
     triggerSound('click');
     try {
-      let token = 'guest_offline_token';
-      let rToken = '';
-      let userId = `usr_guest_${Date.now().toString(36)}`;
-
+      let deviceId = '';
       try {
-        const deviceId = 'dev_' + Math.random().toString(36).substring(2, 10);
-        const s = await nakamaService.authenticateDevice(deviceId, true, username);
-        token = s.token || 'guest_offline_token';
-        rToken = s.refresh_token || '';
-        userId = s.user_id || userId;
+        deviceId = localStorage.getItem('oneengine_device_id') || '';
       } catch {
-        // Offline fallback
+        // storage unavailable: use a throwaway id
       }
-
-      const guestProfile: UserProfile = {
-        id: userId,
-        callsign: username,
-        email: `${username.toLowerCase()}@guest.oneengine.io`,
-        rank: 'RECON SCOUT',
-        level: 1,
-        avatarUrl: `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(username)}`,
-        status: 'ONLINE',
-        walletBalance: 50.00,
-        role: 'OPERATOR',
-        ownedGameIds: ['railbound'],
-        nakamaToken: token,
-        nakamaRefreshToken: rToken,
-      };
-
-      setCurrentUser(guestProfile);
+      if (!deviceId) {
+        deviceId = `dev_${crypto.randomUUID()}`;
+        try {
+          localStorage.setItem('oneengine_device_id', deviceId);
+        } catch {
+          // ignore
+        }
+      }
+      await nakamaService.authenticateDevice(deviceId, true, username);
+      const profile = await nakamaService.getAccount();
+      if (!profile) return { success: false, error: 'Signed in, but the profile could not be loaded.' };
+      setCurrentUser(profile);
       setIsAuthenticated(true);
-      localStorage.setItem('oneengine_user_profile', JSON.stringify(guestProfile));
-      addToast(`Signed in as ${guestProfile.callsign}.`, 'info');
+      addToast(`Signed in as ${profile.callsign}.`, 'info');
       return { success: true };
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : String(err);
-      return { success: false, error: msg };
+      triggerSound('alert');
+      return { success: false, error: err instanceof Error ? err.message : String(err) };
     }
   };
 
@@ -912,13 +857,15 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         partial.nakamaHost !== undefined ||
         partial.nakamaPort !== undefined ||
         partial.nakamaUseSsl !== undefined ||
-        partial.nakamaServerKey !== undefined
+        partial.nakamaServerKey !== undefined ||
+        partial.nakamaBasePath !== undefined
       ) {
         nakamaService.updateConfig({
           host: next.nakamaHost,
           port: next.nakamaPort,
           useSsl: next.nakamaUseSsl,
           serverKey: next.nakamaServerKey,
+          basePath: next.nakamaBasePath,
         });
       }
       return next;
@@ -975,7 +922,6 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         loginWithNakama,
         registerWithNakama,
         loginAsGuest,
-        loginOffline,
         logout,
         searchQuery,
         isAuthModalOpen,

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useStore } from '../store/useStore';
 import { X, LogOut, AlertCircle, Eye, EyeOff, Copy, Check } from 'lucide-react';
 import { nakamaService } from '../lib/nakama';
+import { ServerAddressField } from './ui/ServerAddressField';
 
 type Mode = 'LOGIN' | 'REGISTER';
 type ServerStatus = 'CHECKING' | 'ONLINE' | 'OFFLINE';
@@ -53,7 +54,6 @@ export const AuthModal: React.FC = () => {
     loginAsGuest,
     logout,
     settings,
-    updateSettings,
     addToast,
   } = useStore();
 
@@ -65,6 +65,7 @@ export const AuthModal: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [serverStatus, setServerStatus] = useState<ServerStatus>('CHECKING');
+  const [serverMessage, setServerMessage] = useState('');
   const [copiedToken, setCopiedToken] = useState(false);
   const [showServerDetails, setShowServerDetails] = useState(false);
 
@@ -82,18 +83,23 @@ export const AuthModal: React.FC = () => {
     let isMounted = true;
     setServerStatus('CHECKING');
     nakamaService.testConnection().then((res) => {
-      if (isMounted) setServerStatus(res.ok ? 'ONLINE' : 'OFFLINE');
+      if (!isMounted) return;
+      setServerStatus(res.ok ? 'ONLINE' : 'OFFLINE');
+      setServerMessage(res.message);
     });
     return () => {
       isMounted = false;
     };
-  }, [isAuthModalOpen, settings.nakamaHost, settings.nakamaPort]);
+  }, [isAuthModalOpen, settings.nakamaHost, settings.nakamaPort, settings.nakamaUseSsl, settings.nakamaBasePath]);
 
   if (!isAuthModalOpen) return null;
 
   const recheck = () => {
     setServerStatus('CHECKING');
-    nakamaService.testConnection().then((r) => setServerStatus(r.ok ? 'ONLINE' : 'OFFLINE'));
+    nakamaService.testConnection().then((r) => {
+      setServerStatus(r.ok ? 'ONLINE' : 'OFFLINE');
+      setServerMessage(r.message);
+    });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -131,15 +137,14 @@ export const AuthModal: React.FC = () => {
     try {
       const res = await loginAsGuest(username.trim() || 'Operative_Guest');
       if (res.success) closeAuthModal();
+      else setErrorMessage(res.error || 'Could not start a guest session.');
     } finally {
       setLoading(false);
     }
   };
 
-  const isOfflineSession = !!currentUser.nakamaToken?.startsWith('offline_jwt');
-
   const handleCopyToken = () => {
-    if (currentUser.nakamaToken && !isOfflineSession) {
+    if (currentUser.nakamaToken) {
       navigator.clipboard.writeText(currentUser.nakamaToken);
       setCopiedToken(true);
       setTimeout(() => setCopiedToken(false), 2000);
@@ -214,16 +219,12 @@ export const AuthModal: React.FC = () => {
 
               <div className="rounded-xl bg-[#1b1510]/[0.07] p-3.5 flex items-center justify-between gap-3">
                 <div className="min-w-0">
-                  <div className="text-xs font-semibold">
-                    {isOfflineSession ? 'Offline pass' : 'Launcher key'}
-                  </div>
+                  <div className="text-xs font-semibold">Launcher key</div>
                   <p className="text-[11px] text-[#1b1510]/60 leading-snug mt-0.5">
-                    {isOfflineSession
-                      ? 'Not verified by Nakama. Games start in local mode.'
-                      : 'Hands your session to the game when it starts.'}
+                    Hands your session to the game when it starts.
                   </p>
                 </div>
-                {!isOfflineSession && currentUser.nakamaToken && (
+                {currentUser.nakamaToken && (
                   <button
                     onClick={handleCopyToken}
                     className="shrink-0 px-3 h-8 rounded-full bg-[#1b1510] text-cream text-xs font-semibold flex items-center gap-1.5 cursor-default active:scale-[0.97] transition-transform"
@@ -308,11 +309,6 @@ export const AuthModal: React.FC = () => {
                 <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-danger" />
                 <div className="leading-relaxed text-slate-200">
                   <span>{errorMessage}</span>
-                  {serverStatus === 'OFFLINE' && (
-                    <p className="mt-1 text-slate-400">
-                      You can still continue as a guest to play in local mode.
-                    </p>
-                  )}
                 </div>
               </div>
             )}
@@ -415,35 +411,18 @@ export const AuthModal: React.FC = () => {
             </div>
 
             {showServerDetails && (
-              <div className="rounded-input border border-white/[0.08] p-3.5 text-xs space-y-3 animate-soft-enter">
-                <div className="grid grid-cols-[1fr_88px] gap-2.5">
-                  <div>
-                    <label htmlFor="nk-host" className="text-[11px] text-slate-400 block mb-1">Host</label>
-                    <input
-                      id="nk-host"
-                      type="text"
-                      value={settings.nakamaHost}
-                      onChange={(e) => updateSettings({ nakamaHost: e.target.value.trim() })}
-                      onBlur={recheck}
-                      className={`${inputClass} font-mono text-xs py-1.5`}
-                    />
-                  </div>
-                  <div>
-                    <label htmlFor="nk-port" className="text-[11px] text-slate-400 block mb-1">Port</label>
-                    <input
-                      id="nk-port"
-                      type="text"
-                      value={settings.nakamaPort}
-                      onChange={(e) => updateSettings({ nakamaPort: e.target.value.trim() })}
-                      onBlur={recheck}
-                      className={`${inputClass} font-mono text-xs py-1.5 tabular-nums`}
-                    />
-                  </div>
-                </div>
-                {serverStatus === 'OFFLINE' && (
-                  <p className="text-[11px] text-slate-400 leading-snug">
-                    No reply from {settings.nakamaHost}:{settings.nakamaPort}. Check that Nakama is running and that TCP{' '}
-                    {settings.nakamaPort} is open in the cloud firewall and on the server.
+              <div className="rounded-input border border-white/[0.08] p-3.5 text-xs space-y-2.5 animate-soft-enter">
+                <label htmlFor="nk-address" className="text-[11px] text-slate-400 block">
+                  Server address
+                </label>
+                <ServerAddressField
+                  id="nk-address"
+                  inputClassName={`${inputClass} font-mono text-xs py-1.5`}
+                  onApplied={recheck}
+                />
+                {serverStatus === 'OFFLINE' && serverMessage && (
+                  <p role="status" className="text-[11px] text-slate-400 leading-snug">
+                    {serverMessage}
                   </p>
                 )}
               </div>

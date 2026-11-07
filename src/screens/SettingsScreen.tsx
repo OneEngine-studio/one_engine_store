@@ -18,6 +18,7 @@ import {
   RefreshCw,
 } from 'lucide-react';
 import { nakamaService } from '../lib/nakama';
+import { ServerAddressField } from '../components/ui/ServerAddressField';
 import { Switch } from '../components/ui/Switch';
 
 export const SettingsScreen: React.FC = () => {
@@ -286,6 +287,19 @@ export const SettingsScreen: React.FC = () => {
               Configured backend for OneEngine player authentication, library entitlement sync, and session handoff to Railbound.
             </p>
 
+            <div>
+              <label htmlFor="nk-settings-address" className="text-[11px] font-medium text-slate-400 block mb-1">
+                Server address
+              </label>
+              <ServerAddressField
+                id="nk-settings-address"
+                inputClassName="w-full bg-bg-app border border-white/[0.08] focus:border-accent rounded-thumb px-3 py-1.5 text-xs text-slate-200 outline-none select-text font-mono"
+              />
+              <p className="text-[11px] text-slate-500 mt-1">
+                Paste the full URL and the fields below fill in. Include the path if the server sits behind a prefix.
+              </p>
+            </div>
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-1">
               <div>
                 <label className="text-[11px] font-medium text-slate-400 block mb-1">
@@ -308,6 +322,19 @@ export const SettingsScreen: React.FC = () => {
                   value={settings.nakamaPort}
                   onChange={(e) => updateSettings({ nakamaPort: e.target.value.trim() })}
                   className="w-full bg-bg-app border border-white/[0.08] focus:border-accent rounded-thumb px-3 py-1.5 text-xs text-slate-200 outline-none select-text tabular-nums"
+                />
+              </div>
+
+              <div>
+                <label className="text-[11px] font-medium text-slate-400 block mb-1">
+                  Base path
+                </label>
+                <input
+                  type="text"
+                  value={settings.nakamaBasePath}
+                  onChange={(e) => updateSettings({ nakamaBasePath: e.target.value.trim() })}
+                  placeholder="(none)"
+                  className="w-full bg-bg-app border border-white/[0.08] focus:border-accent rounded-thumb px-3 py-1.5 text-xs text-slate-200 outline-none select-text font-mono"
                 />
               </div>
 

@@ -87,7 +87,7 @@ function createWindow() {
           resolve({
             ok: false,
             status: 0,
-            statusText: 'Connection timed out. Server or port 7350 might be firewalled.',
+            statusText: 'Connection timed out',
             data: '',
           });
         });
