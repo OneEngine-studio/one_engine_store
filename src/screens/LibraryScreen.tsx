@@ -3,6 +3,7 @@ import { useStore } from '../store/useStore';
 import { Game } from '../types/store';
 import { Search, Heart, LayoutGrid, Grid3X3, Columns, ArrowUpDown } from 'lucide-react';
 import { Cartridge } from '../components/ui/Cartridge';
+import { Pill } from '../components/ui/Pill';
 import { Shelf } from '../components/ui/Shelf';
 
 type CardSize = 'compact' | 'standard' | 'hero';
@@ -60,27 +61,16 @@ export const LibraryScreen: React.FC = () => {
         </div>
 
         {/* Filter Pills */}
-        <div className="inline-flex p-1 bg-white/[0.04] border border-white/[0.08] rounded-full self-start sm:self-auto">
+        <div role="tablist" aria-label="Filter library" className="flex flex-wrap gap-2 self-start sm:self-auto">
           {[
             { id: 'ALL', label: `All (${ownedGames.length})` },
             { id: 'INSTALLED', label: `Installed (${ownedGames.filter((g) => g.installed).length})` },
             { id: 'FAVORITES', label: `Favorites (${ownedGames.filter((g) => g.isFavorite).length})` },
-          ].map((pill) => {
-            const isActive = filter === pill.id;
-            return (
-              <button
-                key={pill.id}
-                onClick={() => setFilter(pill.id as typeof filter)}
-                className={`px-4 py-1.5 rounded-full text-xs transition-surface cursor-default ${
-                  isActive
-                    ? 'bg-white/[0.12] text-white font-semibold shadow-sm'
-                    : 'text-slate-400 hover:text-slate-200'
-                }`}
-              >
-                {pill.label}
-              </button>
-            );
-          })}
+          ].map((pill) => (
+            <Pill key={pill.id} role="tab" active={filter === pill.id} onClick={() => setFilter(pill.id as typeof filter)}>
+              {pill.label}
+            </Pill>
+          ))}
         </div>
       </div>
 

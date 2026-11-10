@@ -5,6 +5,7 @@ import {
   ThumbsUp,
   FileText,
 } from 'lucide-react';
+import { Pill } from '../components/ui/Pill';
 import { NumberTicker } from '../components/ui/NumberTicker';
 
 export const CommunityScreen: React.FC = () => {
@@ -36,23 +37,12 @@ export const CommunityScreen: React.FC = () => {
         </div>
 
         {/* Category Filter Pills */}
-        <div className="inline-flex p-1 bg-white/[0.04] border border-white/[0.08] rounded-full self-start sm:self-auto">
-          {categoryTabs.map((tab) => {
-            const isActive = selectedCategory === tab.id;
-            return (
-              <button
-                key={tab.id}
-                onClick={() => setSelectedCategory(tab.id)}
-                className={`px-4 py-1.5 rounded-full text-xs transition-surface cursor-default ${
-                  isActive
-                    ? 'bg-white/[0.12] text-white font-semibold shadow-sm'
-                    : 'text-slate-400 hover:text-slate-200'
-                }`}
-              >
-                {tab.label}
-              </button>
-            );
-          })}
+        <div role="tablist" aria-label="Filter dispatches" className="flex flex-wrap gap-2 self-start sm:self-auto">
+          {categoryTabs.map((tab) => (
+            <Pill key={tab.id} role="tab" active={selectedCategory === tab.id} onClick={() => setSelectedCategory(tab.id)}>
+              {tab.label}
+            </Pill>
+          ))}
         </div>
       </div>
 
@@ -62,7 +52,15 @@ export const CommunityScreen: React.FC = () => {
           <div
             key={item.id}
             onClick={() => openArticle(item)}
-            className="rounded-2xl win11-card overflow-hidden cursor-default flex flex-col justify-between group"
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                openArticle(item);
+              }
+            }}
+            role="button"
+            tabIndex={0}
+            className="rounded-[28px] win11-card focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent overflow-hidden cursor-default flex flex-col justify-between group"
           >
             <div>
               <div className="relative aspect-[16/9] w-full overflow-hidden bg-bg-app">

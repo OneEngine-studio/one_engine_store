@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
 import { useStore } from '../store/useStore';
 import { Cartridge } from '../components/ui/Cartridge';
-import { Gauge } from '../components/ui/Gauge';
+import { Pill } from '../components/ui/Pill';
+import { StatStrip } from '../components/ui/StatStrip';
+import { Timeline } from '../components/ui/Timeline';
 import { Shelf } from '../components/ui/Shelf';
-import { Gamepad2, Download, Heart, ChevronRight, FileText, Search } from 'lucide-react';
+import { ChevronRight, FileText, Search, Clock } from 'lucide-react';
 
 const MOODS = [
   { id: 'all', label: 'Anything', hint: 'Everything on the shelf' },
@@ -11,49 +13,6 @@ const MOODS = [
   { id: 'focus', label: 'Focused', hint: 'Strategy and planning', words: ['strategy', 'tactical', 'management', 'logistics'] },
   { id: 'intense', label: 'Intense', hint: 'Fast and high stakes', words: ['action', 'shooter', 'survival', 'fps'] },
 ];
-
-/** Rotary selector: click anywhere on the knob to step to the next mood. */
-const MoodDial: React.FC<{ index: number; onChange: (i: number) => void }> = ({ index, onChange }) => {
-  const step = 270 / (MOODS.length - 1);
-  const angle = -135 + index * step;
-  return (
-    <div className="flex items-center gap-5">
-      <button
-        onClick={() => onChange((index + 1) % MOODS.length)}
-        className="relative w-[116px] h-[116px] shrink-0 cursor-default group"
-        title="Turn the dial"
-      >
-        <svg viewBox="0 0 120 120" className="w-full h-full">
-          {MOODS.map((m, i) => {
-            const a = ((-135 + i * step - 90) * Math.PI) / 180;
-            return (
-              <g key={m.id}>
-                <circle cx={60 + Math.cos(a) * 52} cy={60 + Math.sin(a) * 52} r={i === index ? 3.5 : 2.5}
-                  fill={i === index ? '#FF7A00' : 'rgba(242,232,213,0.3)'} />
-              </g>
-            );
-          })}
-          <circle cx="60" cy="60" r="40" fill="#2a231b" stroke="#C9A24B" strokeWidth="2" />
-          <circle cx="60" cy="60" r="34" fill="url(#knob)" />
-          <defs>
-            <radialGradient id="knob" cx="35%" cy="30%">
-              <stop offset="0%" stopColor="#4a3f31" />
-              <stop offset="100%" stopColor="#1d1914" />
-            </radialGradient>
-          </defs>
-          <g style={{ transformOrigin: '60px 60px', transform: `rotate(${angle}deg)`, transition: 'transform 420ms cubic-bezier(0.34,1.56,0.64,1)' }}>
-            <rect x="57.5" y="28" width="5" height="18" rx="2.5" fill="#FF7A00" />
-          </g>
-        </svg>
-      </button>
-      <div>
-        <div className="engine-label">Mood dial</div>
-        <div className="font-display text-2xl font-extrabold text-cream">{MOODS[index].label}</div>
-        <div className="text-xs text-slate-400">{MOODS[index].hint}</div>
-      </div>
-    </div>
-  );
-};
 
 export const StoreScreen: React.FC = () => {
   const {
@@ -95,6 +54,7 @@ export const StoreScreen: React.FC = () => {
   const onBench = owned.filter((g) => g.installed).slice(0, 5);
   const spotlight = shelfGames[0];
   const installedCount = owned.filter((g) => g.installed).length;
+  const timeline = [...owned].sort((x, y) => (y.playHours ?? 0) - (x.playHours ?? 0)).slice(0, 4);
   const recentArticles = articles.slice(0, 3);
 
   const cartProps = (g: (typeof games)[number]) => ({
@@ -110,7 +70,7 @@ export const StoreScreen: React.FC = () => {
   return (
     <div className="p-8 space-y-12 max-w-7xl mx-auto w-full">
       {searchQuery && (
-        <div className="flex items-center justify-between p-4 rounded-2xl bg-bg-card border border-white/[0.07]">
+        <div className="flex items-center justify-between p-4 rounded-[28px] bg-bg-card border border-white/[0.07]">
           <div className="flex items-center gap-2 text-xs text-slate-300">
             <Search className="w-4 h-4 text-accent" />
             <span>Results for "{searchQuery}" ({searched.length} found)</span>
@@ -130,10 +90,19 @@ export const StoreScreen: React.FC = () => {
               <span className="text-accent">{currentUser.callsign}</span>
             </h1>
             <p className="text-sm text-slate-400 mt-3 max-w-md">
-              Pick a cartridge, slot it in, play. Turn the dial to tune the shelf to your mood.
+              Pick a cartridge, slot it in, play. Pick a mood to tune the shelf.
             </p>
           </div>
-          <MoodDial index={moodIndex} onChange={setMoodIndex} />
+          <div className="space-y-3">
+            <div role="tablist" aria-label="Mood" className="flex flex-wrap gap-2">
+              {MOODS.map((m, i) => (
+                <Pill key={m.id} role="tab" active={i === moodIndex} onClick={() => setMoodIndex(i)}>
+                  {m.label}
+                </Pill>
+              ))}
+            </div>
+            <p className="text-xs text-slate-500">{MOODS[moodIndex].hint}</p>
+          </div>
         </div>
 
         {spotlight && (
@@ -145,28 +114,51 @@ export const StoreScreen: React.FC = () => {
         )}
       </section>
 
-      {/* Instrument panel */}
-      <section className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Gauge
-          label="Library" icon={<Gamepad2 className="w-3 h-3" />}
-          value={owned.length ? (installedCount / owned.length) * 100 : 0}
-          readout={`${installedCount}/${owned.length}`} sub="installed and ready"
-          onClick={() => navigate('library')}
-        />
-        <Gauge
-          label="Downloads" icon={<Download className="w-3 h-3" />} live={!!activeDownload}
-          value={activeDownload ? activeDownload.progress : 100}
-          readout={activeDownload ? `${Math.round(activeDownload.progress)}%` : 'Idle'}
-          sub={activeDownload ? `${activeDownload.title} updating` : 'everything up to date'}
-          onClick={() => navigate('downloads')}
-        />
-        <Gauge
-          label="Wishlist" icon={<Heart className="w-3 h-3" />}
-          value={games.length ? (wishlisted.length / games.length) * 100 : 0}
-          readout={String(wishlisted.length)} sub="titles saved for later"
-          onClick={() => navigate('library')}
-        />
-      </section>
+      {/* Numbers at a glance */}
+      <StatStrip
+        stats={[
+          {
+            label: 'Library',
+            value: String(installedCount),
+            unit: `of ${owned.length} installed`,
+            sub: 'Ready to play',
+            onClick: () => navigate('library'),
+          },
+          {
+            label: 'Downloads',
+            value: activeDownload ? String(Math.round(activeDownload.progress)) : '0',
+            unit: activeDownload ? '%' : 'active',
+            sub: activeDownload ? `${activeDownload.title} updating` : 'Everything up to date',
+            live: !!activeDownload,
+            onClick: () => navigate('downloads'),
+          },
+          {
+            label: 'Wishlist',
+            value: String(wishlisted.length),
+            unit: wishlisted.length === 1 ? 'title' : 'titles',
+            sub: 'Saved for later',
+            onClick: () => navigate('library'),
+          },
+        ]}
+      />
+
+      {/* Play timeline */}
+      {timeline.length > 0 && (
+        <section className="space-y-6">
+          <h2 className="font-display text-2xl font-bold text-cream text-center">Your play timeline</h2>
+          <Timeline
+            head={<Clock className="w-5 h-5" />}
+            headLabel="Most played"
+            items={timeline.map((g) => ({
+              id: g.id,
+              title: g.title,
+              meta: g.playHours ? `${g.playHours}h logged` : 'Not played yet',
+              cover: g.coverImage,
+              onClick: () => navigate('game-detail', g.id),
+            }))}
+          />
+        </section>
+      )}
 
       {/* On the bench */}
       {onBench.length > 0 && (
@@ -213,7 +205,7 @@ export const StoreScreen: React.FC = () => {
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
           {recentArticles.map((a) => (
             <button key={a.id} onClick={() => openArticle(a)}
-              className="group text-left rounded-2xl bg-bg-card border border-white/[0.07] hover:border-accent/50 overflow-hidden cursor-default transition-colors">
+              className="group text-left rounded-[28px] bg-bg-card border border-white/[0.07] hover:border-accent/50 overflow-hidden cursor-default transition-colors">
               <div className="relative aspect-[16/9] overflow-hidden bg-black">
                 <img src={a.cover} alt={a.title} className="w-full h-full object-cover opacity-80 group-hover:opacity-100 group-hover:scale-105 transition duration-300" />
                 <span className="absolute top-2.5 left-2.5 engine-label bg-black/60 px-2 py-1 rounded">{a.gameTitle}</span>

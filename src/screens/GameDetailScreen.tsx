@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useStore } from '../store/useStore';
+import { Pill } from '../components/ui/Pill';
 import {
   Play,
   Download,
@@ -285,7 +286,7 @@ export const GameDetailScreen: React.FC = () => {
 
           {/* Pill segmented tabs control below media */}
           <div className="space-y-4 pt-2">
-            <div className="inline-flex p-1 bg-white/[0.04] border border-white/[0.08] rounded-full">
+            <div role="tablist" className="flex flex-wrap gap-2">
               {[
                 { id: 'overview', label: 'Overview', icon: AlignLeft },
                 { id: 'specs', label: 'System requirements', icon: Cpu },
@@ -293,20 +294,16 @@ export const GameDetailScreen: React.FC = () => {
                 { id: 'patchNotes', label: 'Patch notes', icon: FileText },
               ].map((tab) => {
                 const Icon = tab.icon;
-                const isActive = activeTab === tab.id;
                 return (
-                  <button
+                  <Pill
                     key={tab.id}
+                    role="tab"
+                    active={activeTab === tab.id}
+                    icon={<Icon className="w-3.5 h-3.5" />}
                     onClick={() => setActiveTab(tab.id as typeof activeTab)}
-                    className={`flex items-center gap-2 px-4 py-1.5 rounded-full text-xs transition-surface cursor-default ${
-                      isActive
-                        ? 'bg-white/[0.12] text-white font-semibold shadow-sm'
-                        : 'text-slate-400 hover:text-slate-200'
-                    }`}
                   >
-                    <Icon className="w-3.5 h-3.5" />
-                    <span>{tab.label}</span>
-                  </button>
+                    {tab.label}
+                  </Pill>
                 );
               })}
             </div>

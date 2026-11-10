@@ -173,7 +173,7 @@ export const DownloadsScreen: React.FC = () => {
       {/* Transfer status & Storage section */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Speed transfer panel / Calm idle summary */}
-        <div className="lg:col-span-2 rounded-2xl win11-card p-6 flex flex-col justify-between">
+        <div className="lg:col-span-2 rounded-[28px] win11-card p-6 flex flex-col justify-between">
           <div className="flex items-center justify-between pb-3 border-b border-white/[0.06]">
             <span className="text-xs font-semibold text-slate-200 flex items-center gap-2">
               <Activity className="w-4 h-4 text-accent" /> Network telemetry
@@ -226,21 +226,21 @@ export const DownloadsScreen: React.FC = () => {
           )}
 
           <div className="grid grid-cols-3 gap-3 pt-3 border-t border-white/[0.06] text-center text-xs tabular-nums">
-            <div className="p-2.5 rounded-thumb bg-white/[0.02]">
+            <div className="p-4 rounded-2xl bg-white/[0.03] text-left space-y-1">
               <span className="text-[11px] text-slate-400 block">Download speed</span>
-              <span className="text-sm font-semibold text-white">
+              <span className="font-display text-xl font-light whitespace-nowrap text-cream">
                 <NumberTicker value={currentSpeed} decimalPlaces={1} suffix=" MB/s" />
               </span>
             </div>
-            <div className="p-2.5 rounded-thumb bg-white/[0.02]">
+            <div className="p-4 rounded-2xl bg-white/[0.03] text-left space-y-1">
               <span className="text-[11px] text-slate-400 block">Disk write</span>
-              <span className="text-sm font-semibold text-success">
+              <span className="font-display text-xl font-light whitespace-nowrap text-success">
                 <NumberTicker value={diskSpeed} decimalPlaces={1} suffix=" MB/s" />
               </span>
             </div>
-            <div className="p-2.5 rounded-thumb bg-white/[0.02]">
+            <div className="p-4 rounded-2xl bg-white/[0.03] text-left space-y-1">
               <span className="text-[11px] text-slate-400 block">Peak bandwidth</span>
-              <span className="text-sm font-semibold text-slate-200">
+              <span className="font-display text-xl font-light whitespace-nowrap text-cream">
                 <NumberTicker value={78.4} decimalPlaces={1} suffix=" MB/s" />
               </span>
             </div>
@@ -248,7 +248,7 @@ export const DownloadsScreen: React.FC = () => {
         </div>
 
         {/* Storage as a rounded segmented bar with legend */}
-        <div className="rounded-2xl win11-card p-6 flex flex-col justify-between space-y-4">
+        <div className="rounded-[28px] win11-card p-6 flex flex-col justify-between space-y-4">
           <div className="space-y-4">
             <div className="flex items-center gap-2 pb-3 border-b border-white/[0.06]">
               <HardDrive className="w-4 h-4 text-slate-400" />
@@ -320,7 +320,7 @@ export const DownloadsScreen: React.FC = () => {
               return (
                 <div
                   key={item.gameId}
-                  className="rounded-2xl win11-card p-4 flex flex-col md:flex-row md:items-center justify-between gap-4"
+                  className="rounded-[28px] win11-card p-4 flex flex-col md:flex-row md:items-center justify-between gap-4"
                 >
                   {/* Left: Thumbnail & Name */}
                   <div className="flex items-center gap-3.5 min-w-[220px]">
@@ -409,7 +409,7 @@ export const DownloadsScreen: React.FC = () => {
           {recentlyCompleted.map((item) => (
             <div
               key={item.id}
-              className="rounded-2xl win11-card p-4 flex items-center justify-between gap-4"
+              className="rounded-[28px] win11-card p-4 flex items-center justify-between gap-4"
             >
               <div className="flex items-center gap-3.5">
                 <img src={item.cover} alt="" className="w-14 h-9 rounded-thumb object-cover border border-white/10" />

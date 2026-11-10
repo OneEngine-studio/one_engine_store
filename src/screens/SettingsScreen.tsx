@@ -145,7 +145,7 @@ export const SettingsScreen: React.FC = () => {
         {/* Left Column (2 Cols): Core Groups */}
         <div className="lg:col-span-2 space-y-6">
           {/* Group: Startup and window behavior */}
-          <section className="win11-card rounded-2xl p-6 space-y-5">
+          <section className="win11-card rounded-[28px] p-6 space-y-5">
             <h2 className="text-sm font-semibold text-white flex items-center gap-2">
               <Power className="w-4 h-4 text-accent" /> Startup and performance
             </h2>
@@ -188,7 +188,7 @@ export const SettingsScreen: React.FC = () => {
           </section>
 
           {/* Group: Audio & feedback */}
-          <section className="win11-card rounded-2xl p-6 space-y-4">
+          <section className="win11-card rounded-[28px] p-6 space-y-4">
             <h2 className="text-sm font-semibold text-white flex items-center gap-2">
               {settings.enableTactileAudio ? <Volume2 className="w-4 h-4 text-accent" /> : <VolumeX className="w-4 h-4 text-slate-400" />}
               Sound effects
@@ -220,7 +220,7 @@ export const SettingsScreen: React.FC = () => {
           </section>
 
           {/* Group: Storage & installation directory */}
-          <section className="win11-card rounded-2xl p-6 space-y-4">
+          <section className="win11-card rounded-[28px] p-6 space-y-4">
             <h2 className="text-sm font-semibold text-white flex items-center gap-2">
               <HardDrive className="w-4 h-4 text-accent" /> Installation directory
             </h2>
@@ -268,7 +268,7 @@ export const SettingsScreen: React.FC = () => {
           </section>
 
           {/* Group: Nakama Server & Authentication */}
-          <section className="win11-card rounded-2xl p-6 space-y-4">
+          <section className="win11-card rounded-[28px] p-6 space-y-4">
             <div className="flex items-center justify-between">
               <h2 className="text-sm font-semibold text-white flex items-center gap-2">
                 <Server className="w-4 h-4 text-accent" /> Nakama server connection
@@ -380,7 +380,7 @@ export const SettingsScreen: React.FC = () => {
           </section>
 
           {/* Group: Developer telemetry mode */}
-          <section className="win11-card rounded-2xl p-6 space-y-4">
+          <section className="win11-card rounded-[28px] p-6 space-y-4">
             <h2 className="text-sm font-semibold text-white flex items-center gap-2">
               <Terminal className="w-4 h-4 text-accent" /> Developer options
             </h2>
@@ -406,7 +406,7 @@ export const SettingsScreen: React.FC = () => {
         {/* Right Column: Maintenance & About (includes moved v2.6) */}
         <div className="space-y-6">
           {/* Maintenance diagnostics */}
-          <section className="win11-card rounded-2xl p-6 space-y-5">
+          <section className="win11-card rounded-[28px] p-6 space-y-5">
             <h2 className="text-sm font-semibold text-white flex items-center gap-2">
               <Activity className="w-4 h-4 text-accent" /> Maintenance
             </h2>
@@ -442,7 +442,7 @@ export const SettingsScreen: React.FC = () => {
           </section>
 
           {/* About & Runtime information */}
-          <section className="win11-card rounded-2xl p-6 space-y-4">
+          <section className="win11-card rounded-[28px] p-6 space-y-4">
             <h2 className="text-sm font-semibold text-white flex items-center gap-2">
               <Shield className="w-4 h-4 text-accent" /> About OneEngine
             </h2>
