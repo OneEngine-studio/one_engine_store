@@ -94,7 +94,7 @@ export interface UserProfile {
   nakamaRefreshToken?: string;
 }
 
-export type NavigationTab = 'store' | 'game-detail' | 'library' | 'downloads' | 'community' | 'settings';
+export type NavigationTab = 'store' | 'game-detail' | 'library' | 'downloads' | 'activity' | 'community' | 'settings';
 
 export interface AppSettings {
   launchOnStartup: boolean;

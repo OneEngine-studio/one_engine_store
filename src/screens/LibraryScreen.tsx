@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
 import { useStore } from '../store/useStore';
 import { Game } from '../types/store';
-import { Search, Heart, LayoutGrid, Grid3X3, Columns, ArrowUpDown } from 'lucide-react';
+import { Search, Heart, LayoutGrid, Grid3X3, Columns, ArrowUpDown, List } from 'lucide-react';
 import { Cartridge } from '../components/ui/Cartridge';
 import { Pill } from '../components/ui/Pill';
 import { Shelf } from '../components/ui/Shelf';
+import { GameTable } from '../components/ui/GameTable';
 
 type CardSize = 'compact' | 'standard' | 'hero';
 const cartWidth: Record<CardSize, number> = { compact: 140, standard: 188, hero: 248 };
@@ -28,6 +29,7 @@ export const LibraryScreen: React.FC = () => {
   const [cardSize, setCardSize] = useState<CardSize>('standard');
   const [sortOption, setSortOption] = useState<SortOption>('recent');
   const [search, setSearch] = useState('');
+  const [view, setView] = useState<'shelf' | 'table'>('shelf');
 
   const ownedGames = games.filter((g) => currentUser.ownedGameIds.includes(g.id));
 
@@ -104,8 +106,34 @@ export const LibraryScreen: React.FC = () => {
             </select>
           </div>
 
+          {/* Shelf or table */}
+          <div role="group" aria-label="Library view" className="flex items-center p-0.5 bg-white/[0.04] border border-white/[0.08] rounded-full">
+            <button
+              onClick={() => setView('shelf')}
+              aria-pressed={view === 'shelf'}
+              aria-label="Shelf view"
+              className={`p-1.5 rounded-full transition-surface cursor-default ${
+                view === 'shelf' ? 'bg-cream text-[#1b1510]' : 'text-slate-400 hover:text-white'
+              }`}
+              title="Shelf view"
+            >
+              <LayoutGrid className="w-3.5 h-3.5" />
+            </button>
+            <button
+              onClick={() => setView('table')}
+              aria-pressed={view === 'table'}
+              aria-label="Table view"
+              className={`p-1.5 rounded-full transition-surface cursor-default ${
+                view === 'table' ? 'bg-cream text-[#1b1510]' : 'text-slate-400 hover:text-white'
+              }`}
+              title="Table view"
+            >
+              <List className="w-3.5 h-3.5" />
+            </button>
+          </div>
+
           {/* Size toggle */}
-          <div className="flex items-center p-0.5 bg-white/[0.04] border border-white/[0.08] rounded-full">
+          <div className={`items-center p-0.5 bg-white/[0.04] border border-white/[0.08] rounded-full ${view === 'shelf' ? 'flex' : 'hidden'}`}>
             <button
               onClick={() => setCardSize('compact')}
               className={`p-1.5 rounded-full transition-surface cursor-default ${
@@ -149,6 +177,8 @@ export const LibraryScreen: React.FC = () => {
             Explore store
           </button>
         </div>
+      ) : view === 'table' ? (
+        <GameTable games={sortedGames} onOpen={(g) => navigate('game-detail', g.id)} />
       ) : (
         <Shelf
           items={sortedGames}

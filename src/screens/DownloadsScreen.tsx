@@ -15,6 +15,7 @@ import { NumberTicker } from '../components/ui/NumberTicker';
 export const DownloadsScreen: React.FC = () => {
   const {
     downloads,
+    games,
     pauseDownload,
     resumeDownload,
     cancelDownload,
@@ -26,6 +27,9 @@ export const DownloadsScreen: React.FC = () => {
     addToast,
     navigate,
   } = useStore();
+
+  const installedGames = games.filter((g) => g.installed);
+  const installedGb = installedGames.reduce((sum, g) => sum + g.installSizeGb, 0);
 
   const [showThrottleModal, setShowThrottleModal] = useState(false);
   const [throttleInput, setThrottleInput] = useState('50');
@@ -258,36 +262,44 @@ export const DownloadsScreen: React.FC = () => {
             </div>
 
             <div className="space-y-3">
-              <div className="flex justify-between text-xs">
-                <span className="text-slate-400 truncate max-w-[150px]">{settings.downloadDirectory}</span>
-                <span className="text-white font-semibold tabular-nums">542 GB / 1,024 GB</span>
+              <div>
+                <span className="text-[11px] text-slate-400 block truncate">{settings.downloadDirectory}</span>
+                <span className="mt-1 flex items-baseline gap-1.5">
+                  <span className="font-display text-4xl font-light tracking-tight text-cream tabular-nums">
+                    {Math.round(installedGb * 10) / 10}
+                  </span>
+                  <span className="text-sm text-slate-400">GB installed</span>
+                </span>
               </div>
 
-              {/* Rounded segmented bar */}
-              <div className="w-full h-3 rounded-full bg-white/[0.06] overflow-hidden flex p-0.5 gap-0.5">
-                {/* OneEngine games segment (53%) */}
-                <div className="h-full bg-accent rounded-l-full" style={{ width: '53%' }} title="Games: 542 GB" />
-                {/* Other files & system segment (15%) */}
-                <div className="h-full bg-slate-500" style={{ width: '15%' }} title="System & other apps: 154 GB" />
-                {/* Free space segment (32%) */}
-                <div className="h-full bg-transparent" style={{ width: '32%' }} title="Free space: 328 GB" />
+              {/* One segment per installed game */}
+              <div className="w-full h-3 rounded-full bg-white/[0.06] overflow-hidden flex gap-0.5 p-0.5">
+                {installedGames.map((g, i) => (
+                  <div
+                    key={g.id}
+                    className="h-full rounded-full"
+                    style={{
+                      width: `${(g.installSizeGb / Math.max(installedGb, 1)) * 100}%`,
+                      background: i === 0 ? '#FF7A00' : i === 1 ? '#C9A24B' : '#78716c',
+                    }}
+                    title={`${g.title}: ${g.installSizeGb} GB`}
+                  />
+                ))}
               </div>
 
-              {/* Segmented bar legend */}
-              <div className="grid grid-cols-3 gap-2 pt-1 text-[11px] text-slate-400">
-                <div className="flex items-center gap-1.5">
-                  <span className="w-2.5 h-2.5 rounded-full bg-accent" />
-                  <span>Games (542 GB)</span>
-                </div>
-                <div className="flex items-center gap-1.5">
-                  <span className="w-2.5 h-2.5 rounded-full bg-slate-500" />
-                  <span>Other (154 GB)</span>
-                </div>
-                <div className="flex items-center gap-1.5">
-                  <span className="w-2.5 h-2.5 rounded-full border border-white/20 bg-transparent" />
-                  <span>Free (328 GB)</span>
-                </div>
-              </div>
+              <ul className="space-y-1.5 pt-1 text-[11px] text-slate-400">
+                {installedGames.length === 0 && <li>Nothing installed yet</li>}
+                {installedGames.map((g, i) => (
+                  <li key={g.id} className="flex items-center gap-2">
+                    <span
+                      className="w-2.5 h-2.5 rounded-full shrink-0"
+                      style={{ background: i === 0 ? '#FF7A00' : i === 1 ? '#C9A24B' : '#78716c' }}
+                    />
+                    <span className="truncate">{g.title}</span>
+                    <span className="ml-auto tabular-nums text-slate-300">{g.installSizeGb} GB</span>
+                  </li>
+                ))}
+              </ul>
             </div>
           </div>
 

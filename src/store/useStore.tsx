@@ -10,6 +10,7 @@ import {
   ToastNotification 
 } from '../types/store';
 import { nakamaService } from '../lib/nakama';
+import { recordPlayDay } from '../lib/playLog';
 import { LauncherBridge } from '../lib/launcherBridge';
 
 // Synthetic Tactical Audio Engine via Web Audio API (zero audio files needed)
@@ -615,6 +616,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       return;
     }
     setLaunchingGameId(gameId);
+    recordPlayDay();
 
     const target = games.find((g) => g.id === gameId);
     const exePath = `${settings.downloadDirectory}\\${gameId}\\${gameId}.exe`;
