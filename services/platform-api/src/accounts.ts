@@ -7,6 +7,7 @@ import { signAccessToken } from './auth.js';
 import { hashPassword, needsRehash, passwordProblem, verifyPassword } from './passwords.js';
 import { resetMail, verificationMail, type Mailer } from './mailer.js';
 import { RateLimiter } from './tickets.js';
+import { googleConfigured, makeGoogleExchange, type GoogleExchange } from './google.js';
 
 export const ACCESS_TTL_SECONDS = 15 * 60;
 const REFRESH_TTL_MS = 30 * 24 * 60 * 60 * 1000;
@@ -18,6 +19,8 @@ interface Deps {
   db: DatabaseSync;
   mailer: Mailer;
   now: () => number;
+  /** Replaced in tests; the real one talks to Google. */
+  googleExchange?: GoogleExchange;
   requireUser: (req: FastifyRequest, reply: FastifyReply) => Promise<unknown>;
 }
 
@@ -59,7 +62,9 @@ export const accountValidationError: z.core.$ZodErrorMap = (issue) => {
   }
 };
 
-export function registerAccountRoutes(app: FastifyInstance, { cfg, db, mailer, now, requireUser }: Deps) {
+export function registerAccountRoutes(app: FastifyInstance, { cfg, db, mailer, now, requireUser, googleExchange }: Deps) {
+  const exchangeGoogle = googleExchange ?? (googleConfigured(cfg) ? makeGoogleExchange(cfg) : null);
+  const googleLimiter = new RateLimiter(20, 15 * 60_000, now);
   const loginLimiter = new RateLimiter(8, 15 * 60_000, now); // per ip + email
   const loginIpLimiter = new RateLimiter(40, 15 * 60_000, now);
   const registerLimiter = new RateLimiter(5, 60 * 60_000, now);
@@ -217,6 +222,90 @@ export function registerAccountRoutes(app: FastifyInstance, { cfg, db, mailer, n
     return issueSession(row);
   });
 
+  // ---- Google sign-in ----
+  // The launcher opens Google in the system browser (authorization code + PKCE, loopback redirect). It hands the
+  // code to this route; we redeem it with Google, verify the ID token, and sign the player in to a OneEngine account.
+  app.get('/v1/auth/providers', async () => ({
+    google: exchangeGoogle ? { clientId: cfg.googleClientId } : null,
+  }));
+
+  // A Google display name is made to fit our rules; the player can change it afterwards.
+  const nameFrom = (name: string, addr: string) => {
+    const clean = (value: string) =>
+      value.replace(/[^\p{L}\p{N} _.-]/gu, '').replace(/\s+/g, ' ').trim().slice(0, 32);
+    const first = clean(name);
+    if (first.length >= 2) return first;
+    const local = clean(addr.split('@')[0] ?? '');
+    return local.length >= 2 ? local : 'Player';
+  };
+
+  app.post('/v1/auth/google', async (req, reply) => {
+    if (!exchangeGoogle) return fail(reply, 404, 'google_unavailable', 'Google sign-in is not set up on this service.');
+    const parsed = z
+      .object({
+        code: z.string().min(10).max(2048),
+        codeVerifier: z.string().min(43).max(128),
+        nonce: z.string().min(16).max(128),
+        // Desktop apps receive the code on a loopback address only.
+        redirectUri: z.string().regex(/^http:\/\/127\.0\.0\.1:\d{2,5}\/callback$/),
+      })
+      .safeParse(req.body);
+    if (!parsed.success) return badRequest(reply, 'The Google sign-in response was incomplete. Try again.');
+    if (!googleLimiter.allow(req.ip)) return fail(reply, 429, 'rate_limited', 'Too many attempts. Try again later.');
+
+    let who;
+    try {
+      who = await exchangeGoogle(parsed.data);
+    } catch (err) {
+      req.log.warn({ err: err instanceof Error ? err.message : String(err) }, 'google sign-in failed');
+      return fail(reply, 401, 'google_failed', 'Google could not confirm your sign-in. Try again.');
+    }
+    if (!who.emailVerified) {
+      return fail(reply, 403, 'google_email_unverified', 'Your Google account has no verified email address.');
+    }
+
+    const linked = db
+      .prepare(
+        "SELECT a.user_id, a.email, a.display_name, a.email_verified, a.status FROM identities i JOIN accounts a ON a.user_id = i.user_id WHERE i.provider = 'google' AND i.subject = ?"
+      )
+      .get(who.subject) as AccountRow | undefined;
+
+    let account = linked;
+    if (!account) {
+      // First Google sign-in for this person. An existing account with the same, Google-verified email is
+      // joined (Google has proven they own the mailbox); otherwise a new account is created.
+      const existing = db
+        .prepare('SELECT user_id, email, display_name, email_verified, status FROM accounts WHERE email = ?')
+        .get(who.email) as AccountRow | undefined;
+      if (existing) {
+        account = existing;
+        if (!existing.email_verified) {
+          // Someone may have registered this address by password without owning the mailbox. The real owner just
+          // proved it through Google, so whatever password and sessions that registration made are cleared.
+          db.prepare('DELETE FROM credentials WHERE user_id = ?').run(existing.user_id);
+          revokeAllSessions(existing.user_id);
+          db.prepare('UPDATE accounts SET email_verified = 1 WHERE user_id = ?').run(existing.user_id);
+          account = { ...existing, email_verified: 1 };
+        }
+      } else {
+        const userId = randomUUID();
+        const name = nameFrom(who.name, who.email);
+        db.prepare('INSERT INTO accounts (user_id, email, email_verified, display_name) VALUES (?, ?, 1, ?)').run(
+          userId,
+          who.email,
+          name
+        );
+        account = { user_id: userId, email: who.email, display_name: name, email_verified: 1, status: 'active' };
+      }
+      db.prepare("INSERT INTO identities (provider, subject, user_id) VALUES ('google', ?, ?)").run(
+        who.subject,
+        account.user_id
+      );
+    }
+    if (account.status !== 'active') return fail(reply, 403, 'account_suspended', 'This account is suspended.');
+    return issueSession(account);
+  });
+
   // ---- refresh (rotating, reuse revokes the whole chain) ----
   app.post('/v1/auth/refresh', async (req, reply) => {
     const parsed = z.object({ refreshToken: z.string().min(20).max(128) }).safeParse(req.body);
@@ -301,7 +390,7 @@ export function registerAccountRoutes(app: FastifyInstance, { cfg, db, mailer, n
     if (!mailIpLimiter.allow(`forgot|${req.ip}`)) return fail(reply, 429, 'rate_limited', 'Too many requests. Try again later.');
     const row = findByEmail(parsed.data.email);
     // Same answer whether or not the address has an account.
-    if (row && row.password_hash && row.status === 'active' && mailLimiter.allow(`reset|${row.user_id}`)) {
+    if (row && row.status === 'active' && mailLimiter.allow(`reset|${row.user_id}`)) {
       try {
         await sendCode(row, 'reset');
       } catch {

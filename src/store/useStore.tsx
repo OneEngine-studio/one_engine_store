@@ -255,6 +255,8 @@ interface StoreContextType {
   forgotPassword: (email: string) => Promise<AuthResult>;
   resetPassword: (email: string, code: string, newPassword: string) => Promise<AuthResult>;
   changePassword: (currentPassword: string, newPassword: string) => Promise<AuthResult>;
+  signInWithGoogle: () => Promise<AuthResult>;
+  cancelGoogleSignIn: () => void;
   logout: () => void;
 
   navigate: (tab: NavigationTab, gameId?: string) => void;
@@ -874,6 +876,21 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }
   };
 
+  const signInWithGoogle = async (): Promise<AuthResult> => {
+    triggerSound('click');
+    try {
+      const profile = await startSession(await platformApi.googleSignIn());
+      addToast(`Signed in with Google. Welcome, ${profile.callsign}!`, 'success');
+      return { success: true };
+    } catch (err) {
+      return failure(err);
+    }
+  };
+
+  const cancelGoogleSignIn = () => {
+    void platformApi.googleCancel();
+  };
+
   const register = async (email: string, password: string, displayName: string): Promise<AuthResult> => {
     triggerSound('click');
     try {
@@ -1045,6 +1062,8 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         forgotPassword,
         resetPassword,
         changePassword,
+        signInWithGoogle,
+        cancelGoogleSignIn,
         logout,
         searchQuery,
         isAuthModalOpen,

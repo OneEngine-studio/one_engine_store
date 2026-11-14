@@ -6,7 +6,7 @@ from the public repo, so a new version shows up there by itself, with its file, 
 
 ## What the first public release contains
 
-- Account creation, email confirmation, sign-in, password reset and change, display name, sign-out.
+- Account creation, email confirmation, sign-in, password reset and change, display name, sign-out, and "Continue with Google" once the service has a Google client (`docs/google-login.md`; untested with a real Google account).
 - The game catalog, read from the Platform API.
 - **Not in this version:** game downloads, installs and play. The code is in the repo (`electron/installer.cjs`)
   and tested, but the build switches it off. The Library, Downloads and Play controls say "coming soon", and the

@@ -288,6 +288,31 @@ class PlatformApi {
     await this.call('/v1/auth/forgot-password', { method: 'POST', body: { email } });
   }
 
+  /** True when this is the desktop app and the service has Google sign-in set up. */
+  async googleAvailable(): Promise<boolean> {
+    if (typeof window === 'undefined' || !window.electronAPI?.platform.googleSignIn) return false;
+    try {
+      const out = await this.call<{ google?: { clientId?: string } | null }>('/v1/auth/providers', { timeoutMs: 6000 });
+      return !!out.google?.clientId;
+    } catch {
+      return false;
+    }
+  }
+
+  /** Opens Google in the system browser; resolves once the player is signed in to a OneEngine account. */
+  async googleSignIn(): Promise<PlatformUser> {
+    const bridge = typeof window !== 'undefined' ? window.electronAPI?.platform : undefined;
+    if (!bridge) throw new PlatformError('Google sign-in needs the OneEngine Store desktop app.', 'google_unavailable', 0);
+    const res = await bridge.googleSignIn();
+    if (res.status >= 200 && res.status < 300) return (res.data as { user: PlatformUser }).user;
+    const error = res.data?.error as { code?: string; message?: string } | undefined;
+    throw new PlatformError(error?.message || 'Google sign-in did not finish.', error?.code || 'google_error', res.status);
+  }
+
+  async googleCancel(): Promise<void> {
+    await window.electronAPI?.platform.googleCancel?.();
+  }
+
   async resetPassword(email: string, code: string, newPassword: string): Promise<void> {
     await this.call('/v1/auth/reset-password', { method: 'POST', body: { email, code, newPassword } });
   }

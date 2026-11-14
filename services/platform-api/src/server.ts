@@ -9,6 +9,7 @@ import type { Config } from './config.js';
 import { makeVerifier, signAccessToken, type AuthUser, type TokenVerifier } from './auth.js';
 import { accountValidationError, displayNameSchema, registerAccountRoutes } from './accounts.js';
 import { makeMailer, type Mailer } from './mailer.js';
+import type { GoogleExchange } from './google.js';
 import { RateLimiter, TicketStore } from './tickets.js';
 
 declare module 'fastify' {
@@ -25,6 +26,7 @@ interface Deps {
   verify?: TokenVerifier;
   mailer?: Mailer;
   now?: () => number;
+  googleExchange?: GoogleExchange;
 }
 
 type ProductRow = {
@@ -47,7 +49,7 @@ const safeEqual = (a: string, b: string) => {
   return timingSafeEqual(ha, hb);
 };
 
-export function buildServer({ cfg, db, tickets, verify, mailer, now = Date.now }: Deps) {
+export function buildServer({ cfg, db, tickets, verify, mailer, now = Date.now, googleExchange }: Deps) {
   const app = Fastify({
     logger: { level: cfg.logLevel, redact: ['req.headers.authorization'] },
     trustProxy: cfg.production,
@@ -404,6 +406,7 @@ export function buildServer({ cfg, db, tickets, verify, mailer, now = Date.now }
     mailer: mailer ?? makeMailer(cfg, app.log),
     now,
     requireUser,
+    googleExchange,
   });
 
   return app;

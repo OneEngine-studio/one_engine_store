@@ -19,6 +19,9 @@ export interface Config {
   /** Argon2id memory cost in KiB. Lower only in tests. */
   passwordCost: number;
   corsOrigins: string[];
+  /** "Continue with Google": an OAuth client of type Desktop app from Google Cloud. Both empty = the button is hidden. */
+  googleClientId: string;
+  googleClientSecret: string;
   logLevel: string;
 }
 
@@ -53,6 +56,8 @@ export function loadConfig(env: Record<string, string | undefined> = process.env
     requireVerifiedEmail:
       env.REQUIRE_EMAIL_VERIFICATION === undefined ? production : env.REQUIRE_EMAIL_VERIFICATION === 'true',
     passwordCost: Number(env.PASSWORD_COST ?? 64 * 1024),
+    googleClientId: (env.GOOGLE_CLIENT_ID ?? '').trim(),
+    googleClientSecret: (env.GOOGLE_CLIENT_SECRET ?? '').trim(),
     logLevel: env.LOG_LEVEL ?? 'info',
     corsOrigins: (env.CORS_ORIGINS ?? 'http://localhost:1420').split(',').map((s) => s.trim()).filter(Boolean),
   };
@@ -71,6 +76,9 @@ export function loadConfig(env: Record<string, string | undefined> = process.env
     }
     if (cfg.requireVerifiedEmail && !cfg.smtpUrl) {
       problems.push('SMTP_URL is required while email verification is on (or set REQUIRE_EMAIL_VERIFICATION=false)');
+    }
+    if (!!cfg.googleClientId !== !!cfg.googleClientSecret) {
+      problems.push('GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET must be set together');
     }
     if (cfg.passwordCost < MIN_PASSWORD_COST) problems.push('PASSWORD_COST is too low for production');
     if (problems.length) throw new Error(`Unsafe production config:\n- ${problems.join('\n- ')}`);

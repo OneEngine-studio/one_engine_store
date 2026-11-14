@@ -20,6 +20,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
     request: (payload) => ipcRenderer.invoke('platform-request', payload),
     restore: () => ipcRenderer.invoke('platform-restore'),
     signOut: () => ipcRenderer.invoke('platform-sign-out'),
+    googleSignIn: () => ipcRenderer.invoke('platform-google-sign-in'),
+    googleCancel: () => ipcRenderer.invoke('platform-google-cancel'),
   },
   library: {
     defaultDir: () => ipcRenderer.invoke('library-default-dir'),

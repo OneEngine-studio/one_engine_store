@@ -23,6 +23,8 @@ export interface ElectronAPI {
     }) => Promise<{ status: number; data: Record<string, unknown> }>;
     restore: () => Promise<{ ok: boolean }>;
     signOut: () => Promise<{ ok: boolean }>;
+    googleSignIn: () => Promise<{ status: number; data: Record<string, unknown> }>;
+    googleCancel: () => Promise<{ ok: boolean }>;
   };
   library: {
     defaultDir: () => Promise<string>;

@@ -6,6 +6,8 @@ you: the API is not hosted anywhere yet. A player can only use the launcher once
 
 ## 1. Host the Platform API
 
+On AWS: follow `docs/aws-deploy.md` (server, domain, HTTPS, email, backups). For Google sign-in add the Google client from `docs/google-login.md`.
+
 You need a small server (any VPS with Docker) and a domain name, for example `api.yourdomain.com`.
 
 1. Point a DNS record for that name at the server.

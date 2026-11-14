@@ -7,11 +7,12 @@
 //
 // The page does not choose where requests go either: the address comes from the build (config.cjs) and
 // only the routes listed in ROUTES can be called, so this is not a general HTTP proxy.
-const { app, ipcMain, safeStorage } = require('electron');
+const { app, ipcMain, safeStorage, shell } = require('electron');
 const fs = require('fs');
 const path = require('path');
 const appConfig = require('./config.cjs');
 const { isTrustedSender } = require('./security.cjs');
+const google = require('./google.cjs');
 
 let session = null; // { baseUrl, access, accessExp, refresh }
 let stored = null; // { baseUrl, refresh } read from disk, used once by restore
@@ -108,6 +109,7 @@ const ID = '[A-Za-z0-9_-]{1,64}';
 // [method, path pattern, needs a signed-in session, only when games are enabled]
 const ROUTES = [
   ['GET', /^\/healthz$/, false],
+  ['GET', /^\/v1\/auth\/providers$/, false],
   ['GET', /^\/v1\/catalog$/, false],
   ['GET', new RegExp(`^/v1/catalog/${ID}$`), false],
   ['POST', /^\/v1\/auth\/(register|login|forgot-password|reset-password)$/, false],
@@ -157,11 +159,44 @@ async function request({ path: route, method = 'GET', body } = {}) {
   return res;
 }
 
+/**
+ * Google sign-in: the browser step runs here, the code goes to the Platform API, and the tokens that come back
+ * stay in this process like any other sign-in. The page only learns who signed in.
+ */
+async function googleSignIn() {
+  const baseUrl = appConfig.get().platformApiUrl;
+  if (!baseUrl) return problem(0, 'not_configured', 'This build of OneEngine Store has no service address.');
+
+  const providers = await rawFetch(baseUrl, '/v1/auth/providers', 'GET');
+  if (providers.status !== 200) return providers.status === 0 ? providers : problem(providers.status, 'google_unavailable', 'Google sign-in is not available right now.');
+  const clientId = providers.data.google && providers.data.google.clientId;
+  if (!clientId) return problem(404, 'google_unavailable', 'Google sign-in is not set up on this service yet.');
+
+  let grant;
+  try {
+    grant = await google.authorize({ clientId, openUrl: (url) => shell.openExternal(url) });
+  } catch (err) {
+    return problem(0, err.code || 'google_error', err.message || 'Google sign-in did not finish.');
+  }
+
+  const res = await rawFetch(baseUrl, '/v1/auth/google', 'POST', grant, undefined, 20000);
+  if (res.status === 200 && res.data && res.data.accessToken && res.data.refreshToken) {
+    return { status: 200, data: adopt(baseUrl, res.data) };
+  }
+  return res;
+}
+
 function registerPlatformIpc() {
   const guarded = (handler) => (event, payload) =>
     isTrustedSender(event) ? handler(payload) : problem(0, 'forbidden', 'Request refused.');
 
   ipcMain.handle('platform-request', guarded((payload) => request(payload || {})));
+
+  ipcMain.handle('platform-google-sign-in', guarded(() => googleSignIn()));
+  ipcMain.handle('platform-google-cancel', guarded(() => {
+    google.cancel();
+    return { ok: true };
+  }));
 
   // Signs back in from the encrypted refresh token saved by an earlier run.
   ipcMain.handle('platform-restore', guarded(async () => {

@@ -4,11 +4,12 @@ import { openDb } from '../src/db.js';
 import { buildServer } from '../src/server.js';
 import { makeMailer, type Mailer } from '../src/mailer.js';
 import { legacyScryptHash, needsRehash } from '../src/passwords.js';
+import type { GoogleExchange, GoogleIdentity } from '../src/google.js';
 
 const env = { PASSWORD_COST: '1024', REQUIRE_EMAIL_VERIFICATION: 'true', LOG_LEVEL: 'silent' };
 const GOOD = 'correct horse battery';
 
-function setup(extra: Record<string, string> = {}) {
+function setup(extra: Record<string, string> = {}, googleExchange?: GoogleExchange) {
   let clock = 1_800_000_000_000;
   const now = () => clock;
   const sent: { to: string; subject: string; text: string }[] = [];
@@ -18,7 +19,7 @@ function setup(extra: Record<string, string> = {}) {
     },
   };
   const db = openDb(':memory:');
-  const app = buildServer({ cfg: loadConfig({ ...env, ...extra }), db, mailer, now });
+  const app = buildServer({ cfg: loadConfig({ ...env, ...extra }), db, mailer, now, googleExchange });
   const lastCode = () => /\b(\d{6})\b/.exec(sent[sent.length - 1]?.text ?? '')?.[1] ?? '';
   const advance = (ms: number) => {
     clock += ms;
@@ -148,6 +149,119 @@ describe('profile', () => {
     const invalidCharacters = await patch(ctx, { displayName: '<script>' }, body.accessToken);
     expect(invalidCharacters.statusCode).toBe(400);
     expect(invalidCharacters.json().error.message).toBe('Use letters, numbers, spaces, dots, dashes and underscores.');
+  });
+});
+
+describe('Google sign-in', () => {
+  const google = { GOOGLE_CLIENT_ID: 'client.apps.googleusercontent.com', GOOGLE_CLIENT_SECRET: 'secret' };
+  const body = {
+    code: 'authorization-code-from-google',
+    codeVerifier: 'v'.repeat(64),
+    nonce: 'n'.repeat(32),
+    redirectUri: 'http://127.0.0.1:53682/callback',
+  };
+  const identity = (over: Partial<GoogleIdentity> = {}): GoogleIdentity => ({
+    subject: 'google-sub-1',
+    email: 'gamer@gmail.com',
+    emailVerified: true,
+    name: 'Gamer Girl',
+    ...over,
+  });
+  const withGoogle = (who: () => GoogleIdentity | Promise<GoogleIdentity> = () => identity()) =>
+    setup(google, async () => who());
+  const signIn = (ctx: Ctx, payload: unknown = body) => post(ctx, '/v1/auth/google', payload);
+
+  it('advertises Google only when it is set up, and never returns the secret', async () => {
+    const off = setup();
+    expect((await off.app.inject({ method: 'GET', url: '/v1/auth/providers' })).json()).toEqual({ google: null });
+    expect((await signIn(off)).statusCode).toBe(404);
+
+    const on = withGoogle();
+    const res = await on.app.inject({ method: 'GET', url: '/v1/auth/providers' });
+    expect(res.json()).toEqual({ google: { clientId: google.GOOGLE_CLIENT_ID } });
+    expect(res.body).not.toContain(google.GOOGLE_CLIENT_SECRET);
+  });
+
+  it('creates a verified account on first sign-in and the same one on the next', async () => {
+    const ctx = withGoogle();
+    const first = await signIn(ctx);
+    expect(first.statusCode).toBe(200);
+    expect(first.json().user).toMatchObject({ email: 'gamer@gmail.com', displayName: 'Gamer Girl', emailVerified: true });
+    expect(first.json().accessToken.split('.')).toHaveLength(3);
+    const again = await signIn(ctx);
+    expect(again.json().user.userId).toBe(first.json().user.userId);
+    expect((ctx.db.prepare('SELECT COUNT(*) AS n FROM accounts').get() as { n: number }).n).toBe(1);
+    // the new session works like any other
+    const me = await ctx.app.inject({ method: 'GET', url: '/v1/me', headers: { authorization: `Bearer ${first.json().accessToken}` } });
+    expect(me.statusCode).toBe(200);
+  });
+
+  it('has no password until the player sets one, which the reset flow allows', async () => {
+    const ctx = withGoogle();
+    await signIn(ctx);
+    expect((await post(ctx, '/v1/auth/login', { email: 'gamer@gmail.com', password: GOOD })).statusCode).toBe(401);
+    await post(ctx, '/v1/auth/forgot-password', { email: 'gamer@gmail.com' });
+    const reset = await post(ctx, '/v1/auth/reset-password', { email: 'gamer@gmail.com', code: ctx.lastCode(), newPassword: GOOD });
+    expect(reset.statusCode).toBe(200);
+    expect((await post(ctx, '/v1/auth/login', { email: 'gamer@gmail.com', password: GOOD })).statusCode).toBe(200);
+  });
+
+  it('joins an existing password account that has the same email', async () => {
+    const ctx = withGoogle();
+    const { body: reg } = await register(ctx, 'gamer@gmail.com');
+    await post(ctx, '/v1/auth/verify-email', { code: ctx.lastCode() }, reg.accessToken);
+    const res = await signIn(ctx);
+    expect(res.json().user.userId).toBe(reg.user.userId);
+    expect((await post(ctx, '/v1/auth/login', { email: 'gamer@gmail.com', password: GOOD })).statusCode).toBe(200);
+  });
+
+  it('does not let someone who pre-registered an address they do not own keep access', async () => {
+    const ctx = withGoogle();
+    const { body: attacker } = await register(ctx, 'gamer@gmail.com'); // never confirmed the mailbox
+    const res = await signIn(ctx);
+    expect(res.json().user.userId).toBe(attacker.user.userId);
+    expect(res.json().user.emailVerified).toBe(true);
+    expect((await post(ctx, '/v1/auth/login', { email: 'gamer@gmail.com', password: GOOD })).statusCode).toBe(401);
+    expect((await post(ctx, '/v1/auth/refresh', { refreshToken: attacker.refreshToken })).statusCode).toBe(401);
+  });
+
+  it('refuses an unverified Google email, a failed exchange, a suspended account and a non-loopback redirect', async () => {
+    expect((await signIn(withGoogle(() => identity({ emailVerified: false })))).statusCode).toBe(403);
+
+    const failing = withGoogle(() => {
+      throw new Error('bad code');
+    });
+    const failed = await signIn(failing);
+    expect(failed.statusCode).toBe(401);
+    expect(failed.json().error.code).toBe('google_failed');
+
+    const ctx = withGoogle();
+    await signIn(ctx);
+    ctx.db.prepare("UPDATE accounts SET status = 'suspended'").run();
+    expect((await signIn(ctx)).statusCode).toBe(403);
+
+    expect((await signIn(withGoogle(), { ...body, redirectUri: 'https://evil.example/callback' })).statusCode).toBe(400);
+    expect((await signIn(withGoogle(), { ...body, redirectUri: 'http://127.0.0.1:53682/other' })).statusCode).toBe(400);
+    expect((await signIn(withGoogle(), { code: 'short' })).statusCode).toBe(400);
+  });
+
+  it('makes a valid display name out of whatever Google sends', async () => {
+    const odd = await signIn(withGoogle(() => identity({ name: '<script>alert(1)</script>' })));
+    expect(odd.json().user.displayName).toMatch(/^[\p{L}\p{N} _.-]{2,32}$/u);
+    const none = await signIn(withGoogle(() => identity({ name: '', email: 'x.y@gmail.com' })));
+    expect(none.json().user.displayName).toBe('x.y');
+  });
+
+  it('requires both Google settings together in production', () => {
+    const prod = {
+      NODE_ENV: 'production',
+      JWT_SECRET: 'j'.repeat(40),
+      PLATFORM_SERVICE_KEY: 's'.repeat(40),
+      PLATFORM_DOWNLOAD_KEY: 'd'.repeat(40),
+      SMTP_URL: 'smtps://user:pass@smtp.example.com',
+    };
+    expect(() => loadConfig({ ...prod, GOOGLE_CLIENT_ID: 'x' })).toThrow(/GOOGLE_CLIENT/);
+    expect(() => loadConfig({ ...prod, GOOGLE_CLIENT_ID: 'x', GOOGLE_CLIENT_SECRET: 'y' })).not.toThrow();
   });
 });
 
