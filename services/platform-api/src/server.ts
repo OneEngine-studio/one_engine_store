@@ -1,0 +1,261 @@
+import Fastify, { type FastifyReply, type FastifyRequest } from 'fastify';
+import cors from '@fastify/cors';
+import { createHash, createHmac, randomUUID, timingSafeEqual } from 'node:crypto';
+import type { DatabaseSync } from 'node:sqlite';
+import { z } from 'zod';
+import type { Config } from './config.js';
+import { makeVerifier, signDevToken, type AuthUser, type TokenVerifier } from './auth.js';
+import { RateLimiter, TicketStore } from './tickets.js';
+
+declare module 'fastify' {
+  interface FastifyRequest {
+    user: AuthUser | null;
+  }
+}
+
+interface Deps {
+  cfg: Config;
+  db: DatabaseSync;
+  tickets?: TicketStore;
+  verify?: TokenVerifier;
+  now?: () => number;
+}
+
+type ProductRow = {
+  product_id: string;
+  kind: string;
+  title: string;
+  summary: string | null;
+  developer: string | null;
+  tags: string;
+  visibility: string;
+};
+type PriceRow = { amount_minor: number; discount_percent: number; currency: string };
+
+const fail = (reply: FastifyReply, status: number, code: string, message: string) =>
+  reply.code(status).send({ error: { code, message } });
+
+const safeEqual = (a: string, b: string) => {
+  const ha = createHash('sha256').update(a).digest();
+  const hb = createHash('sha256').update(b).digest();
+  return timingSafeEqual(ha, hb);
+};
+
+export function buildServer({ cfg, db, tickets, verify, now = Date.now }: Deps) {
+  const app = Fastify({ logger: { level: cfg.logLevel }, trustProxy: cfg.production });
+  const store = tickets ?? new TicketStore(now);
+  const verifier = verify ?? makeVerifier(cfg);
+  const ticketLimiter = new RateLimiter(10, 60_000, now);
+
+  app.register(cors, { origin: cfg.corsOrigins });
+  app.decorateRequest('user', null);
+
+  // ---------- helpers ----------
+  const getPrice = (productId: string, currency: string): PriceRow | undefined =>
+    db
+      .prepare('SELECT amount_minor, discount_percent, currency FROM prices WHERE product_id = ? AND currency = ?')
+      .get(productId, currency) as PriceRow | undefined;
+
+  const priceView = (p?: PriceRow) =>
+    p
+      ? {
+          currency: p.currency,
+          amountMinor: p.amount_minor,
+          discountPercent: p.discount_percent,
+          finalMinor: Math.round(p.amount_minor * (1 - p.discount_percent / 100)),
+        }
+      : null;
+
+  const productView = (r: ProductRow, currency: string) => ({
+    productId: r.product_id,
+    kind: r.kind,
+    title: r.title,
+    summary: r.summary,
+    developer: r.developer,
+    tags: JSON.parse(r.tags) as string[],
+    price: priceView(getPrice(r.product_id, currency)),
+  });
+
+  const isFree = (productId: string) => {
+    const p = getPrice(productId, 'USD');
+    return !p || p.amount_minor === 0;
+  };
+
+  const hasEntitlement = (userId: string, productId: string) =>
+    !!db
+      .prepare('SELECT 1 FROM entitlements WHERE user_id = ? AND product_id = ? AND revoked_at IS NULL')
+      .get(userId, productId);
+
+  const upsertAccount = (u: AuthUser) => {
+    const byId = db.prepare('SELECT user_id, display_name, status FROM accounts WHERE user_id = ?').get(u.sub) as
+      | { user_id: string; display_name: string; status: string }
+      | undefined;
+    if (byId) return byId;
+    db.prepare('INSERT INTO accounts (user_id, email, display_name) VALUES (?, ?, ?)').run(
+      u.sub,
+      u.email || `${u.sub}@unknown.invalid`,
+      u.name
+    );
+    return { user_id: u.sub, display_name: u.name, status: 'active' };
+  };
+
+  async function requireUser(req: FastifyRequest, reply: FastifyReply) {
+    const header = req.headers.authorization ?? '';
+    const token = header.startsWith('Bearer ') ? header.slice(7) : '';
+    if (!token) return fail(reply, 401, 'auth_required', 'Sign in to continue.');
+    try {
+      req.user = await verifier(token);
+    } catch {
+      return fail(reply, 401, 'auth_invalid', 'Your session is invalid or expired.');
+    }
+    const account = upsertAccount(req.user);
+    if (account.status !== 'active') return fail(reply, 403, 'account_suspended', 'This account is suspended.');
+  }
+
+  // ---------- public ----------
+  app.get('/healthz', async () => ({ ok: true }));
+
+  app.get('/v1/catalog', async (req) => {
+    const currency = z.string().length(3).catch('USD').parse((req.query as Record<string, string>).currency);
+    const rows = db.prepare("SELECT * FROM products WHERE visibility = 'public' ORDER BY title").all() as ProductRow[];
+    return { items: rows.map((r) => productView(r, currency.toUpperCase())) };
+  });
+
+  app.get('/v1/catalog/:productId', async (req, reply) => {
+    const { productId } = req.params as { productId: string };
+    const currency = z.string().length(3).catch('USD').parse((req.query as Record<string, string>).currency);
+    const row = db.prepare("SELECT * FROM products WHERE product_id = ? AND visibility = 'public'").get(productId) as
+      | ProductRow
+      | undefined;
+    if (!row) return fail(reply, 404, 'not_found', 'Product not found.');
+    return productView(row, currency.toUpperCase());
+  });
+
+  // ---------- development login (disabled unless ALLOW_DEV_LOGIN=true) ----------
+  if (cfg.allowDevLogin) {
+    const body = z.object({ email: z.string().email(), displayName: z.string().min(2).max(32) });
+    app.post('/v1/dev/login', async (req, reply) => {
+      const parsed = body.safeParse(req.body);
+      if (!parsed.success) return fail(reply, 400, 'bad_request', 'Provide a valid email and display name.');
+      const { email, displayName } = parsed.data;
+      const existing = db.prepare('SELECT user_id FROM accounts WHERE email = ?').get(email) as
+        | { user_id: string }
+        | undefined;
+      const userId = existing?.user_id ?? randomUUID();
+      if (!existing) {
+        db.prepare('INSERT INTO accounts (user_id, email, display_name) VALUES (?, ?, ?)').run(userId, email, displayName);
+      }
+      const accessToken = await signDevToken(cfg, { sub: userId, email, name: displayName });
+      return { accessToken, expiresInSeconds: 600, userId };
+    });
+  }
+
+  // ---------- signed-in ----------
+  app.get('/v1/me', { preHandler: requireUser }, async (req) => {
+    const row = db.prepare('SELECT user_id, email, email_verified, display_name FROM accounts WHERE user_id = ?').get(
+      req.user!.sub
+    ) as { user_id: string; email: string; email_verified: number; display_name: string };
+    return {
+      userId: row.user_id,
+      email: row.email,
+      emailVerified: !!row.email_verified,
+      displayName: row.display_name,
+    };
+  });
+
+  app.get('/v1/library', { preHandler: requireUser }, async (req) => {
+    const rows = db
+      .prepare(
+        `SELECT p.* FROM entitlements e JOIN products p ON p.product_id = e.product_id
+         WHERE e.user_id = ? AND e.revoked_at IS NULL ORDER BY e.granted_at`
+      )
+      .all(req.user!.sub) as ProductRow[];
+    return { items: rows.map((r) => productView(r, 'USD')) };
+  });
+
+  app.post('/v1/library/:productId/claim', { preHandler: requireUser }, async (req, reply) => {
+    const { productId } = req.params as { productId: string };
+    const exists = db.prepare("SELECT 1 FROM products WHERE product_id = ? AND visibility = 'public'").get(productId);
+    if (!exists) return fail(reply, 404, 'not_found', 'Product not found.');
+    // Paid products are granted by the payment webhook. Dev mode may claim anything for testing.
+    if (!isFree(productId) && !cfg.allowDevLogin) {
+      return fail(reply, 402, 'payment_required', 'This product must be purchased.');
+    }
+    if (!hasEntitlement(req.user!.sub, productId)) {
+      db.prepare('INSERT INTO entitlements (user_id, product_id, source) VALUES (?, ?, ?)').run(
+        req.user!.sub,
+        productId,
+        isFree(productId) ? 'free' : 'dev'
+      );
+    }
+    return { ok: true };
+  });
+
+  // Short-lived CDN access token: "<productId>.<expiresAtSeconds>.<hmac>"
+  app.post('/v1/products/:productId/download-token', { preHandler: requireUser }, async (req, reply) => {
+    const { productId } = req.params as { productId: string };
+    if (!hasEntitlement(req.user!.sub, productId)) return fail(reply, 403, 'not_entitled', 'You do not own this game.');
+    const expires = Math.floor(now() / 1000) + 600;
+    const payload = `${productId}.${expires}`;
+    const sig = createHmac('sha256', cfg.downloadKey).update(payload).digest('base64url');
+    return { token: `${payload}.${sig}`, expiresAt: expires * 1000 };
+  });
+
+  const ticketBody = z.object({
+    productId: z.string().min(1).max(64),
+    buildId: z.string().max(64).optional(),
+    platform: z.string().max(16).default('win64'),
+    deviceId: z.string().min(8).max(128),
+  });
+
+  app.post('/v1/launch-tickets', { preHandler: requireUser }, async (req, reply) => {
+    const parsed = ticketBody.safeParse(req.body);
+    if (!parsed.success) return fail(reply, 400, 'bad_request', 'productId and deviceId are required.');
+    const { productId, buildId, platform, deviceId } = parsed.data;
+    const user = req.user!;
+
+    if (!ticketLimiter.allow(user.sub)) return fail(reply, 429, 'rate_limited', 'Too many launch attempts. Wait a minute.');
+    if (!hasEntitlement(user.sub, productId)) return fail(reply, 403, 'not_entitled', 'You do not own this game.');
+    if (buildId) {
+      const blocked = db
+        .prepare('SELECT blocked FROM builds WHERE product_id = ? AND platform = ? AND build_id = ?')
+        .get(productId, platform, buildId) as { blocked: number } | undefined;
+      if (blocked?.blocked) return fail(reply, 403, 'build_blocked', 'This version is no longer allowed. Update the game.');
+    }
+
+    const account = db.prepare('SELECT display_name FROM accounts WHERE user_id = ?').get(user.sub) as {
+      display_name: string;
+    };
+    const issued = store.issue({ userId: user.sub, displayName: account.display_name, productId, deviceId });
+    db.prepare(
+      'INSERT INTO ticket_audit (ticket_hash, user_id, product_id, device_id, issued_at) VALUES (?, ?, ?, ?, ?)'
+    ).run(issued.ticketHash, user.sub, productId, deviceId, new Date(now()).toISOString());
+    return { ticket: issued.ticket, expiresAt: issued.expiresAt };
+  });
+
+  // ---------- internal: called by Nakama, never exposed publicly ----------
+  app.post('/internal/tickets/redeem', async (req, reply) => {
+    const header = req.headers.authorization ?? '';
+    const key = header.startsWith('Bearer ') ? header.slice(7) : '';
+    if (!key || !safeEqual(key, cfg.serviceKey)) return fail(reply, 401, 'auth_invalid', 'Service key required.');
+    const parsed = z.object({ ticket: z.string().min(20).max(128) }).safeParse(req.body);
+    if (!parsed.success) return fail(reply, 400, 'bad_request', 'ticket is required.');
+
+    const payload = store.redeem(parsed.data.ticket);
+    if (!payload) return fail(reply, 404, 'ticket_invalid', 'Ticket is invalid, used or expired.');
+
+    db.prepare('UPDATE ticket_audit SET redeemed_at = ? WHERE ticket_hash = ?').run(
+      new Date(now()).toISOString(),
+      TicketStore.hash(parsed.data.ticket)
+    );
+    // Re-check at redemption time: a refund or ban between issue and redeem must win.
+    const entitled = hasEntitlement(payload.userId, payload.productId);
+    const status = (db.prepare('SELECT status FROM accounts WHERE user_id = ?').get(payload.userId) as {
+      status: string;
+    }).status;
+    if (!entitled || status !== 'active') return fail(reply, 403, 'not_entitled', 'Access has been revoked.');
+    return { userId: payload.userId, displayName: payload.displayName, productId: payload.productId, entitled: true };
+  });
+
+  return app;
+}
