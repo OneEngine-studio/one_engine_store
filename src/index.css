@@ -169,6 +169,51 @@
   animation: modalScaleIn 200ms var(--ease-out) forwards;
 }
 
+/* ── Sign-in pop-up: card pops, crystals burst out of its edge, fields rise in ── */
+@keyframes authPop {
+  0% { opacity: 0; transform: translateY(18px) scale(0.93); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes authShardPop {
+  0% { opacity: 0; transform: translate(70px, 10px) scale(0.55) rotate(-8deg); }
+  100% { opacity: 1; transform: translate(0, 0) scale(1) rotate(0); }
+}
+@keyframes authFloat {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-9px); }
+}
+@keyframes authGlow {
+  0%, 100% { opacity: 0.75; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.06); }
+}
+@keyframes authTwinkle {
+  0%, 100% { opacity: 0.15; transform: scale(0.7); }
+  50% { opacity: 1; transform: scale(1); }
+}
+@keyframes authRise {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes authBackdrop {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+.auth-backdrop { animation: authBackdrop 220ms ease-out both; }
+.auth-pop { animation: authPop 440ms cubic-bezier(0.23, 1, 0.32, 1) both; }
+.auth-shard-pop { animation: authShardPop 620ms cubic-bezier(0.22, 1.2, 0.36, 1) 140ms both; }
+.auth-float { animation: authFloat 6s ease-in-out infinite; }
+.auth-float-slow { animation: authFloat 8.5s ease-in-out -2s infinite; }
+.auth-glow { animation: authGlow 4.5s ease-in-out infinite; transform-origin: center; }
+.auth-twinkle { animation: authTwinkle 3.2s ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
+.auth-parallax { transform: translate(calc(var(--px, 0) * 14px), calc(var(--py, 0) * 10px)); transition: transform 260ms var(--ease-out); }
+.auth-form > * { animation: authRise 420ms var(--ease-out) both; }
+.auth-form > *:nth-child(1) { animation-delay: 80ms; }
+.auth-form > *:nth-child(2) { animation-delay: 120ms; }
+.auth-form > *:nth-child(3) { animation-delay: 160ms; }
+.auth-form > *:nth-child(4) { animation-delay: 200ms; }
+.auth-form > *:nth-child(5) { animation-delay: 240ms; }
+.auth-form > *:nth-child(n+6) { animation-delay: 280ms; }
+
 /* ── Reduced motion compliance ─────────────────────────── */
 @media (prefers-reduced-motion: reduce) {
   *,

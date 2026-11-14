@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useStore } from '../store/useStore';
 import { X, LogOut, AlertCircle, Eye, EyeOff, MailCheck } from 'lucide-react';
 import { platformApi } from '../lib/platformApi';
@@ -7,30 +7,150 @@ type View = 'signin' | 'register' | 'forgot' | 'reset';
 type ServerStatus = 'CHECKING' | 'ONLINE' | 'OFFLINE';
 
 const inputClass =
-  'w-full px-3 py-2.5 rounded-input bg-bg-app border border-white/[0.1] focus:border-accent text-sm text-cream placeholder-slate-600 outline-none transition-surface select-text';
+  'w-full px-3.5 py-3 rounded-xl bg-white/[0.05] border border-white/[0.08] hover:border-white/[0.16] focus:border-accent focus:bg-white/[0.07] focus:shadow-[0_0_0_3px_rgba(187,59,59,0.22)] text-sm text-cream placeholder-slate-500 outline-none transition-surface select-text';
 const primaryButton =
-  'w-full h-11 rounded-full bg-accent hover:bg-accent-hover text-white text-sm font-bold transition-[background-color,transform] active:scale-[0.98] flex items-center justify-center gap-2 disabled:opacity-60 cursor-default';
+  'w-full h-12 rounded-xl bg-gradient-to-b from-[#CC4545] to-accent hover:from-[#D45050] hover:to-[#B13636] text-white text-sm font-bold tracking-wide shadow-glow transition-[filter,transform] active:scale-[0.98] flex items-center justify-center gap-2 disabled:opacity-60 cursor-default';
 const linkButton = 'text-slate-400 hover:text-cream cursor-default transition-colors';
 
-/** Brand mark for the sign-in panel. Purely decorative. */
-const SlotArt: React.FC = () => (
-  <svg viewBox="0 0 220 260" className="w-full h-auto" aria-hidden="true">
-    <g style={{ animation: 'softFadeIn 500ms cubic-bezier(0.23, 1, 0.32, 1) both' }}>
-      <rect x="46" y="46" width="128" height="128" rx="32" fill="#BB3B3B" />
-      <rect x="46" y="46" width="128" height="128" rx="32" fill="url(#shine)" />
-      <path d="M84 92h52M84 110h52M84 128h30" stroke="#FFFFFF" strokeWidth="9" strokeLinecap="round" />
-    </g>
-    <rect x="70" y="208" width="80" height="6" rx="3" fill="rgba(255,255,255,0.14)" />
-    <rect x="90" y="224" width="40" height="4" rx="2" fill="rgba(255,255,255,0.08)" />
-    <defs>
-      <linearGradient id="shine" x1="0" y1="0" x2="1" y2="1">
-        <stop offset="0" stopColor="#fff" stopOpacity="0.5" />
-        <stop offset="0.6" stopColor="#fff" stopOpacity="0" />
-        <stop offset="1" stopColor="#000" stopOpacity="0.12" />
-      </linearGradient>
-    </defs>
-  </svg>
+const SPARKS: Array<[number, number, number, number]> = [
+  [96, 150, 3, 0],
+  [318, 120, 2.4, 0.9],
+  [330, 300, 3.2, 1.7],
+  [78, 330, 2.2, 2.3],
+  [250, 70, 2, 1.2],
+  [150, 420, 2.6, 0.5],
+];
+
+/** Hero art for the sign-in card: a glowing crystal over a red orb, with a pointer parallax. Purely decorative. */
+const HeroArt: React.FC = () => {
+  const ref = useRef<HTMLDivElement>(null);
+  const onMove = (e: React.MouseEvent) => {
+    const el = ref.current;
+    if (!el) return;
+    const r = el.getBoundingClientRect();
+    el.style.setProperty('--px', String(((e.clientX - r.left) / r.width - 0.5) * 2));
+    el.style.setProperty('--py', String(((e.clientY - r.top) / r.height - 0.5) * 2));
+  };
+  const onLeave = () => {
+    ref.current?.style.setProperty('--px', '0');
+    ref.current?.style.setProperty('--py', '0');
+  };
+  return (
+    <div ref={ref} onMouseMove={onMove} onMouseLeave={onLeave} className="absolute inset-0 overflow-hidden" aria-hidden="true">
+      <div className="absolute inset-0 bg-[radial-gradient(120%_80%_at_50%_30%,#5A1C20_0%,#2A1012_55%,#0B0405_100%)]" />
+      <div className="auth-parallax absolute inset-0">
+        <svg viewBox="0 0 400 560" preserveAspectRatio="xMidYMid slice" className="w-full h-full">
+          <defs>
+            <radialGradient id="auth-orb" cx="50%" cy="50%" r="50%">
+              <stop offset="0" stopColor="#E25A5A" stopOpacity="0.85" />
+              <stop offset="0.45" stopColor="#BB3B3B" stopOpacity="0.35" />
+              <stop offset="1" stopColor="#BB3B3B" stopOpacity="0" />
+            </radialGradient>
+            <linearGradient id="auth-gem-a" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0" stopColor="#FF8A8A" />
+              <stop offset="1" stopColor="#BB3B3B" />
+            </linearGradient>
+            <linearGradient id="auth-gem-b" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0" stopColor="#9C2B31" />
+              <stop offset="1" stopColor="#4A1217" />
+            </linearGradient>
+          </defs>
+          <circle className="auth-glow" cx="200" cy="230" r="190" fill="url(#auth-orb)" />
+          <g className="auth-float-slow" opacity="0.9">
+            <polygon points="70,250 98,196 120,262" fill="url(#auth-gem-b)" />
+            <polygon points="98,196 120,262 112,228" fill="#E25A5A" opacity="0.55" />
+            <polygon points="318,330 346,268 362,344" fill="url(#auth-gem-b)" />
+            <polygon points="346,268 362,344 352,300" fill="#E25A5A" opacity="0.5" />
+          </g>
+          <g className="auth-float">
+            <polygon points="120,170 200,110 200,200" fill="#7A1F25" />
+            <polygon points="200,110 280,170 200,200" fill="url(#auth-gem-a)" />
+            <polygon points="120,170 200,200 138,290" fill="#5A141A" />
+            <polygon points="280,170 262,290 200,200" fill="#BB3B3B" />
+            <polygon points="138,290 200,200 200,350" fill="#8E2A30" />
+            <polygon points="262,290 200,350 200,200" fill="#A53232" />
+            <path d="M120 170 200 110 280 170 262 290 200 350 138 290Z M200 110v90M120 170l80 30 80-30M138 290l62-90 62 90" fill="none" stroke="#fff" strokeOpacity="0.28" strokeWidth="1.2" strokeLinejoin="round" />
+            <polygon points="200,110 232,134 200,152 168,134" fill="#fff" opacity="0.22" />
+          </g>
+          {SPARKS.map(([x, y, r, d]) => (
+            <path
+              key={x}
+              className="auth-twinkle"
+              style={{ animationDelay: `${d}s` }}
+              d={`M${x} ${y - r * 3}L${x + r} ${y - r}L${x + r * 3} ${y}L${x + r} ${y + r}L${x} ${y + r * 3}L${x - r} ${y + r}L${x - r * 3} ${y}L${x - r} ${y - r}Z`}
+              fill="#fff"
+            />
+          ))}
+        </svg>
+      </div>
+      <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-[#0B0405] via-[#0B0405]/60 to-transparent" />
+    </div>
+  );
+};
+
+/** Crystals that burst out of the card's left edge and a paint splash behind its corner. */
+const PopOuts: React.FC = () => (
+  <>
+    <svg
+      viewBox="0 0 170 230"
+      className="hidden md:block absolute -left-[58px] top-[14%] w-[140px] h-auto z-20 pointer-events-none auth-shard-pop drop-shadow-[0_12px_24px_rgba(187,59,59,0.35)]"
+      aria-hidden="true"
+    >
+      <defs>
+        <linearGradient id="auth-shard-a" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stopColor="#FF8A8A" />
+          <stop offset="1" stopColor="#BB3B3B" />
+        </linearGradient>
+        <linearGradient id="auth-shard-b" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stopColor="#D24A4A" />
+          <stop offset="1" stopColor="#5A141A" />
+        </linearGradient>
+      </defs>
+      <g className="auth-float">
+        <polygon points="4,96 112,18 150,120 70,148" fill="url(#auth-shard-b)" />
+        <polygon points="112,18 150,120 70,148" fill="url(#auth-shard-a)" opacity="0.8" />
+        <polygon points="4,96 70,148 30,176" fill="#7A1F25" />
+        <path d="M4 96 112 18M70 148 150 120" stroke="#fff" strokeOpacity="0.3" strokeWidth="1.2" />
+      </g>
+      <g className="auth-float-slow">
+        <polygon points="40,176 96,150 112,212 60,226" fill="url(#auth-shard-b)" />
+        <polygon points="96,150 112,212 78,196" fill="#E25A5A" opacity="0.7" />
+      </g>
+    </svg>
+    <svg
+      viewBox="0 0 220 180"
+      className="hidden md:block absolute -right-[46px] -bottom-[34px] w-[200px] h-auto pointer-events-none auth-pop"
+      aria-hidden="true"
+    >
+      <path
+        d="M30 120c-20-30 6-70 40-68 14-26 58-30 80-8 28-4 56 22 46 52 12 24-6 52-38 50-20 18-62 18-82-2-24 6-44-6-46-24z"
+        fill="#BB3B3B"
+        opacity="0.55"
+      />
+    </svg>
+  </>
 );
+
+const strengthOf = (p: string) => {
+  let n = 0;
+  if (p.length >= 8) n++;
+  if (p.length >= 12) n++;
+  if (/[a-z]/.test(p) && /[A-Z]/.test(p)) n++;
+  if (/\d/.test(p) && /[^A-Za-z0-9]/.test(p)) n++;
+  return p ? Math.max(1, n) : 0;
+};
+
+const StrengthMeter: React.FC<{ value: string }> = ({ value }) => {
+  const n = strengthOf(value);
+  const tone = n <= 1 ? 'bg-danger' : n === 2 ? 'bg-warning' : 'bg-success';
+  return (
+    <div className="flex gap-1 mt-2" aria-hidden="true">
+      {[1, 2, 3, 4].map((i) => (
+        <span key={i} className={`h-1 flex-1 rounded-full transition-colors duration-300 ${i <= n ? tone : 'bg-white/[0.1]'}`} />
+      ))}
+    </div>
+  );
+};
 
 const Field: React.FC<{ id: string; label: string; children: React.ReactNode; hint?: string }> = ({ id, label, children, hint }) => (
   <div>
@@ -272,7 +392,8 @@ export const AuthModal: React.FC = () => {
     autoComplete: string,
     hint?: string,
     value = password,
-    setValue: (v: string) => void = setPassword
+    setValue: (v: string) => void = setPassword,
+    meter = false
   ) => (
     <Field id={id} label={label} hint={hint}>
       <div className="relative">
@@ -295,6 +416,7 @@ export const AuthModal: React.FC = () => {
           {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
         </button>
       </div>
+      {meter && <StrengthMeter value={value} />}
     </Field>
   );
 
@@ -307,7 +429,7 @@ export const AuthModal: React.FC = () => {
         onChange={(e) => setEmail(e.target.value)}
         placeholder="you@example.com"
         autoComplete="email"
-        autoFocus={!readOnly}
+        autoFocus={!readOnly && view !== 'register'}
         readOnly={readOnly}
         className={inputClass}
         required
@@ -344,9 +466,24 @@ export const AuthModal: React.FC = () => {
           ? 'Reset your password'
           : 'Choose a new password';
 
+  const heroTitle = needsVerification
+    ? 'Almost there.'
+    : view === 'signin'
+      ? 'Welcome back.'
+      : view === 'register'
+        ? 'Join us and enjoy.'
+        : "Let's get you in.";
+  const heroText = needsVerification
+    ? 'One quick code and your library is ready.'
+    : view === 'register'
+      ? 'Create an account to sync your library and launch games.'
+      : view === 'signin'
+        ? 'Sign in to sync your library and launch games with your account.'
+        : 'We will email you a short code to set a new password.';
+
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 p-4 select-none"
+      className="auth-backdrop fixed inset-0 z-50 flex items-center justify-center bg-[radial-gradient(70%_60%_at_50%_45%,rgba(120,28,34,0.45),rgba(0,0,0,0.82))] backdrop-blur-[3px] p-4 select-none"
       onClick={closeAuthModal}
     >
       {signedIn && !needsVerification ? (
@@ -425,20 +562,20 @@ export const AuthModal: React.FC = () => {
           aria-modal="true"
           aria-labelledby="auth-title"
           onClick={(e) => e.stopPropagation()}
-          className="relative w-full max-w-3xl grid md:grid-cols-[270px_1fr] rounded-panel overflow-hidden bg-bg-panel border border-white/[0.08] shadow-modal animate-modal-in"
+          className="relative w-full max-w-[880px] auth-pop"
         >
+          <PopOuts />
+          <div className="relative z-10 grid md:grid-cols-[1fr_1fr] rounded-[28px] overflow-hidden bg-[#1A0A0B] border border-white/[0.08] shadow-modal">
           {closeButton}
-          <aside className="hidden md:flex flex-col justify-between p-7 bg-bg-app border-r border-white/[0.06]">
-            <div>
-              <p className="font-display text-3xl font-extrabold text-cream leading-[1.05]">Welcome.</p>
-              <p className="text-xs text-slate-400 mt-2 leading-relaxed">
-                Sign in to sync your library and launch Railbound with your account.
-              </p>
+          <aside className="hidden md:block relative min-h-[520px] border-r border-white/[0.06]">
+            <HeroArt />
+            <div className="absolute inset-x-0 bottom-0 p-8">
+              <p className="font-display text-[34px] text-white leading-[1.05]">{heroTitle}</p>
+              <p className="text-sm text-slate-300 mt-2 leading-relaxed max-w-[260px]">{heroText}</p>
             </div>
-            <SlotArt />
           </aside>
 
-          <form onSubmit={handleSubmit} className="p-7 space-y-5" noValidate>
+          <form key={needsVerification ? 'verify' : view} onSubmit={handleSubmit} className="auth-form p-8 space-y-5 self-center" noValidate>
             {!needsVerification && (view === 'signin' || view === 'register') ? (
               <div role="tablist" className="flex gap-6 border-b border-white/[0.08]">
                 {(
@@ -510,7 +647,7 @@ export const AuthModal: React.FC = () => {
                     />
                   </Field>
                   {emailField()}
-                  {passwordField('auth-password', 'Password', 'new-password', 'At least 8 characters.')}
+                  {passwordField('auth-password', 'Password', 'new-password', 'At least 8 characters.', password, setPassword, true)}
                   {passwordField('auth-confirm', 'Confirm password', 'new-password', undefined, confirmPassword, setConfirmPassword)}
                 </>
               ) : view === 'forgot' ? (
@@ -519,7 +656,7 @@ export const AuthModal: React.FC = () => {
                 <>
                   {emailField(true)}
                   {codeField}
-                  {passwordField('auth-password', 'New password', 'new-password', 'At least 8 characters.')}
+                  {passwordField('auth-password', 'New password', 'new-password', 'At least 8 characters.', password, setPassword, true)}
                   {passwordField('auth-confirm', 'Confirm new password', 'new-password', undefined, confirmPassword, setConfirmPassword)}
                 </>
               )}
@@ -552,7 +689,7 @@ export const AuthModal: React.FC = () => {
                   <span className="h-px flex-1 bg-white/[0.08]" />
                 </div>
                 {googleBusy ? (
-                  <div className="flex items-center justify-between gap-3 rounded-full border border-white/[0.1] px-4 h-11 text-xs text-slate-300">
+                  <div className="flex items-center justify-between gap-3 rounded-xl border border-white/[0.1] px-4 h-12 text-xs text-slate-300">
                     <span className="flex items-center gap-2.5">
                       <span className="w-4 h-4 border-2 border-accent border-t-transparent rounded-full animate-spin" />
                       Finish signing in with Google in your browser…
@@ -566,7 +703,7 @@ export const AuthModal: React.FC = () => {
                     type="button"
                     onClick={handleGoogle}
                     disabled={loading}
-                    className="w-full h-11 rounded-full bg-white text-[#1f1f1f] hover:bg-slate-100 font-semibold text-sm flex items-center justify-center gap-2.5 transition-surface active:scale-[0.99] disabled:opacity-60 cursor-default"
+                    className="w-full h-12 rounded-xl bg-white text-[#1f1f1f] hover:bg-slate-100 font-semibold text-sm flex items-center justify-center gap-2.5 transition-surface active:scale-[0.99] disabled:opacity-60 cursor-default"
                   >
                     <svg viewBox="0 0 48 48" className="w-[18px] h-[18px]" aria-hidden="true">
                       <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z" />
@@ -632,6 +769,7 @@ export const AuthModal: React.FC = () => {
               </div>
             )}
           </form>
+          </div>
         </div>
       )}
     </div>
