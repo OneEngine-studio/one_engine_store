@@ -21,8 +21,8 @@ namespace OneEngine.Integration
     {
         [Header("Nakama")]
         [SerializeField] private string nakamaScheme = "https";
-        [SerializeField] private string nakamaHost = "127.0.0.1";
-        [SerializeField] private int nakamaPort = 7350;
+        [SerializeField] private string nakamaHost = "restapinakama.kushanherath.me";
+        [SerializeField] private int nakamaPort = 443;
         [Tooltip("Change before any public build. Must match the server's socket.server_key.")]
         [SerializeField] private string nakamaServerKey = "defaultkey";
 
