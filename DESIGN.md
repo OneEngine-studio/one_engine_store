@@ -52,7 +52,7 @@ Configured in `tailwind.config.js` and `src/index.css`.
 ### Typography
 
 - **Font family:** Poppins (self-hosted via `@fontsource/poppins`, weights 400/500/600/700), falling back to Segoe UI.
-- **Display face:** Poppins as well (`font-display`), bold for page headings and game titles.
+- **Display face:** chunky rounded `font-display` for page headings, game titles, section heads and big numbers: Grobold if it is installed (licence needed for commercial use, not bundled), otherwise Titan One (SIL Open Font Licence, self-hosted via `@fontsource/titan-one`). One weight only, `font-synthesis: none` so it is never faux-bolded.
 - **Numbers:** `tabular-nums` on all prices, file sizes, download speeds, percentages, and timestamps.
 - **Casing:** Sentence case everywhere. Never uppercase for game titles or section headers.
 

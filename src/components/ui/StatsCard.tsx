@@ -23,7 +23,7 @@ export const StatsCard: React.FC<StatsCardProps> = ({ title, total, totalLabel, 
   const shown = Math.max(0.04, Math.min(1, fill));
   return (
     <section className="rounded-card bg-bg-card border border-white/[0.06] shadow-card p-6 flex flex-col">
-      <h2 className="text-base font-semibold text-cream">{title}</h2>
+      <h2 className="font-display text-lg text-cream">{title}</h2>
       <div className="relative mx-auto my-5 w-[180px] h-[180px]">
         <svg viewBox="0 0 180 180" className="w-full h-full -rotate-90" aria-hidden="true">
           <defs>
@@ -48,7 +48,7 @@ export const StatsCard: React.FC<StatsCardProps> = ({ title, total, totalLabel, 
         </svg>
         <div className="absolute inset-[26px] rounded-full bg-[#2A1113] flex flex-col items-center justify-center text-center">
           <span className="text-[10px] text-slate-400">{totalLabel}</span>
-          <span className="text-2xl font-bold text-cream tabular-nums tracking-tight">{total}</span>
+          <span className="font-display text-3xl text-cream tabular-nums">{total}</span>
         </div>
       </div>
       <div className="grid grid-cols-3 gap-2 mt-auto">

@@ -181,7 +181,8 @@
 }
 
 /* ── Type and detail helpers ───────────────────────────── */
-.font-display { font-family: 'Poppins', 'Segoe UI', sans-serif; }
+/* Chunky display face for headings and big numbers. One weight only, so never let the browser fake bold. */
+.font-display { font-family: 'Grobold', 'Titan One', 'Poppins', sans-serif; font-synthesis: none; font-weight: 400; letter-spacing: 0.005em; }
 
 .blueprint-grid {
   background-image: radial-gradient(rgba(255, 255, 255, 0.035) 1px, transparent 1px);

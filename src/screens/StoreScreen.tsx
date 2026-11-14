@@ -118,11 +118,11 @@ export const StoreScreen: React.FC = () => {
                   <span className="mt-5 inline-flex items-center gap-1.5 h-7 px-3 rounded-full bg-white text-[#361518] text-xs font-semibold">
                     <Flame className="w-3.5 h-3.5 text-accent" /> Popular
                   </span>
-                  <h1 className="mt-3 text-4xl font-bold tracking-tight text-cream leading-tight">{spotlight.title}</h1>
+                  <h1 className="mt-3 font-display text-[40px] text-cream leading-[1.05]">{spotlight.title}</h1>
                   <p className="mt-2 text-sm text-slate-300 leading-relaxed line-clamp-3">{spotlight.description || spotlight.tagline}</p>
                 </>
               ) : (
-                <h1 className="mt-4 text-4xl font-bold tracking-tight text-cream">Welcome to OneEngine</h1>
+                <h1 className="mt-4 font-display text-[40px] text-cream">Welcome to OneEngine</h1>
               )}
             </div>
             {spotlight && (
@@ -164,7 +164,7 @@ export const StoreScreen: React.FC = () => {
       {/* Play timeline */}
       {timeline.length > 0 && (
         <section className="space-y-6">
-          <h2 className="text-xl font-semibold text-cream text-center">Your play timeline</h2>
+          <h2 className="font-display text-2xl text-cream text-center">Your play timeline</h2>
           <Timeline
             head={<Clock className="w-5 h-5" />}
             headLabel="Most played"
@@ -183,7 +183,7 @@ export const StoreScreen: React.FC = () => {
       {onBench.length > 0 && (
         <section className="space-y-5">
           <div className="flex items-center justify-between">
-            <h2 className="text-xl font-semibold text-cream">On the bench</h2>
+            <h2 className="font-display text-2xl text-cream">On the bench</h2>
             <button onClick={() => navigate('library')} className="text-xs text-slate-400 hover:text-white flex items-center gap-1 cursor-default">
               Open library <ChevronRight className="w-4 h-4" />
             </button>
@@ -198,7 +198,7 @@ export const StoreScreen: React.FC = () => {
       <section className="space-y-5">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
-            <h2 className="text-xl font-semibold text-cream">{mood.id === 'all' ? 'New games' : `${mood.label} picks`}</h2>
+            <h2 className="font-display text-2xl text-cream">{mood.id === 'all' ? 'New games' : `${mood.label} picks`}</h2>
             <p className="text-xs text-slate-400 mt-0.5">
               {moodFallback ? `Nothing tagged ${mood.label.toLowerCase()} yet, showing everything` : MOODS[moodIndex].hint}
             </p>
