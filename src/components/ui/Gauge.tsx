@@ -22,9 +22,9 @@ export const Gauge: React.FC<GaugeProps> = ({ value, label, readout, sub, icon, 
     >
       <svg viewBox="0 0 80 80" className="w-[76px] h-[76px] shrink-0">
         <g transform="rotate(135 40 40)">
-          <circle cx="40" cy="40" r={r} fill="none" stroke="rgba(242,232,213,0.1)" strokeWidth="6" strokeLinecap="round"
+          <circle cx="40" cy="40" r={r} fill="none" stroke="rgba(255,255,255,0.1)" strokeWidth="6" strokeLinecap="round"
             strokeDasharray={`${arc} 999`} />
-          <circle cx="40" cy="40" r={r} fill="none" stroke="#FF7A00" strokeWidth="6" strokeLinecap="round"
+          <circle cx="40" cy="40" r={r} fill="none" stroke="#FFFFFF" strokeWidth="6" strokeLinecap="round"
             strokeDasharray={`${(arc * v) / 100} 999`}
             style={{ transition: 'stroke-dasharray 900ms cubic-bezier(0.16,1,0.3,1)' }} />
         </g>
@@ -34,14 +34,14 @@ export const Gauge: React.FC<GaugeProps> = ({ value, label, readout, sub, icon, 
           return (
             <line key={i} x1={40 + Math.cos(a) * 21} y1={40 + Math.sin(a) * 21}
               x2={40 + Math.cos(a) * 24} y2={40 + Math.sin(a) * 24}
-              stroke="rgba(242,232,213,0.3)" strokeWidth="1" />
+              stroke="rgba(255,255,255,0.3)" strokeWidth="1" />
           );
         })}
         {/* needle */}
         <g style={{ transformOrigin: '40px 40px', transform: `rotate(${-135 + v * 2.7}deg)`, transition: 'transform 900ms cubic-bezier(0.34,1.56,0.64,1)' }}>
-          <line x1="40" y1="40" x2="40" y2="20" stroke="#F2E8D5" strokeWidth="2" strokeLinecap="round" />
+          <line x1="40" y1="40" x2="40" y2="20" stroke="#F5F5F5" strokeWidth="2" strokeLinecap="round" />
         </g>
-        <circle cx="40" cy="40" r="4" fill="#C9A24B" />
+        <circle cx="40" cy="40" r="4" fill="#A3A3A3" />
       </svg>
       <div className="min-w-0">
         <div className="flex items-center gap-1.5 engine-label">

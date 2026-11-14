@@ -120,7 +120,7 @@ export const WindowFrame: React.FC = () => {
           >
             <Bell className="w-3.5 h-3.5" strokeWidth={1.75} />
             {unreadNotifsCount > 0 && (
-              <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-accent ring-2 ring-bg-app shadow-[0_0_8px_rgba(255,122,0,0.5)]" />
+              <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-accent ring-2 ring-bg-app shadow-[0_0_8px_rgba(255,255,255,0.45)]" />
             )}
           </button>
 

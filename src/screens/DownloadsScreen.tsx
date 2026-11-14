@@ -205,12 +205,12 @@ export const DownloadsScreen: React.FC = () => {
                 <svg viewBox={`0 0 ${svgWidth} ${svgHeight}`} className="w-full h-full" preserveAspectRatio="none">
                   <defs>
                     <linearGradient id="downloadSpeedGrad" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="#FF7A00" stopOpacity="0.28" />
-                      <stop offset="100%" stopColor="#FF7A00" stopOpacity="0.0" />
+                      <stop offset="0%" stopColor="#FFFFFF" stopOpacity="0.28" />
+                      <stop offset="100%" stopColor="#FFFFFF" stopOpacity="0.0" />
                     </linearGradient>
                   </defs>
                   <path d={pathD} fill="url(#downloadSpeedGrad)" />
-                  <path d={lineD} fill="none" stroke="#FF7A00" strokeWidth="2" />
+                  <path d={lineD} fill="none" stroke="#FFFFFF" strokeWidth="2" />
                 </svg>
               </div>
 
@@ -276,7 +276,7 @@ export const DownloadsScreen: React.FC = () => {
                     className="h-full rounded-full"
                     style={{
                       width: `${(g.installSizeGb / Math.max(installedGb, 0.01)) * 100}%`,
-                      background: i === 0 ? '#FF7A00' : i === 1 ? '#C9A24B' : '#78716c',
+                      background: i === 0 ? '#FFFFFF' : i === 1 ? '#A3A3A3' : '#525252',
                     }}
                     title={`${g.title}: ${g.installSizeGb} GB`}
                   />
@@ -289,7 +289,7 @@ export const DownloadsScreen: React.FC = () => {
                   <li key={g.id} className="flex items-center gap-2">
                     <span
                       className="w-2.5 h-2.5 rounded-full shrink-0"
-                      style={{ background: i === 0 ? '#FF7A00' : i === 1 ? '#C9A24B' : '#78716c' }}
+                      style={{ background: i === 0 ? '#FFFFFF' : i === 1 ? '#A3A3A3' : '#525252' }}
                     />
                     <span className="truncate">{g.title}</span>
                     <span className="ml-auto tabular-nums text-slate-300">{g.installSizeGb} GB</span>

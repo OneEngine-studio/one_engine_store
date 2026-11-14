@@ -4,8 +4,9 @@
 
 @layer base {
   :root {
-    --ambient-tint: rgba(255, 122, 0, 0.09);
-    --ambient-spot: rgba(255, 122, 0, 0.12);
+    --ambient-tint: rgba(255, 255, 255, 0.02);
+    --ambient-spot: rgba(255, 255, 255, 0.05);
+    --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
   }
 
   * {
@@ -13,10 +14,11 @@
   }
 
   body {
-    background-color: #0C0A08;
-    color: #F8FAFC;
+    background-color: #050505;
+    color: #FAFAFA;
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     font-feature-settings: "cv11", "ss01";
+    -webkit-font-smoothing: antialiased;
     user-select: none;
     overflow: hidden;
   }
@@ -60,52 +62,51 @@
   background: rgba(255, 255, 255, 0.28);
 }
 
-/* ── Surfaces: solid warm panels, depth from tone and a soft drop shadow ── */
+/* ── Surfaces: solid neutral panels, depth from tone and a soft drop shadow ── */
 .win11-acrylic {
-  background-color: #1a1612;
-  border: 1px solid rgba(242, 232, 213, 0.1);
+  background-color: #111111;
+  border: 1px solid rgba(255, 255, 255, 0.1);
   box-shadow: 0 24px 60px rgba(0, 0, 0, 0.6);
 }
 
 .win11-popover {
-  background-color: #1d1914;
-  border: 1px solid rgba(242, 232, 213, 0.12);
+  background-color: #141414;
+  border: 1px solid rgba(255, 255, 255, 0.12);
   box-shadow: 0 18px 40px rgba(0, 0, 0, 0.55);
   border-radius: 18px;
 }
 
 .win11-tile,
 .win11-card {
-  background-color: #1d1914;
-  border: 1px solid rgba(242, 232, 213, 0.08);
+  background-color: #141414;
+  border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 16px;
-  transition: background-color 0.18s cubic-bezier(0.23, 1, 0.32, 1),
-    border-color 0.18s cubic-bezier(0.23, 1, 0.32, 1);
+  transition: background-color 0.2s var(--ease-out), border-color 0.2s var(--ease-out);
 }
 
 @media (hover: hover) and (pointer: fine) {
   .win11-tile:hover,
   .win11-card:hover {
-    background-color: #241f19;
-    border-color: rgba(242, 232, 213, 0.18);
+    background-color: #1A1A1A;
+    border-color: rgba(255, 255, 255, 0.2);
   }
 }
 
 .win11-tile-active {
-  background-color: rgba(255, 122, 0, 0.12) !important;
-  border-color: rgba(255, 122, 0, 0.6) !important;
+  background-color: rgba(255, 255, 255, 0.08) !important;
+  border-color: rgba(255, 255, 255, 0.55) !important;
   border-radius: 16px !important;
 }
 
 .win11-dock {
-  background-color: #1a1612;
-  border: 1px solid rgba(242, 232, 213, 0.12);
+  background-color: #111111;
+  border: 1px solid rgba(255, 255, 255, 0.12);
   box-shadow: 0 16px 36px rgba(0, 0, 0, 0.6);
 }
 
-/* ── Focus-visible 2px accent ring ─────────────────────── */
+/* ── Focus-visible 2px white ring ──────────────────────── */
 :focus-visible {
-  outline: 2px solid #FF7A00 !important;
+  outline: 2px solid rgba(255, 255, 255, 0.9) !important;
   outline-offset: 2px !important;
 }
 
@@ -113,8 +114,8 @@
 .panel-ambient-glow {
   background-image: radial-gradient(
     ellipse 85% 55% at 50% -10%,
-    var(--ambient-spot, rgba(255, 122, 0, 0.11)) 0%,
-    var(--ambient-tint, rgba(255, 122, 0, 0.04)) 45%,
+    var(--ambient-spot, rgba(255, 255, 255, 0.05)) 0%,
+    var(--ambient-tint, rgba(255, 255, 255, 0.02)) 45%,
     transparent 75%
   );
   pointer-events: none;
@@ -124,7 +125,7 @@
 @keyframes softFadeIn {
   from {
     opacity: 0;
-    transform: translateY(3px);
+    transform: translateY(6px);
   }
   to {
     opacity: 1;
@@ -133,14 +134,30 @@
 }
 
 .animate-soft-enter {
-  animation: softFadeIn 160ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation: softFadeIn 260ms var(--ease-out) both;
+}
+
+/* ── Screen change: content eases in, never snaps ──────── */
+@keyframes screenIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-screen-in {
+  animation: screenIn 240ms var(--ease-out) both;
 }
 
 /* ── Modal transition ──────────────────────────────────── */
 @keyframes modalScaleIn {
   0% {
     opacity: 0;
-    transform: scale(0.98);
+    transform: scale(0.97);
   }
   100% {
     opacity: 1;
@@ -150,7 +167,7 @@
 
 .animate-modal-in {
   opacity: 1;
-  animation: modalScaleIn 160ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation: modalScaleIn 200ms var(--ease-out) forwards;
 }
 
 /* ── Reduced motion compliance ─────────────────────────── */
@@ -164,20 +181,13 @@
   }
 }
 
-/* ── Workshop system ───────────────────────────────────── */
+/* ── Type and detail helpers ───────────────────────────── */
 .font-display { font-family: 'Bricolage Grotesque Variable', 'Inter', sans-serif; }
 
 .blueprint-grid {
-  background-image: radial-gradient(rgba(242, 232, 213, 0.07) 1px, transparent 1px);
+  background-image: radial-gradient(rgba(255, 255, 255, 0.06) 1px, transparent 1px);
   background-size: 22px 22px;
   pointer-events: none;
-}
-
-.shelf-plank {
-  height: 14px;
-  border-radius: 4px;
-  background: linear-gradient(180deg, #3a2e22 0%, #261e15 60%, #17120c 100%);
-  box-shadow: 0 10px 18px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 220, 170, 0.18);
 }
 
 .engine-label {
@@ -185,17 +195,12 @@
   letter-spacing: 0.16em;
   text-transform: uppercase;
   font-weight: 600;
-  color: rgba(242, 232, 213, 0.5);
+  color: rgba(255, 255, 255, 0.5);
 }
 
 
 @keyframes ledPulse { 0%,100% { opacity: 1; } 50% { opacity: 0.35; } }
 .led-pulse { animation: ledPulse 1.4s ease-in-out infinite; }
-
-@keyframes cartDrop {
-  from { transform: translateY(-26px); opacity: 0; }
-  to { transform: translateY(0); opacity: 1; }
-}
 
 /* scroll containers that never need a visible scrollbar */
 .no-scrollbar { scrollbar-width: none; }

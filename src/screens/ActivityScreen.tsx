@@ -39,8 +39,8 @@ export const ActivityScreen: React.FC = () => {
 
       {top && (
         <PromoBanner
-          text={top.installed ? (top.playHours > 0 ? `Back to ${top.title}? You have ${top.playHours}h in it.` : `${top.title} is ready when you are.`) : `${top.title} is waiting on your shelf.`}
-          action={top.installed ? 'Insert & play' : 'Open page'}
+          text={top.installed ? (top.playHours > 0 ? `Back to ${top.title}? You have ${top.playHours}h in it.` : `${top.title} is ready when you are.`) : `${top.title} is waiting in your library.`}
+          action={top.installed ? 'Play' : 'Open page'}
           onAction={() => (top.installed ? launchGame(top.id) : navigate('game-detail', top.id))}
         />
       )}

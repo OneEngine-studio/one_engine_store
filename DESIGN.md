@@ -6,11 +6,11 @@
 
 ## 1. Principles
 
-**Soft, premium, hand-crafted, calm depth.**
+**Black and white, quiet, precise, calm depth.**
 
-1. **Floating surfaces & calm depth:** The window background sits as the deepest layer (`#0C0A08`). The primary content lives inside an inset, floating panel (`#15120F`) with generous 24px rounded corners and a 1px specular inner border (`rgba(255,255,255,0.06)`).
+1. **Floating surfaces & calm depth:** The window background sits as the deepest layer (`#050505`). The primary content lives inside an inset, floating panel (`#0D0D0D`) with generous 24px rounded corners and a 1px specular inner border (`rgba(255,255,255,0.06)`).
 2. **Radius hierarchy over monotony:** Never apply one universal radius. Outer containers dictate inner container radii (`R_inner = R_outer - padding`).
-3. **Restrained color & functional ambient tint:** Warm charcoal base. Orange brand accent (`#FF7A00`) reserved exclusively for primary actions, active state indicators, and focus rings. Dynamic ambient tinting (8–14% opacity radial gradient) extracts key colors from active game artwork to provide subtle atmosphere.
+3. **Restrained color & functional ambient tint:** Pure neutral black, white and grey. White (`#FFFFFF`) is the accent and is reserved for primary actions, active state indicators, and focus rings. The only colour in the interface is functional status: green for running or online, amber for warnings, red for errors and destructive actions. The ambient glow behind the panel is a fixed 2–5% white wash, the same for every game and view.
 4. **Sentence case & human copy:** All headings, labels, tags, and settings use natural sentence case. Game titles are shown as published—never forced into uppercase blocks.
 
 ---
@@ -32,10 +32,10 @@ Configured in `tailwind.config.js` and `src/index.css`.
 
 | Layer | Token / Hex | Usage |
 |---|---|---|
-| Window Base (darkest) | `bg-app` (`#0C0A08`) | Shell window background visible around inset panel |
-| Floating Main Panel | `bg-panel` (`#15120F`) | Inset floating surface with 24px radius and 1px inner border |
-| Card & Tile Layer | `bg-card` (`#1D1914`) | Flat content cards, separated by tone rather than harsh borders |
-| Card Elevated / Hover | `bg-card-hover` (`#262019`) | Hover state for interactive cards and list rows |
+| Window Base (darkest) | `bg-app` (`#050505`) | Shell window background visible around inset panel |
+| Floating Main Panel | `bg-panel` (`#0D0D0D`) | Inset floating surface with 24px radius and 1px inner border |
+| Card & Tile Layer | `bg-card` (`#141414`) | Flat content cards, separated by tone rather than harsh borders |
+| Card Elevated / Hover | `tech-elevated` (`#1C1C1C`) | Hover state for interactive cards and list rows |
 | Generic Hover Surface | `bg-hover` (`rgba(255,255,255,0.06)`) | Button hover, icon hover, subtle list hover |
 | Pressed / Active Surface | `bg-pressed` (`rgba(255,255,255,0.10)`) | Active button press, selected segmented tab |
 | Modal Scrim | `bg-overlay` (`rgba(0,0,0,0.72)`) | Backdrop overlay paired with `backdrop-blur-md` |
@@ -47,12 +47,12 @@ Configured in `tailwind.config.js` and `src/index.css`.
 | `border-subtle` | `rgba(255,255,255,0.06)` | Floating panel inner border, card borders, dividers |
 | `border-default` | `rgba(255,255,255,0.10)` | Interactive inputs, segmented controls, pill borders |
 | `border-strong` | `rgba(255,255,255,0.18)` | Active card hover borders, focused panels |
-| `border-focus` | `#FF7A00` | Keyboard focus ring with offset |
+| `border-focus` | `rgba(255,255,255,0.9)` | Keyboard focus ring with offset |
 
 ### Typography
 
 - **Font family:** `Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`
-- **Display face:** Bricolage Grotesque Variable (self-hosted via `@fontsource-variable/bricolage-grotesque`), extrabold, used for page headings, shelf titles and cartridge labels via `font-display`.
+- **Display face:** Bricolage Grotesque Variable (self-hosted via `@fontsource-variable/bricolage-grotesque`), extrabold, used for page headings and game titles via `font-display`.
 - **Features:** `font-feature-settings: "cv11", "ss01"`
 - **Numbers:** `tabular-nums` on all prices, file sizes, download speeds, percentages, and timestamps.
 - **Casing:** Sentence case everywhere. Never uppercase for game titles or section headers.
@@ -167,12 +167,12 @@ Shadows are applied strictly to floating layers, never to flat in-panel cards:
 
 ---
 
-## 3. Workshop theme
+## 7. Monochrome system
 
-The store is a workshop: games are physical cartridges standing on shelves.
+- **Palette:** `bg-app` #050505, `bg-sidebar` #080808, `bg-panel` #0D0D0D, `bg-dock` #111111, `bg-card` #141414, elevated #1C1C1C. Text ramp is Tailwind `neutral` (`slate` is aliased to it); `cream` (#F5F5F5) is the primary text and light fill, `brass` (#A3A3A3) the mid grey. Accent is white; text on an accent fill is #0A0A0A. No hue anywhere except the status colours.
+- **Game card** (`components/ui/Cartridge.tsx`, name kept for imports): 4:5 cover art on a flat card, title and one quiet line beneath. State pill (Playing / Installed / Update) top right. The Play / Stop / Install button is a white pill that rises in on hover or keyboard focus. The card lifts 4px on hover.
+- **Grid** (`components/ui/Shelf.tsx`): even auto-fill grid; each card eases in 30ms after the previous one, capped at eight.
+- **Gauge** (`components/ui/Gauge.tsx`): white arc on a faint ring, grey ticks.
+- **Motion:** one easing, `cubic-bezier(0.23, 1, 0.32, 1)` (`--ease-out`, `ease-out-strong`). Screen changes fade and rise 8px over 240ms (`animate-screen-in`), modals scale from 0.97 over 200ms, hover and colour changes 200ms, press feedback `scale(0.97)`. Everything is disabled under `prefers-reduced-motion`.
+- **Rules:** no eyebrow labels above headings; no glow halos; every card has a real focusable button named "Open <title>".
 
-- **Cartridge** (`components/ui/Cartridge.tsx`): per-game plastic colour derived from the game id (Railbound is forced to engine orange), cream sticker label with cover art, brass connector pins, status light (orange installed, green running, grey not installed). Tilts toward the cursor; the Insert & play / Eject / Install lever appears on hover or keyboard focus.
-- **Shelf** (`components/ui/Shelf.tsx`): lays items in rows measured from the container width, each row on a wooden plank.
-- **Gauge** (`components/ui/Gauge.tsx`): dial for library, downloads and wishlist state.
-- **Palette additions:** `cream` (#F2E8D5) for headings and labels, `brass` (#C9A24B) for hardware details; Tailwind `slate` is remapped to warm `stone`.
-- **Rules:** no eyebrow labels above headings; no zero-offset glow halos; every cartridge has a real focusable button named "Open <title>".

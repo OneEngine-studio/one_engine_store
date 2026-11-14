@@ -348,7 +348,7 @@ export const SettingsScreen: React.FC = () => {
                   <button
                     type="submit"
                     disabled={pwBusy || !currentPw || !newPw}
-                    className="px-4 py-1.5 rounded-full bg-accent hover:bg-accent-hover text-xs font-bold text-[#1b1510] disabled:opacity-50 transition-surface"
+                    className="px-4 py-1.5 rounded-full bg-accent hover:bg-accent-hover text-xs font-bold text-[#0A0A0A] disabled:opacity-50 transition-surface"
                   >
                     {pwBusy ? 'Changing…' : 'Change password'}
                   </button>
@@ -404,7 +404,7 @@ export const SettingsScreen: React.FC = () => {
               <div className={`p-3 rounded-thumb text-xs flex items-center gap-2 ${
                 testResult.ok
                   ? 'bg-success/15 border border-success/30 text-success'
-                  : 'bg-amber-400/15 border border-amber-400/30 text-amber-300'
+                  : 'bg-white/[0.06] border border-white/15 text-slate-200'
               }`}>
                 {testResult.ok ? (
                   <Check className="w-4 h-4 shrink-0" />

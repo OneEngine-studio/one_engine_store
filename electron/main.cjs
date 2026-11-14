@@ -49,7 +49,7 @@ function createWindow() {
     frame: false,
     // vite copies public/ into dist/, which is what ships in the installer
     icon: path.join(__dirname, app.isPackaged ? '../dist/images/logo.png' : '../public/images/logo.png'),
-    backgroundColor: '#090B0E',
+    backgroundColor: '#050505',
     webPreferences: {
       preload: path.join(__dirname, 'preload.cjs'),
       nodeIntegration: false,

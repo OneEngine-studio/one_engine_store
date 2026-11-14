@@ -9,39 +9,39 @@ export default {
   theme: {
     extend: {
       colors: {
-        // Deep obsidian layered surfaces
-        'bg-app':      '#0C0A08', // Root window background
-        'bg-panel':    '#15120F', // Floating main content panel
-        'bg-sidebar':  '#0F0D0A', // Left navigation rail
-        'bg-card':     '#1D1914', // Cards, tiles, panels
+        // Neutral black layers: depth comes from tone, never from hue
+        'bg-app':      '#050505', // Root window background
+        'bg-panel':    '#0D0D0D', // Floating main content panel
+        'bg-sidebar':  '#080808', // Left navigation rail
+        'bg-card':     '#141414', // Cards, tiles, panels
         'bg-hover':    'rgba(255, 255, 255, 0.06)', // 6% white interaction hover
         'bg-pressed':  'rgba(255, 255, 255, 0.10)',
-        'bg-dock':     '#1A1612', // Floating bottom dock
+        'bg-dock':     '#111111', // Floating bottom dock
 
         // Backward-compat aliases
-        'void-black':    '#0C0A08',
-        'gunmetal-slate':'#0F0D0A',
-        'tech-surface':  '#1D1914',
-        'tech-elevated': '#262019',
+        'void-black':    '#050505',
+        'gunmetal-slate':'#080808',
+        'tech-surface':  '#141414',
+        'tech-elevated': '#1C1C1C',
         'border-stroke': 'rgba(255, 255, 255, 0.08)',
 
-        // Workshop palette: cool slate greys become warm stone
-        slate: colors.stone,
-        cream:  '#F2E8D5',
-        brass:  '#C9A24B',
+        // Greys (text ramp) and the one light tone used for text and fills
+        slate: colors.neutral,
+        cream:  '#F5F5F5',
+        brass:  '#A3A3A3',
 
-        // Brand accent (only for primary actions, active state and focus)
-        'accent':       '#FF7A00',
-        'accent-hover': '#E66E00',
-        'accent-muted': 'rgba(255, 122, 0, 0.14)',
-        'primary-accent': '#FF7A00',
+        // Accent is plain white: primary actions, active state and focus
+        'accent':       '#FFFFFF',
+        'accent-hover': '#E5E5E5',
+        'accent-muted': 'rgba(255, 255, 255, 0.10)',
+        'primary-accent': '#FFFFFF',
 
-        // Semantic status tokens
+        // Semantic status tokens (the only colour in the interface)
         'success': '#10B981',
         'warning': '#F59E0B',
-        'danger':  '#E53935',
+        'danger':  '#E5484D',
         'tactical-green':  '#10B981',
-        'tactical-danger': '#E53935',
+        'tactical-danger': '#E5484D',
       },
       fontFamily: {
         display: ['"Bricolage Grotesque Variable"', 'Inter', 'sans-serif'],
@@ -79,6 +79,9 @@ export default {
       },
       transitionProperty: {
         'surface': 'background-color, color, border-color, opacity',
+      },
+      transitionTimingFunction: {
+        'out-strong': 'cubic-bezier(0.23, 1, 0.32, 1)',
       },
     },
   },

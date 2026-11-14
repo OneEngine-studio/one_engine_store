@@ -110,7 +110,9 @@ export const Sidebar: React.FC = () => {
               className="w-11 h-11 rounded-[14px] flex items-center justify-center hover:bg-white/[0.06] active:scale-[0.94] cursor-default"
               style={{ transition: `background-color 200ms ${EASE}, transform 160ms ${EASE}` }}
             >
-              <img src="./images/logo.png" alt="" className="w-6 h-6 object-contain" />
+              <span className="block w-9 h-9 rounded-[11px] overflow-hidden bg-black ring-1 ring-white/10">
+                <img src="./images/logo.png" alt="" className="w-full h-full object-cover" style={{ transform: 'scale(3.6) translateX(21%)' }} />
+              </span>
             </button>
           </Tip>
 
@@ -139,7 +141,7 @@ export const Sidebar: React.FC = () => {
                     aria-label={item.label}
                     aria-current={isActive ? 'page' : undefined}
                     className={`relative z-10 flex items-center justify-center rounded-[14px] cursor-default active:scale-[0.94] ${
-                      isActive ? 'text-[#1b1510]' : 'text-slate-400 hover:text-cream hover:bg-white/[0.06]'
+                      isActive ? 'text-[#0A0A0A]' : 'text-slate-400 hover:text-cream hover:bg-white/[0.06]'
                     }`}
                     style={{
                       width: ITEM,
@@ -151,7 +153,7 @@ export const Sidebar: React.FC = () => {
                     {item.badge !== undefined && (
                       <span
                         className={`absolute top-1 right-1 min-w-[16px] h-4 px-1 flex items-center justify-center text-[9px] font-bold rounded-full tabular-nums ${
-                          isActive ? 'bg-[#1b1510] text-cream' : 'bg-accent text-[#1b1510]'
+                          isActive ? 'bg-[#0A0A0A] text-cream' : 'bg-accent text-[#0A0A0A]'
                         }`}
                       >
                         {item.badge}
@@ -225,7 +227,7 @@ export const Sidebar: React.FC = () => {
               aria-label="Settings"
               aria-current={settingsActive ? 'page' : undefined}
               className={`flex items-center justify-center rounded-[14px] cursor-default active:scale-[0.94] ${
-                settingsActive ? 'bg-accent text-[#1b1510]' : 'text-slate-400 hover:text-cream hover:bg-white/[0.06]'
+                settingsActive ? 'bg-accent text-[#0A0A0A]' : 'text-slate-400 hover:text-cream hover:bg-white/[0.06]'
               }`}
               style={{
                 width: ITEM,

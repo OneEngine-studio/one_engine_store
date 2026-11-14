@@ -120,7 +120,7 @@ export const LibraryScreen: React.FC = () => {
               aria-pressed={view === 'shelf'}
               aria-label="Shelf view"
               className={`p-1.5 rounded-full transition-surface cursor-default ${
-                view === 'shelf' ? 'bg-cream text-[#1b1510]' : 'text-slate-400 hover:text-white'
+                view === 'shelf' ? 'bg-cream text-[#0A0A0A]' : 'text-slate-400 hover:text-white'
               }`}
               title="Shelf view"
             >
@@ -131,7 +131,7 @@ export const LibraryScreen: React.FC = () => {
               aria-pressed={view === 'table'}
               aria-label="Table view"
               className={`p-1.5 rounded-full transition-surface cursor-default ${
-                view === 'table' ? 'bg-cream text-[#1b1510]' : 'text-slate-400 hover:text-white'
+                view === 'table' ? 'bg-cream text-[#0A0A0A]' : 'text-slate-400 hover:text-white'
               }`}
               title="Table view"
             >
@@ -175,8 +175,8 @@ export const LibraryScreen: React.FC = () => {
       {/* Shelf of cartridges */}
       {sortedGames.length === 0 ? (
         <div className="p-12 text-center rounded-card bg-white/[0.02] border border-dashed border-white/[0.12] space-y-3">
-          <p className="font-display text-lg font-bold text-cream">This shelf is empty</p>
-          <p className="text-xs text-slate-500">Adjust your filters, or browse the store to find your next cartridge.</p>
+          <p className="font-display text-lg font-bold text-cream">Nothing here yet</p>
+          <p className="text-xs text-slate-500">Adjust your filters, or browse the store to find your next game.</p>
           <button
             onClick={() => navigate('store')}
             className="px-4 py-2 rounded-full bg-accent hover:bg-accent-hover text-bg-app font-semibold text-xs transition-surface cursor-default"

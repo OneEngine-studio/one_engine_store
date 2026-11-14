@@ -42,7 +42,7 @@ export const HoldButton: React.FC<HoldButtonProps> = ({ onComplete, children, ho
       className={`relative overflow-hidden rounded-full border-2 border-accent text-accent font-bold text-sm px-6 h-11 cursor-default ${className}`}
     >
       <span className="absolute inset-x-0 bottom-0 bg-accent" style={{ height: `${pct}%` }} />
-      <span className="relative flex items-center justify-center gap-2" style={{ color: pct > 55 ? '#1b1510' : undefined }}>
+      <span className="relative flex items-center justify-center gap-2" style={{ color: pct > 55 ? '#0A0A0A' : undefined }}>
         {children}
       </span>
     </button>

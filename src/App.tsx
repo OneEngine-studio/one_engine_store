@@ -125,7 +125,7 @@ const MainViewport: React.FC = () => {
             onScroll={handleScroll}
             className="flex-1 flex flex-col overflow-y-auto overflow-x-hidden relative z-10 custom-scroll min-h-0"
           >
-            <div key={activeTab + (activeTab === 'game-detail' ? `-${selectedGameId}` : '')} className="flex-1 flex flex-col min-h-full">
+            <div key={activeTab + (activeTab === 'game-detail' ? `-${selectedGameId}` : '')} className="flex-1 flex flex-col min-h-full animate-screen-in">
               {renderActiveScreen()}
             </div>
           </div>

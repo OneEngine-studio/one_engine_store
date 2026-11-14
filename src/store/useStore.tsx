@@ -98,7 +98,7 @@ export const DEFAULT_GUEST_USER: UserProfile = {
 // A local avatar made from the display name: no third-party image service ever sees it.
 function initialsAvatar(name: string): string {
   const initials = (name.trim().split(/s+/).map((w) => Array.from(w)[0] ?? '').join('').slice(0, 2) || '?').toUpperCase();
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" fill="#2a1a10"/><text x="32" y="41" font-family="Inter,Arial,sans-serif" font-size="26" font-weight="700" text-anchor="middle" fill="#ff9a3c">${initials.replace(/[<>&"']/g, '')}</text></svg>`;
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" fill="#1A1A1A"/><text x="32" y="41" font-family="Inter,Arial,sans-serif" font-size="26" font-weight="700" text-anchor="middle" fill="#F5F5F5">${initials.replace(/[<>&"']/g, '')}</text></svg>`;
   return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
 }
 

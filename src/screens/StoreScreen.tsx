@@ -8,7 +8,7 @@ import { Shelf } from '../components/ui/Shelf';
 import { ChevronRight, Search, Clock, WifiOff } from 'lucide-react';
 
 const MOODS = [
-  { id: 'all', label: 'Anything', hint: 'Everything on the shelf' },
+  { id: 'all', label: 'Anything', hint: 'Everything in the catalog' },
   { id: 'cozy', label: 'Cozy', hint: 'Slow, calm, no pressure', words: ['relax', 'cozy', 'simulation', 'puzzle', 'builder'] },
   { id: 'focus', label: 'Focused', hint: 'Strategy and planning', words: ['strategy', 'tactical', 'management', 'logistics'] },
   { id: 'intense', label: 'Intense', hint: 'Fast and high stakes', words: ['action', 'shooter', 'survival', 'fps'] },
@@ -110,7 +110,7 @@ export const StoreScreen: React.FC = () => {
               <span className="text-accent">{currentUser.callsign}</span>
             </h1>
             <p className="text-sm text-slate-400 mt-3 max-w-md">
-              Pick a cartridge, slot it in, play. Pick a mood to tune the shelf.
+              Pick a mood to tune what you see, then jump straight in.
             </p>
           </div>
           <div className="space-y-3">
@@ -186,7 +186,7 @@ export const StoreScreen: React.FC = () => {
           <div className="flex items-center justify-between">
             <h2 className="font-display text-2xl font-bold text-cream">On the bench</h2>
             <button onClick={() => navigate('library')} className="text-xs text-slate-400 hover:text-white flex items-center gap-1 cursor-default">
-              Open full shelf <ChevronRight className="w-4 h-4" />
+              Open library <ChevronRight className="w-4 h-4" />
             </button>
           </div>
           <Shelf items={onBench} itemWidth={188} render={(g) => (
@@ -199,10 +199,10 @@ export const StoreScreen: React.FC = () => {
       <section className="space-y-5">
         <div className="flex items-center justify-between">
           <h2 className="font-display text-2xl font-bold text-cream">
-            {mood.id === 'all' ? 'Featured shelf' : `${mood.label} shelf`}
+            {mood.id === 'all' ? 'Featured' : `${mood.label} picks`}
           </h2>
           <span className="text-xs text-slate-400">
-            {moodFallback ? `Nothing tagged ${mood.label.toLowerCase()} yet, showing everything` : 'Hover a cartridge to pick it up'}
+            {moodFallback ? `Nothing tagged ${mood.label.toLowerCase()} yet, showing everything` : 'Hover a game to play or install'}
           </span>
         </div>
         <Shelf items={shelfGames} itemWidth={188} render={(g) => {
