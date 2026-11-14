@@ -21,9 +21,12 @@ git tag v1.0.1
 git push origin v1.0.1
 ```
 
-The workflow (`.github/workflows/release.yml`) checks the tag, runs `npm run dist` and creates the release
+The workflow (`.github/workflows/release.yml`) checks the tag, runs `npm run dist`, attaches the installer to a release on this repo (private) and creates the public release
 with the commit subjects since the previous tag as notes. A tag with a dash (`v1.1.0-beta`) becomes a
 pre-release. The download page prefers the newest non-pre-release.
+
+To rebuild a tag that already exists (for example after adding the secret): **Actions > Release launcher >
+Run workflow**, enter the tag. Existing releases get the installer replaced, not duplicated.
 
 ## Build locally
 

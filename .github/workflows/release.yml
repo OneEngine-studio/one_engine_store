@@ -1,17 +1,24 @@
 name: Release launcher
 
-# Push a tag like v1.0.1 (matching package.json) to build the Windows installer and publish it as a
-# GitHub Release on the public OneEngine repo. The download page reads releases from that repo.
+# Push a tag like v1.0.1 (matching package.json) to build the Windows installer. The installer is attached
+# to a release on this repo (private, for the team) and published on the public OneEngine repo, which the
+# download page reads. To rebuild an existing tag, use "Run workflow" and enter the tag.
 on:
   push:
     tags:
       - 'v*'
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Existing tag to build, e.g. v1.0.0'
+        required: true
 
 permissions:
-  contents: read
+  contents: write
 
 env:
-  RELEASES_REPO: oneenginedev/oneengine
+  TAG: ${{ inputs.tag || github.ref_name }}
+  PUBLIC_RELEASES_REPO: oneenginedev/oneengine
 
 jobs:
   windows:
@@ -19,6 +26,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
+          ref: ${{ env.TAG }}
           fetch-depth: 0
 
       - uses: actions/setup-node@v4
@@ -30,8 +38,8 @@ jobs:
         shell: bash
         run: |
           version=$(node -p "require('./package.json').version")
-          if [ "$GITHUB_REF_NAME" != "v$version" ]; then
-            echo "Tag $GITHUB_REF_NAME does not match package.json version v$version"
+          if [ "$TAG" != "v$version" ]; then
+            echo "Tag $TAG does not match package.json version v$version"
             exit 1
           fi
 
@@ -43,22 +51,45 @@ jobs:
           # Address of the Platform API baked into this build (repository variable, optional)
           VITE_PLATFORM_API_URL: ${{ vars.PLATFORM_API_URL }}
 
-      - name: Publish release
+      - name: Write release notes
+        shell: bash
+        run: |
+          previous=$(git describe --tags --abbrev=0 "$TAG^" 2>/dev/null || true)
+          if [ -n "$previous" ]; then range="$previous..$TAG"; else range="$TAG"; fi
+          git log --no-merges --pretty='- %s' "$range" > notes.md
+          flags=""
+          case "$TAG" in *-*) flags="--prerelease" ;; esac
+          echo "FLAGS=$flags" >> "$GITHUB_ENV"
+
+      - name: Release on this repo
         shell: bash
         env:
-          # Fine-grained token with "Contents: read and write" on the releases repo
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if gh release view "$TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            gh release upload "$TAG" release/OneEngine-Store-Setup-*.exe --repo "$GITHUB_REPOSITORY" --clobber
+          else
+            gh release create "$TAG" release/OneEngine-Store-Setup-*.exe \
+              --repo "$GITHUB_REPOSITORY" \
+              --title "OneEngine Store $TAG" \
+              --notes-file notes.md $FLAGS
+          fi
+
+      - name: Publish on the public repo (download page)
+        shell: bash
+        env:
+          # Fine-grained token with "Contents: read and write" on the public releases repo
           GH_TOKEN: ${{ secrets.RELEASES_TOKEN }}
         run: |
           if [ -z "$GH_TOKEN" ]; then
-            echo "Add the RELEASES_TOKEN repository secret first."
+            echo "Add the RELEASES_TOKEN repository secret to publish on the download page."
             exit 1
           fi
-          previous=$(git describe --tags --abbrev=0 "$GITHUB_REF_NAME^" 2>/dev/null || true)
-          if [ -n "$previous" ]; then range="$previous..$GITHUB_REF_NAME"; else range="$GITHUB_REF_NAME"; fi
-          git log --no-merges --pretty='- %s' "$range" > notes.md
-          flags=""
-          case "$GITHUB_REF_NAME" in *-*) flags="--prerelease" ;; esac
-          gh release create "$GITHUB_REF_NAME" release/OneEngine-Store-Setup-*.exe \
-            --repo "$RELEASES_REPO" \
-            --title "OneEngine Store $GITHUB_REF_NAME" \
-            --notes-file notes.md $flags
+          if gh release view "$TAG" --repo "$PUBLIC_RELEASES_REPO" >/dev/null 2>&1; then
+            gh release upload "$TAG" release/OneEngine-Store-Setup-*.exe --repo "$PUBLIC_RELEASES_REPO" --clobber
+          else
+            gh release create "$TAG" release/OneEngine-Store-Setup-*.exe \
+              --repo "$PUBLIC_RELEASES_REPO" \
+              --title "OneEngine Store $TAG" \
+              --notes-file notes.md $FLAGS
+          fi
