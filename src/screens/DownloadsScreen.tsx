@@ -1,16 +1,46 @@
 import React, { useState } from 'react';
 import { useStore } from '../store/useStore';
-import {
-  Pause,
-  Play,
-  X,
-  HardDrive,
-  Activity,
-  CheckCircle,
-  Clock,
-  Sliders,
-} from 'lucide-react';
+import { Pause, Play, X, HardDrive, Activity, CheckCircle, Clock, Sliders, AlertTriangle, RotateCcw } from 'lucide-react';
 import { NumberTicker } from '../components/ui/NumberTicker';
+import type { DownloadItem } from '../types/store';
+
+const MB = 1024 * 1024;
+const GB = 1024 * MB;
+
+const formatSize = (bytes: number) => (bytes >= GB ? `${(bytes / GB).toFixed(2)} GB` : `${(bytes / MB).toFixed(0)} MB`);
+
+const formatEta = (seconds: number) => {
+  if (seconds <= 0) return '';
+  if (seconds < 60) return 'under a minute left';
+  if (seconds < 3600) return `~${Math.ceil(seconds / 60)} min left`;
+  return `~${Math.floor(seconds / 3600)} h ${Math.ceil((seconds % 3600) / 60)} min left`;
+};
+
+const statusLabel = (item: DownloadItem) => {
+  switch (item.status) {
+    case 'PAUSED':
+      return 'Paused';
+    case 'VERIFYING':
+      return 'Verifying';
+    case 'EXTRACTING':
+      return 'Unpacking';
+    case 'FAILED':
+      return 'Failed';
+    case 'COMPLETED':
+      return 'Installed';
+    default:
+      return 'Downloading';
+  }
+};
+
+const statusColor = (item: DownloadItem) =>
+  item.status === 'COMPLETED'
+    ? 'text-success'
+    : item.status === 'PAUSED'
+      ? 'text-warning'
+      : item.status === 'FAILED'
+        ? 'text-danger'
+        : 'text-accent';
 
 export const DownloadsScreen: React.FC = () => {
   const {
@@ -21,10 +51,8 @@ export const DownloadsScreen: React.FC = () => {
     cancelDownload,
     speedTelemetryHistory,
     settings,
-    isPausedAll,
-    togglePauseAllDownloads,
+    updateSettings,
     launchGame,
-    addToast,
     navigate,
   } = useStore();
 
@@ -32,50 +60,32 @@ export const DownloadsScreen: React.FC = () => {
   const installedGb = installedGames.reduce((sum, g) => sum + g.installSizeGb, 0);
 
   const [showThrottleModal, setShowThrottleModal] = useState(false);
-  const [throttleInput, setThrottleInput] = useState('50');
+  const [throttleInput, setThrottleInput] = useState(String(settings.bandwidthLimitMBps));
 
   const activeDownloads = downloads.filter((d) => d.status === 'DOWNLOADING');
-  const isTransferring = activeDownloads.length > 0 && !isPausedAll;
-  const activeDownload = activeDownloads[0];
-  const currentSpeed = activeDownload?.speedMbps || 0;
-  const diskSpeed = activeDownload?.diskSpeedMbps || 0;
+  const working = downloads.filter((d) => d.status === 'DOWNLOADING' || d.status === 'VERIFYING' || d.status === 'EXTRACTING');
+  const isTransferring = activeDownloads.length > 0;
+  const currentSpeed = activeDownloads.reduce((sum, d) => sum + d.speedBps, 0) / MB;
+  const peakSpeed = Math.max(0, ...speedTelemetryHistory);
+  const finished = downloads.filter((d) => d.status === 'COMPLETED');
+  const queue = downloads.filter((d) => d.status !== 'COMPLETED');
 
-  // Live speed graph parameters
-  const maxSpeed = 80;
+  // Live speed graph: the y axis follows the fastest sample so a slow link still fills the plot.
+  const maxSpeed = Math.max(10, peakSpeed * 1.15);
   const svgWidth = 600;
   const svgHeight = 110;
-
-  const points = speedTelemetryHistory.map((val, idx) => {
-    const x = (idx / (speedTelemetryHistory.length - 1)) * svgWidth;
+  const samples = speedTelemetryHistory.length > 1 ? speedTelemetryHistory : [0, ...speedTelemetryHistory, ...speedTelemetryHistory];
+  const points = samples.map((val, idx) => {
+    const x = (idx / Math.max(1, samples.length - 1)) * svgWidth;
     const y = svgHeight - (val / maxSpeed) * (svgHeight - 16) - 8;
     return `${x},${y}`;
   });
-
   const pathD = `M 0,${svgHeight} L ${points.join(' L ')} L ${svgWidth},${svgHeight} Z`;
   const lineD = `M ${points.join(' L ')}`;
 
-  const recentlyCompleted = [
-    {
-      id: 'railbound',
-      title: 'Railbound: Tactical Protocol',
-      patchVersion: 'Patch v2.4.0',
-      completedDate: '12 minutes ago',
-      size: '38.4 GB',
-      cover: './images/railbound-theme.jpg',
-    },
-    {
-      id: 'cyber-siege',
-      title: 'Cyber Siege: Operative',
-      patchVersion: 'Patch v2.1.0',
-      completedDate: 'Yesterday',
-      size: '62.1 GB',
-      cover: 'https://images.unsplash.com/photo-1542751371-adc38448a05e?q=80&w=400&auto=format&fit=crop',
-    },
-  ];
-
   const applyThrottle = () => {
-    const val = throttleInput.trim();
-    addToast(`Bandwidth limit set to ${val === '0' ? 'unlimited' : `${val} MB/s`}.`, 'info');
+    const value = Math.max(0, Math.min(200, Number(throttleInput) || 0));
+    updateSettings({ bandwidthLimitMBps: value });
     setShowThrottleModal(false);
   };
 
@@ -104,14 +114,15 @@ export const DownloadsScreen: React.FC = () => {
             </div>
 
             <p className="text-xs text-slate-400 leading-relaxed">
-              Limit maximum download bandwidth in MB/s. Set to 0 to download as fast as possible.
+              Limit download speed in MB/s. Set to 0 to download as fast as possible. A running download picks up the new
+              limit the next time it starts or resumes.
             </p>
 
             <div className="space-y-3">
               <div className="flex items-center justify-between text-xs text-slate-300">
                 <span>Maximum speed</span>
                 <span className="font-semibold text-white tabular-nums">
-                  {throttleInput === '0' ? 'Unlimited' : `${throttleInput} MB/s`}
+                  {Number(throttleInput) === 0 ? 'Unlimited' : `${throttleInput} MB/s`}
                 </span>
               </div>
               <input
@@ -129,7 +140,7 @@ export const DownloadsScreen: React.FC = () => {
                 onClick={applyThrottle}
                 className="flex-1 py-2.5 rounded-full bg-accent hover:bg-accent-hover text-bg-app font-bold text-xs transition-surface cursor-default"
               >
-                Save preferences
+                Save limit
               </button>
               <button
                 onClick={() => setShowThrottleModal(false)}
@@ -145,59 +156,46 @@ export const DownloadsScreen: React.FC = () => {
       {/* Top Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="font-display text-4xl font-extrabold tracking-tight text-cream">
-            Downloads
-          </h1>
+          <h1 className="font-display text-4xl font-extrabold tracking-tight text-cream">Downloads</h1>
           <p className="text-xs text-slate-400 mt-1">
             {isTransferring
-              ? `Transferring updates at ${currentSpeed.toFixed(1)} MB/s`
-              : 'All your games and updates are up to date'}
+              ? `Downloading at ${currentSpeed.toFixed(1)} MB/s`
+              : working.length > 0
+                ? 'Finishing up an install'
+                : 'Nothing is downloading'}
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => setShowThrottleModal(true)}
-            className="px-4 py-2 rounded-full bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.08] text-xs text-slate-300 hover:text-white flex items-center gap-2 transition-surface cursor-default"
-          >
-            <Sliders className="w-3.5 h-3.5 text-accent" />
-            <span>Bandwidth limit</span>
-          </button>
-          {downloads.length > 0 && (
-            <button
-              onClick={togglePauseAllDownloads}
-              className="px-4 py-2 rounded-full bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.08] text-xs text-slate-200 font-semibold transition-surface cursor-default"
-            >
-              {isPausedAll ? 'Resume all' : 'Pause all'}
-            </button>
-          )}
-        </div>
+        <button
+          onClick={() => {
+            setThrottleInput(String(settings.bandwidthLimitMBps));
+            setShowThrottleModal(true);
+          }}
+          className="px-4 py-2 rounded-full bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.08] text-xs text-slate-300 hover:text-white flex items-center gap-2 transition-surface cursor-default self-start"
+        >
+          <Sliders className="w-3.5 h-3.5 text-accent" />
+          <span>{settings.bandwidthLimitMBps > 0 ? `Limit ${settings.bandwidthLimitMBps} MB/s` : 'Bandwidth limit'}</span>
+        </button>
       </div>
 
       {/* Transfer status & Storage section */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Speed transfer panel / Calm idle summary */}
         <div className="lg:col-span-2 rounded-[28px] win11-card p-6 flex flex-col justify-between">
           <div className="flex items-center justify-between pb-3 border-b border-white/[0.06]">
             <span className="text-xs font-semibold text-slate-200 flex items-center gap-2">
-              <Activity className="w-4 h-4 text-accent" /> Network telemetry
+              <Activity className="w-4 h-4 text-accent" /> Download speed
             </span>
             {isTransferring && (
               <span className="text-xs text-slate-400 tabular-nums">
-                Network: <span className="text-white font-medium">{currentSpeed.toFixed(1)} MB/s</span> · Disk: <span className="text-success font-medium">{diskSpeed.toFixed(1)} MB/s</span>
+                Now <span className="text-white font-medium">{currentSpeed.toFixed(1)} MB/s</span>
               </span>
             )}
           </div>
 
-          {/* Conditional graph: only shown while actively transferring */}
           {isTransferring ? (
             <div className="space-y-3 py-4">
               <div className="relative h-28 w-full rounded-thumb bg-bg-app/80 border border-white/[0.06] overflow-hidden">
-                <svg
-                  viewBox={`0 0 ${svgWidth} ${svgHeight}`}
-                  className="w-full h-full"
-                  preserveAspectRatio="none"
-                >
+                <svg viewBox={`0 0 ${svgWidth} ${svgHeight}`} className="w-full h-full" preserveAspectRatio="none">
                   <defs>
                     <linearGradient id="downloadSpeedGrad" x1="0" y1="0" x2="0" y2="1">
                       <stop offset="0%" stopColor="#FF7A00" stopOpacity="0.28" />
@@ -209,27 +207,25 @@ export const DownloadsScreen: React.FC = () => {
                 </svg>
               </div>
 
-              {/* Axis labels outside the plot */}
               <div className="flex justify-between text-[11px] text-slate-500 tabular-nums px-1">
-                <span>60s ago</span>
-                <span>Peak 78.4 MB/s</span>
-                <span>Current {currentSpeed.toFixed(1)} MB/s</span>
+                <span>Earlier</span>
+                <span>Peak {peakSpeed.toFixed(1)} MB/s</span>
+                <span>Now {currentSpeed.toFixed(1)} MB/s</span>
               </div>
             </div>
           ) : (
-            /* Calm Idle Summary */
             <div className="py-8 flex flex-col items-center justify-center text-center space-y-2">
               <div className="w-12 h-12 rounded-full bg-success/15 flex items-center justify-center text-success mb-1">
                 <CheckCircle className="w-6 h-6" strokeWidth={1.75} />
               </div>
               <h3 className="text-sm font-semibold text-white">Network is quiet</h3>
               <p className="text-xs text-slate-400 max-w-sm">
-                No active downloads in progress. New game installs and patches will show live transfer telemetry here.
+                No downloads in progress. Installs and updates show their live speed here.
               </p>
             </div>
           )}
 
-          <div className="grid grid-cols-3 gap-3 pt-3 border-t border-white/[0.06] text-center text-xs tabular-nums">
+          <div className="grid grid-cols-2 gap-3 pt-3 border-t border-white/[0.06] text-center text-xs tabular-nums">
             <div className="p-4 rounded-2xl bg-white/[0.03] text-left space-y-1">
               <span className="text-[11px] text-slate-400 block">Download speed</span>
               <span className="font-display text-xl font-light whitespace-nowrap text-cream">
@@ -237,15 +233,9 @@ export const DownloadsScreen: React.FC = () => {
               </span>
             </div>
             <div className="p-4 rounded-2xl bg-white/[0.03] text-left space-y-1">
-              <span className="text-[11px] text-slate-400 block">Disk write</span>
-              <span className="font-display text-xl font-light whitespace-nowrap text-success">
-                <NumberTicker value={diskSpeed} decimalPlaces={1} suffix=" MB/s" />
-              </span>
-            </div>
-            <div className="p-4 rounded-2xl bg-white/[0.03] text-left space-y-1">
-              <span className="text-[11px] text-slate-400 block">Peak bandwidth</span>
+              <span className="text-[11px] text-slate-400 block">Fastest this session</span>
               <span className="font-display text-xl font-light whitespace-nowrap text-cream">
-                <NumberTicker value={78.4} decimalPlaces={1} suffix=" MB/s" />
+                <NumberTicker value={peakSpeed} decimalPlaces={1} suffix=" MB/s" />
               </span>
             </div>
           </div>
@@ -256,14 +246,14 @@ export const DownloadsScreen: React.FC = () => {
           <div className="space-y-4">
             <div className="flex items-center gap-2 pb-3 border-b border-white/[0.06]">
               <HardDrive className="w-4 h-4 text-slate-400" />
-              <h2 className="text-xs font-semibold text-slate-200">
-                Storage drive
-              </h2>
+              <h2 className="text-xs font-semibold text-slate-200">Install folder</h2>
             </div>
 
             <div className="space-y-3">
               <div>
-                <span className="text-[11px] text-slate-400 block truncate">{settings.downloadDirectory}</span>
+                <span className="text-[11px] text-slate-400 block truncate" title={settings.downloadDirectory}>
+                  {settings.downloadDirectory || 'Not chosen yet'}
+                </span>
                 <span className="mt-1 flex items-baseline gap-1.5">
                   <span className="font-display text-4xl font-light tracking-tight text-cream tabular-nums">
                     {Math.round(installedGb * 10) / 10}
@@ -272,14 +262,13 @@ export const DownloadsScreen: React.FC = () => {
                 </span>
               </div>
 
-              {/* One segment per installed game */}
               <div className="w-full h-3 rounded-full bg-white/[0.06] overflow-hidden flex gap-0.5 p-0.5">
                 {installedGames.map((g, i) => (
                   <div
                     key={g.id}
                     className="h-full rounded-full"
                     style={{
-                      width: `${(g.installSizeGb / Math.max(installedGb, 1)) * 100}%`,
+                      width: `${(g.installSizeGb / Math.max(installedGb, 0.01)) * 100}%`,
                       background: i === 0 ? '#FF7A00' : i === 1 ? '#C9A24B' : '#78716c',
                     }}
                     title={`${g.title}: ${g.installSizeGb} GB`}
@@ -303,47 +292,43 @@ export const DownloadsScreen: React.FC = () => {
             </div>
           </div>
 
-          {/* Plain language storage note (rewritten from jargon) */}
           <div className="p-3.5 rounded-thumb bg-white/[0.02] border border-white/[0.06] text-xs text-slate-400">
-            <span className="text-slate-200 font-medium block mb-1">Smooth installs enabled</span>
-            <p className="leading-relaxed">Disk space is reserved before each download begins so updates complete without write bottlenecks.</p>
+            <span className="text-slate-200 font-medium block mb-1">Checked before it is installed</span>
+            <p className="leading-relaxed">
+              Every download is compared with the checksum the service published. A file that does not match is deleted and
+              never installed.
+            </p>
           </div>
         </div>
       </div>
 
       {/* Active downloads queue */}
       <div className="space-y-4">
-        <h2 className="text-lg font-semibold text-white">
-          Active queue ({downloads.length})
-        </h2>
+        <h2 className="text-lg font-semibold text-white">Active queue ({queue.length})</h2>
 
-        {downloads.length === 0 ? (
+        {queue.length === 0 ? (
           <div className="rounded-card bg-bg-card border border-white/[0.06] p-8 text-center space-y-2">
             <CheckCircle className="w-6 h-6 text-success mx-auto opacity-80" />
             <p className="text-xs text-slate-300 font-medium">Queue is empty</p>
-            <p className="text-xs text-slate-500">Games you download or update from the store will appear here.</p>
+            <p className="text-xs text-slate-500">Games you install or update will appear here.</p>
           </div>
         ) : (
           <div className="space-y-3">
-            {downloads.map((item) => {
-              const isPaused = item.status === 'PAUSED' || isPausedAll;
-              const isCompleted = item.status === 'COMPLETED';
+            {queue.map((item) => {
+              const isPaused = item.status === 'PAUSED';
+              const isFailed = item.status === 'FAILED';
+              const busy = item.status === 'VERIFYING' || item.status === 'EXTRACTING';
 
               return (
                 <div
                   key={item.gameId}
                   className="rounded-[28px] win11-card p-4 flex flex-col md:flex-row md:items-center justify-between gap-4"
                 >
-                  {/* Left: Thumbnail & Name */}
                   <div className="flex items-center gap-3.5 min-w-[220px]">
                     <div className="w-16 h-10 rounded-thumb overflow-hidden border border-white/10 bg-bg-app shrink-0">
-                      <img
-                        src={item.coverImage}
-                        alt=""
-                        className="w-full h-full object-cover"
-                      />
+                      {item.coverImage && <img src={item.coverImage} alt="" className="w-full h-full object-cover" />}
                     </div>
-                    <div>
+                    <div className="min-w-0">
                       <h3
                         onClick={() => navigate('game-detail', item.gameId)}
                         className="text-xs font-semibold text-white hover:text-accent cursor-default transition-colors truncate max-w-xs"
@@ -351,58 +336,74 @@ export const DownloadsScreen: React.FC = () => {
                         {item.title}
                       </h3>
                       <div className="flex items-center gap-2 text-[11px] text-slate-400 mt-0.5 tabular-nums">
-                        <span className={isCompleted ? 'text-success font-semibold' : isPaused ? 'text-warning font-semibold' : 'text-accent font-semibold'}>
-                          {isPaused ? 'Paused' : isCompleted ? 'Installed' : 'Downloading'}
-                        </span>
+                        <span className={`font-semibold ${statusColor(item)}`}>{statusLabel(item)}</span>
                         <span>·</span>
-                        <span>{item.downloadedGb} GB of {item.totalGb} GB</span>
+                        <span>
+                          {formatSize(item.receivedBytes)} of {formatSize(item.totalBytes)}
+                        </span>
                       </div>
                     </div>
                   </div>
 
-                  {/* Center: Progress & ETA */}
                   <div className="flex-1 max-w-md space-y-1.5">
-                    <div className="flex items-center justify-between text-xs tabular-nums">
-                      <span className="text-white font-semibold">
-                        {Math.round(item.progress)}%
-                      </span>
-                      {!isCompleted && !isPaused && (
-                        <span className="text-slate-400 flex items-center gap-1 text-[11px]">
-                          <Clock className="w-3 h-3 text-slate-400" /> ~{Math.ceil(item.etaSeconds / 60)} min remaining
-                        </span>
-                      )}
-                    </div>
-                    <div className="w-full h-1.5 bg-white/[0.06] rounded-full overflow-hidden">
-                      <div
-                        className={`h-full transition-[width] duration-300 ${
-                          isCompleted ? 'bg-success' : isPaused ? 'bg-warning' : 'bg-accent'
-                        }`}
-                        style={{ width: `${item.progress}%` }}
-                      />
-                    </div>
+                    {isFailed ? (
+                      <p className="text-[11px] text-danger flex items-start gap-1.5 leading-snug">
+                        <AlertTriangle className="w-3.5 h-3.5 shrink-0 mt-px" />
+                        <span>{item.message || 'The install failed.'}</span>
+                      </p>
+                    ) : (
+                      <>
+                        <div className="flex items-center justify-between text-xs tabular-nums">
+                          <span className="text-white font-semibold">{Math.round(item.progress)}%</span>
+                          {item.status === 'DOWNLOADING' && item.etaSeconds > 0 && (
+                            <span className="text-slate-400 flex items-center gap-1 text-[11px]">
+                              <Clock className="w-3 h-3 text-slate-400" /> {formatEta(item.etaSeconds)}
+                            </span>
+                          )}
+                        </div>
+                        <div className="w-full h-1.5 bg-white/[0.06] rounded-full overflow-hidden">
+                          <div
+                            className={`h-full transition-[width] duration-300 ${
+                              isPaused ? 'bg-warning' : busy ? 'bg-accent animate-pulse' : 'bg-accent'
+                            }`}
+                            style={{ width: `${item.progress}%` }}
+                          />
+                        </div>
+                      </>
+                    )}
                   </div>
 
-                  {/* Right: Controls */}
                   <div className="flex items-center gap-2 shrink-0">
-                    {!isCompleted && (
+                    {(isPaused || isFailed) && (
                       <button
-                        onClick={() => isPaused ? resumeDownload(item.gameId) : pauseDownload(item.gameId)}
+                        onClick={() => resumeDownload(item.gameId)}
                         className="w-8 h-8 rounded-full bg-white/[0.06] hover:bg-white/[0.1] text-slate-200 flex items-center justify-center transition-surface cursor-default"
-                        title={isPaused ? 'Resume' : 'Pause'}
-                        aria-label={isPaused ? 'Resume download' : 'Pause download'}
+                        title={isFailed ? 'Try again' : 'Resume'}
+                        aria-label={isFailed ? 'Try again' : 'Resume download'}
                       >
-                        {isPaused ? <Play className="w-3.5 h-3.5 fill-current" /> : <Pause className="w-3.5 h-3.5 fill-current" />}
+                        {isFailed ? <RotateCcw className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5 fill-current" />}
                       </button>
                     )}
-
-                    <button
-                      onClick={() => cancelDownload(item.gameId)}
-                      className="w-8 h-8 rounded-full bg-white/[0.06] hover:bg-danger/20 text-slate-400 hover:text-danger flex items-center justify-center transition-surface cursor-default"
-                      title="Cancel download"
-                      aria-label="Cancel download"
-                    >
-                      <X className="w-3.5 h-3.5" />
-                    </button>
+                    {item.status === 'DOWNLOADING' && (
+                      <button
+                        onClick={() => pauseDownload(item.gameId)}
+                        className="w-8 h-8 rounded-full bg-white/[0.06] hover:bg-white/[0.1] text-slate-200 flex items-center justify-center transition-surface cursor-default"
+                        title="Pause"
+                        aria-label="Pause download"
+                      >
+                        <Pause className="w-3.5 h-3.5 fill-current" />
+                      </button>
+                    )}
+                    {!busy && (
+                      <button
+                        onClick={() => cancelDownload(item.gameId)}
+                        className="w-8 h-8 rounded-full bg-white/[0.06] hover:bg-danger/20 text-slate-400 hover:text-danger flex items-center justify-center transition-surface cursor-default"
+                        title={isFailed ? 'Dismiss' : 'Cancel download'}
+                        aria-label={isFailed ? 'Dismiss' : 'Cancel download'}
+                      >
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    )}
                   </div>
                 </div>
               );
@@ -411,48 +412,49 @@ export const DownloadsScreen: React.FC = () => {
         )}
       </div>
 
-      {/* Recently Completed Rows with Play CTA */}
-      <div className="space-y-4 pt-2">
-        <h2 className="text-lg font-semibold text-white">
-          Recently completed
-        </h2>
+      {/* Installed during this session */}
+      {finished.length > 0 && (
+        <div className="space-y-4 pt-2">
+          <h2 className="text-lg font-semibold text-white">Recently completed</h2>
 
-        <div className="space-y-2.5">
-          {recentlyCompleted.map((item) => (
-            <div
-              key={item.id}
-              className="rounded-[28px] win11-card p-4 flex items-center justify-between gap-4"
-            >
-              <div className="flex items-center gap-3.5">
-                <img src={item.cover} alt="" className="w-14 h-9 rounded-thumb object-cover border border-white/10" />
-                <div>
-                  <h4
-                    onClick={() => navigate('game-detail', item.id)}
-                    className="text-xs font-semibold text-white hover:text-accent cursor-default transition-colors"
-                  >
-                    {item.title}
-                  </h4>
-                  <div className="flex items-center gap-2 text-[11px] text-slate-400 mt-0.5 tabular-nums">
-                    <span>{item.patchVersion}</span>
-                    <span>·</span>
-                    <span>{item.size}</span>
-                    <span>·</span>
-                    <span>{item.completedDate}</span>
+          <div className="space-y-2.5">
+            {finished.map((item) => (
+              <div key={item.gameId} className="rounded-[28px] win11-card p-4 flex items-center justify-between gap-4">
+                <div className="flex items-center gap-3.5">
+                  <div className="w-14 h-9 rounded-thumb overflow-hidden border border-white/10 bg-bg-app shrink-0">
+                    {item.coverImage && <img src={item.coverImage} alt="" className="w-full h-full object-cover" />}
+                  </div>
+                  <div>
+                    <h4
+                      onClick={() => navigate('game-detail', item.gameId)}
+                      className="text-xs font-semibold text-white hover:text-accent cursor-default transition-colors"
+                    >
+                      {item.title}
+                    </h4>
+                    <div className="flex items-center gap-2 text-[11px] text-slate-400 mt-0.5 tabular-nums">
+                      {item.version && (
+                        <>
+                          <span>{item.version}</span>
+                          <span>·</span>
+                        </>
+                      )}
+                      <span>{formatSize(item.totalBytes)}</span>
+                    </div>
                   </div>
                 </div>
-              </div>
 
-              <button
-                onClick={() => launchGame(item.id)}
-                className="px-4 py-1.5 rounded-full bg-accent hover:bg-accent-hover text-bg-app font-bold text-xs flex items-center gap-1.5 transition-surface cursor-default"
-              >
-                <Play className="w-3.5 h-3.5 fill-current" />
-                <span>Play</span>
-              </button>
-            </div>
-          ))}
+                <button
+                  onClick={() => launchGame(item.gameId)}
+                  className="px-4 py-1.5 rounded-full bg-accent hover:bg-accent-hover text-bg-app font-bold text-xs flex items-center gap-1.5 transition-surface cursor-default"
+                >
+                  <Play className="w-3.5 h-3.5 fill-current" />
+                  <span>Play</span>
+                </button>
+              </div>
+            ))}
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 };

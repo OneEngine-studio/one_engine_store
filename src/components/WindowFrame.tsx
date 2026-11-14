@@ -8,10 +8,8 @@ import {
   ChevronLeft,
   ChevronRight,
   Bell,
-  Wallet,
 } from 'lucide-react';
 import { NotificationPopover } from './NotificationPopover';
-import { NumberTicker } from './ui/NumberTicker';
 import { Kbd } from './ui/Kbd';
 
 export const WindowFrame: React.FC = () => {
@@ -99,7 +97,7 @@ export const WindowFrame: React.FC = () => {
         </button>
       </div>
 
-      {/* Right: telemetry + wallet + profile + notifications + window controls */}
+      {/* Right: status + profile + notifications + window controls */}
       <div
         style={{ WebkitAppRegion: 'no-drag' } as React.CSSProperties}
         className="flex items-center gap-2 pointer-events-auto relative"
@@ -112,17 +110,6 @@ export const WindowFrame: React.FC = () => {
             <span className="text-slate-400 text-[11px]">({formatTimer(sessionElapsedSeconds)})</span>
           </div>
         )}
-
-        {/* Wallet pill */}
-        <div className="flex items-center gap-1.5 px-3 py-1 bg-white/[0.04] border border-white/[0.09] shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06)] rounded-full text-xs text-slate-300 tabular-nums">
-          <Wallet className="w-3.5 h-3.5 text-accent" strokeWidth={1.75} />
-          <NumberTicker
-            value={currentUser.walletBalance}
-            decimalPlaces={2}
-            prefix="$"
-            className="text-slate-100 font-semibold"
-          />
-        </div>
 
         {/* Notification bell */}
         <div className="relative">

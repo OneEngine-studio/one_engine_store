@@ -1,0 +1,6 @@
+{$API_DOMAIN} {
+	# Game downloads are large; do not buffer them.
+	reverse_proxy api:8080 {
+		flush_interval -1
+	}
+}

@@ -13,14 +13,13 @@ export const BottomDock: React.FC = () => {
     resumeDownload,
     sessionElapsedSeconds,
     navigate,
-    isPausedAll,
   } = useStore();
 
   const [hasImgError, setHasImgError] = useState(false);
 
   const runningGame = games.find((g) => g.id === runningGameId);
   const activeDownload = downloads.find(
-    (d) => d.status === 'DOWNLOADING' || d.status === 'PAUSED'
+    (d) => d.status === 'DOWNLOADING' || d.status === 'VERIFYING' || d.status === 'EXTRACTING' || d.status === 'PAUSED'
   );
 
   // Bottom dock hides completely when idle
@@ -44,7 +43,7 @@ export const BottomDock: React.FC = () => {
             className="flex items-center gap-3 cursor-default flex-1 min-w-0"
           >
             <div className="relative w-10 h-10 rounded-thumb overflow-hidden shrink-0 border border-white/10 bg-bg-card">
-              {!hasImgError ? (
+              {!hasImgError && runningGame.coverImage ? (
                 <img
                   src={runningGame.coverImage}
                   alt=""
@@ -81,7 +80,7 @@ export const BottomDock: React.FC = () => {
             className="flex items-center gap-3 cursor-default flex-1 min-w-0"
           >
             <div className="relative w-10 h-10 rounded-thumb overflow-hidden shrink-0 border border-white/10 bg-bg-card">
-              {!hasImgError ? (
+              {!hasImgError && activeDownload.coverImage ? (
                 <img
                   src={activeDownload.coverImage}
                   alt=""
@@ -100,7 +99,15 @@ export const BottomDock: React.FC = () => {
                   {activeDownload.title}
                 </span>
                 <span className="text-slate-300 tabular-nums text-[11px]">
-                  <NumberTicker value={activeDownload.speedMbps} decimalPlaces={1} suffix=" MB/s" />
+                  {activeDownload.status === 'VERIFYING' ? (
+                    'Verifying…'
+                  ) : activeDownload.status === 'EXTRACTING' ? (
+                    'Unpacking…'
+                  ) : activeDownload.status === 'PAUSED' ? (
+                    'Paused'
+                  ) : (
+                    <NumberTicker value={activeDownload.speedBps / (1024 * 1024)} decimalPlaces={1} suffix=" MB/s" />
+                  )}
                 </span>
               </div>
               {/* Progress bar */}
@@ -127,10 +134,10 @@ export const BottomDock: React.FC = () => {
             </button>
           )}
 
-          {!runningGame && activeDownload && (
+          {!runningGame && activeDownload && (activeDownload.status === 'DOWNLOADING' || activeDownload.status === 'PAUSED') && (
             <button
               onClick={() =>
-                activeDownload.status === 'PAUSED' || isPausedAll
+                activeDownload.status === 'PAUSED'
                   ? resumeDownload(activeDownload.gameId)
                   : pauseDownload(activeDownload.gameId)
               }

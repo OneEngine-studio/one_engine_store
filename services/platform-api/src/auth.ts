@@ -9,14 +9,14 @@ export interface AuthUser {
 
 const encoder = new TextEncoder();
 
-/** Dev-only access token (HS256). Real deployments use the identity provider's tokens instead. */
-export async function signDevToken(cfg: Config, user: AuthUser, ttlSeconds = 600): Promise<string> {
+/** Access token (HS256). Short lived; the refresh token keeps the player signed in. */
+export async function signAccessToken(cfg: Config, user: AuthUser, ttlSeconds: number): Promise<string> {
   return new SignJWT({ email: user.email, name: user.name })
     .setProtectedHeader({ alg: 'HS256' })
     .setSubject(user.sub)
     .setIssuedAt()
     .setExpirationTime(`${ttlSeconds}s`)
-    .sign(encoder.encode(cfg.devJwtSecret));
+    .sign(encoder.encode(cfg.jwtSecret));
 }
 
 export type TokenVerifier = (token: string) => Promise<AuthUser>;
@@ -34,12 +34,7 @@ export function makeVerifier(cfg: Config): TokenVerifier {
       };
     };
   }
-  if (!cfg.allowDevLogin) {
-    return async () => {
-      throw new Error('no token verifier configured');
-    };
-  }
-  const secret = encoder.encode(cfg.devJwtSecret);
+  const secret = encoder.encode(cfg.jwtSecret);
   return async (token) => {
     const { payload } = await jwtVerify(token, secret, { algorithms: ['HS256'] });
     if (!payload.sub) throw new Error('token has no subject');

@@ -32,13 +32,13 @@ const auth = (token: string) => ({ authorization: `Bearer ${token}` });
 const device = 'device-1234567890';
 
 describe('catalog', () => {
-  it('lists Railbound with a discounted price', async () => {
+  it('lists Railbound as a free game', async () => {
     const { app } = setup();
     const res = await app.inject({ method: 'GET', url: '/v1/catalog' });
     expect(res.statusCode).toBe(200);
     const item = res.json().items[0];
     expect(item.productId).toBe('railbound');
-    expect(item.price).toMatchObject({ amountMinor: 2999, discountPercent: 20, finalMinor: 2399 });
+    expect(item.price).toMatchObject({ amountMinor: 0, discountPercent: 0, finalMinor: 0 });
   });
 
   it('404s for an unknown product', async () => {

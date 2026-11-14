@@ -198,8 +198,10 @@ export const LibraryScreen: React.FC = () => {
                     launchingGameId === game.id
                       ? 'Inserting…'
                       : game.playHours
-                      ? `${game.playHours}h played · ${game.installSizeGb} GB`
-                      : `Never played · ${game.installSizeGb} GB`
+                      ? `${game.playHours}h played`
+                      : game.installed
+                      ? 'Never played'
+                      : 'Not installed'
                   }
                   onOpen={() => navigate('game-detail', game.id)}
                   onPlay={() => launchGame(game.id)}

@@ -1,13 +1,6 @@
 export type GameStatus = 'UNINSTALLED' | 'DOWNLOADING' | 'INSTALLED' | 'RUNNING' | 'PAUSED';
 
-export interface GameDLC {
-  id: string;
-  title: string;
-  description: string;
-  price: number;
-  owned: boolean;
-}
-
+/** A game as shown in the launcher: catalog data from the server plus what is on this PC. */
 export interface Game {
   id: string;
   title: string;
@@ -16,109 +9,60 @@ export interface Game {
   genre?: string;
   price: number | 'FREE';
   discountPercent?: number;
+  /** Empty when the game has no artwork bundled with the launcher. */
   coverImage: string;
   heroBanner: string;
-  screenshots: string[];
   tags: string[];
-  rating: number; // 0 - 100
-  ratingBreakdown: {
-    positivePercent: number;
-    totalReviews: number;
-  };
   developer: string;
-  publisher: string;
-  releaseDate: string;
   installed: boolean;
+  installedVersion?: string;
+  /** The server has a newer build than the one installed. */
+  updateAvailable?: boolean;
+  /** Size on disk in GB; 0 until the game is installed. */
   installSizeGb: number;
   isFavorite: boolean;
+  /** Hours played on this PC, counted by the launcher while the game runs. */
   playHours: number;
   lastPlayed?: string;
   status: GameStatus;
   downloadProgress: number; // 0 - 100
-  downloadSpeedMbps: number;
-  category: 'FEATURED' | 'TRENDING_TACTICAL' | 'EARLY_ACCESS' | 'RECOMMENDED';
-  achievements: {
-    unlocked: number;
-    total: number;
-  };
-  dlcs: GameDLC[];
-  patchNotes: Array<{
-    version: string;
-    date: string;
-    notes: string[];
-  }>;
-  systemRequirements: {
-    minimum: {
-      os: string;
-      processor: string;
-      memory: string;
-      graphics: string;
-      storage: string;
-    };
-    recommended: {
-      os: string;
-      processor: string;
-      memory: string;
-      graphics: string;
-      storage: string;
-    };
-  };
 }
+
+export type DownloadStatus = 'DOWNLOADING' | 'VERIFYING' | 'EXTRACTING' | 'PAUSED' | 'FAILED' | 'COMPLETED';
 
 export interface DownloadItem {
   gameId: string;
   title: string;
   coverImage: string;
   progress: number;
-  downloadedGb: number;
-  totalGb: number;
-  speedMbps: number;
-  diskSpeedMbps: number;
-  status: 'DOWNLOADING' | 'PAUSED' | 'COMPLETED';
+  receivedBytes: number;
+  totalBytes: number;
+  speedBps: number;
+  status: DownloadStatus;
   etaSeconds: number;
+  message?: string;
+  version?: string;
 }
 
 export interface UserProfile {
   id: string;
   callsign: string;
   email?: string;
-  rank: string;
-  level: number;
   avatarUrl: string;
   status: 'ONLINE' | 'IN_GAME' | 'AWAY';
   currentGame?: string;
-  walletBalance: number;
-  role: 'OPERATOR' | 'DEVELOPER' | 'ADMIN';
   ownedGameIds: string[];
+  emailVerified: boolean;
 }
 
-export type NavigationTab = 'store' | 'game-detail' | 'library' | 'downloads' | 'activity' | 'community' | 'settings';
+export type NavigationTab = 'store' | 'game-detail' | 'library' | 'downloads' | 'activity' | 'settings';
 
 export interface AppSettings {
-  launchOnStartup: boolean;
   downloadDirectory: string;
-  primaryAccent: string;
   enableTactileAudio: boolean;
-  hardwareAcceleration: boolean;
-  devTelemetryMode: boolean;
-  bandwidthThrottleMbps: number;
+  /** Download speed cap in MB/s; 0 means no cap. */
+  bandwidthLimitMBps: number;
   platformApiUrl: string;
-}
-
-export interface Article {
-  id: string;
-  title: string;
-  gameTitle: string;
-  gameId: string;
-  category: 'PATCH_NOTES' | 'DEV_LOGS' | 'COMMUNITY_SPOTLIGHT';
-  date: string;
-  author: string;
-  cover: string;
-  summary: string;
-  content: string[];
-  likes: number;
-  hasLiked: boolean;
-  comments: number;
 }
 
 export interface ClientNotification {
@@ -127,7 +71,7 @@ export interface ClientNotification {
   description: string;
   time: string;
   read: boolean;
-  type: 'update' | 'friend' | 'system';
+  type: 'update' | 'system';
 }
 
 export interface ToastNotification {

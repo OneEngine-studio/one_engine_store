@@ -5,12 +5,10 @@ import { Sidebar } from './components/Sidebar';
 import { AuthModal } from './components/AuthModal';
 import { CommandPalette } from './components/CommandPalette';
 import { ToastContainer } from './components/ToastContainer';
-import { ArticleReaderModal } from './components/ArticleReaderModal';
 import { StoreScreen } from './screens/StoreScreen';
 import { GameDetailScreen } from './screens/GameDetailScreen';
 import { LibraryScreen } from './screens/LibraryScreen';
 import { DownloadsScreen } from './screens/DownloadsScreen';
-import { CommunityScreen } from './screens/CommunityScreen';
 import { SettingsScreen } from './screens/SettingsScreen';
 import { ActivityScreen } from './screens/ActivityScreen';
 import { BottomDock } from './components/BottomDock';
@@ -23,8 +21,6 @@ const MainViewport: React.FC = () => {
     setCommandPaletteOpen,
     goBack,
     canGoBack,
-    selectedArticle,
-    closeArticle,
     isAuthModalOpen,
     closeAuthModal,
   } = useStore();
@@ -59,9 +55,7 @@ const MainViewport: React.FC = () => {
         e.preventDefault();
         setCommandPaletteOpen(true);
       } else if (e.key === 'Escape') {
-        if (selectedArticle) {
-          closeArticle();
-        } else if (isAuthModalOpen) {
+        if (isAuthModalOpen) {
           closeAuthModal();
         } else if (canGoBack) {
           goBack();
@@ -73,8 +67,6 @@ const MainViewport: React.FC = () => {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [
     setCommandPaletteOpen,
-    selectedArticle,
-    closeArticle,
     isAuthModalOpen,
     closeAuthModal,
     canGoBack,
@@ -93,8 +85,6 @@ const MainViewport: React.FC = () => {
         return <DownloadsScreen />;
       case 'activity':
         return <ActivityScreen />;
-      case 'community':
-        return <CommunityScreen />;
       case 'settings':
         return <SettingsScreen />;
       default:
@@ -145,7 +135,6 @@ const MainViewport: React.FC = () => {
       {/* Modals & overlays */}
       <AuthModal />
       <CommandPalette />
-      <ArticleReaderModal />
       <ToastContainer />
     </div>
   );

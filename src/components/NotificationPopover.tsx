@@ -1,6 +1,6 @@
 import React from 'react';
 import { useStore } from '../store/useStore';
-import { Bell, Check, Sparkles, HardDrive, User } from 'lucide-react';
+import { Bell, Check, Sparkles, HardDrive } from 'lucide-react';
 
 interface NotificationPopoverProps {
   isOpen: boolean;
@@ -52,7 +52,6 @@ export const NotificationPopover: React.FC<NotificationPopoverProps> = ({ isOpen
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   {item.type === 'update' && <Sparkles className="w-3.5 h-3.5 text-accent" />}
-                  {item.type === 'friend' && <User className="w-3.5 h-3.5 text-slate-300" />}
                   {item.type === 'system' && <HardDrive className="w-3.5 h-3.5 text-success" />}
                   <span className="text-xs font-semibold text-slate-200">
                     {item.title}

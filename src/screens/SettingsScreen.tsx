@@ -5,13 +5,10 @@ import {
   VolumeX,
   HardDrive,
   Folder,
-  Power,
   RotateCcw,
   Shield,
   Activity,
-  Trash2,
   CheckCircle,
-  Terminal,
   Check,
   AlertTriangle,
   Server,
@@ -26,14 +23,42 @@ export const SettingsScreen: React.FC = () => {
     settings,
     updateSettings,
     playTactileSound,
-    clearShaderCache,
     verifyGameFiles,
     addToast,
+    isAuthenticated,
+    currentUser,
+    changePassword,
   } = useStore();
 
   const [isEditingDir, setIsEditingDir] = useState(false);
   const [customDir, setCustomDir] = useState(settings.downloadDirectory);
   const [showResetConfirm, setShowResetConfirm] = useState(false);
+  const [currentPw, setCurrentPw] = useState('');
+  const [newPw, setNewPw] = useState('');
+  const [pwBusy, setPwBusy] = useState(false);
+  const [pwError, setPwError] = useState<string | null>(null);
+
+  const handleChangePassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setPwError(null);
+    if (newPw.length < 8) {
+      setPwError('Use a new password of at least 8 characters.');
+      return;
+    }
+    setPwBusy(true);
+    try {
+      const res = await changePassword(currentPw, newPw);
+      if (res.success) {
+        setCurrentPw('');
+        setNewPw('');
+      } else {
+        setPwError(res.error || 'Could not change the password.');
+      }
+    } finally {
+      setPwBusy(false);
+    }
+  };
+
   const [testing, setTesting] = useState(false);
   const [testResult, setTestResult] = useState<{ ok: boolean; message: string } | null>(null);
 
@@ -54,34 +79,25 @@ export const SettingsScreen: React.FC = () => {
   };
 
   // Runtime verification
-  const getRuntimeInfo = () => {
-    if (typeof window !== 'undefined' && (window as unknown as { electronAPI?: unknown }).electronAPI) {
-      return 'Electron / Chromium';
-    }
-    if (typeof window !== 'undefined' && '__TAURI_INTERNALS__' in window) {
-      return 'Tauri / WebKit Desktop';
-    }
-    return 'Electron / Chromium';
-  };
+  const getRuntimeInfo = () =>
+    typeof window !== 'undefined' && window.electronAPI ? 'Desktop app' : 'Web browser (installing games is off)';
 
   const handleSaveDirectory = () => {
-    if (customDir && customDir.trim()) {
-      updateSettings({ downloadDirectory: customDir.trim() });
+    const dir = customDir.trim();
+    if (dir && !/^([a-zA-Z]:[\\/]|\/)/.test(dir)) {
+      addToast('Enter a full folder path, for example D:\\Games\\OneEngine.', 'warning');
+      return;
+    }
+    if (dir) {
+      updateSettings({ downloadDirectory: dir });
       addToast(`Installation directory set to ${customDir.trim()}`, 'success');
       setIsEditingDir(false);
     }
   };
 
   const handleResetDefaults = () => {
-    updateSettings({
-      launchOnStartup: true,
-      downloadDirectory: 'C:\\OneEngine\\GameLibrary',
-      primaryAccent: '#FF7A00',
-      enableTactileAudio: true,
-      hardwareAcceleration: true,
-      devTelemetryMode: false,
-      bandwidthThrottleMbps: 0,
-    });
+    // An empty folder makes the desktop app pick its default again.
+    updateSettings({ downloadDirectory: '', enableTactileAudio: true, bandwidthLimitMBps: 0 });
     addToast('Preferences reset to defaults.', 'info');
     setShowResetConfirm(false);
   };
@@ -144,49 +160,6 @@ export const SettingsScreen: React.FC = () => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Left Column (2 Cols): Core Groups */}
         <div className="lg:col-span-2 space-y-6">
-          {/* Group: Startup and window behavior */}
-          <section className="win11-card rounded-[28px] p-6 space-y-5">
-            <h2 className="text-sm font-semibold text-white flex items-center gap-2">
-              <Power className="w-4 h-4 text-accent" /> Startup and performance
-            </h2>
-
-            <div className="divide-y divide-white/[0.06]">
-              {/* Toggle 1: Launch on startup */}
-              <div className="flex items-center justify-between py-3">
-                <div className="space-y-0.5 max-w-md">
-                  <span className="text-xs font-semibold text-slate-200 block">
-                    Launch OneEngine on system startup
-                  </span>
-                  <span className="text-xs text-slate-400 leading-relaxed block">
-                    Open the store automatically when your computer boots up.
-                  </span>
-                </div>
-                <Switch
-                  checked={settings.launchOnStartup}
-                  onChange={(v) => updateSettings({ launchOnStartup: v })}
-                  label="Launch on system startup"
-                />
-              </div>
-
-              {/* Toggle 2: Hardware acceleration */}
-              <div className="flex items-center justify-between py-3">
-                <div className="space-y-0.5 max-w-md">
-                  <span className="text-xs font-semibold text-slate-200 block">
-                    Hardware acceleration
-                  </span>
-                  <span className="text-xs text-slate-400 leading-relaxed block">
-                    Use GPU rendering for fluid UI motion and 4K media playback.
-                  </span>
-                </div>
-                <Switch
-                  checked={settings.hardwareAcceleration}
-                  onChange={(v) => updateSettings({ hardwareAcceleration: v })}
-                  label="Hardware acceleration"
-                />
-              </div>
-            </div>
-          </section>
-
           {/* Group: Audio & feedback */}
           <section className="win11-card rounded-[28px] p-6 space-y-4">
             <h2 className="text-sm font-semibold text-white flex items-center gap-2">
@@ -267,6 +240,63 @@ export const SettingsScreen: React.FC = () => {
             </div>
           </section>
 
+          {/* Group: Account */}
+          {isAuthenticated && currentUser.id && (
+            <section className="win11-card rounded-[28px] p-6 space-y-4">
+              <h2 className="text-sm font-semibold text-white flex items-center gap-2">
+                <Shield className="w-4 h-4 text-accent" /> Account
+              </h2>
+              <p className="text-xs text-slate-400 leading-relaxed">
+                Signed in as <span className="text-slate-200">{currentUser.email}</span>. Changing your password signs
+                you out of every other device.
+              </p>
+              <form onSubmit={handleChangePassword} className="grid grid-cols-1 md:grid-cols-2 gap-3" noValidate>
+                <div>
+                  <label htmlFor="pw-current" className="text-[11px] font-medium text-slate-400 block mb-1">
+                    Current password
+                  </label>
+                  <input
+                    id="pw-current"
+                    type="password"
+                    autoComplete="current-password"
+                    value={currentPw}
+                    onChange={(e) => setCurrentPw(e.target.value)}
+                    className="w-full bg-bg-app border border-white/[0.08] focus:border-accent rounded-thumb px-3 py-1.5 text-xs text-slate-200 outline-none select-text"
+                    required
+                  />
+                </div>
+                <div>
+                  <label htmlFor="pw-new" className="text-[11px] font-medium text-slate-400 block mb-1">
+                    New password
+                  </label>
+                  <input
+                    id="pw-new"
+                    type="password"
+                    autoComplete="new-password"
+                    value={newPw}
+                    onChange={(e) => setNewPw(e.target.value)}
+                    className="w-full bg-bg-app border border-white/[0.08] focus:border-accent rounded-thumb px-3 py-1.5 text-xs text-slate-200 outline-none select-text"
+                    required
+                  />
+                </div>
+                <div className="md:col-span-2 flex items-center gap-3">
+                  <button
+                    type="submit"
+                    disabled={pwBusy || !currentPw || !newPw}
+                    className="px-4 py-1.5 rounded-full bg-accent hover:bg-accent-hover text-xs font-bold text-[#1b1510] disabled:opacity-50 transition-surface"
+                  >
+                    {pwBusy ? 'Changing…' : 'Change password'}
+                  </button>
+                  {pwError && (
+                    <span role="alert" className="text-[11px] text-danger">
+                      {pwError}
+                    </span>
+                  )}
+                </div>
+              </form>
+            </section>
+          )}
+
           {/* Group: OneEngine service */}
           <section className="win11-card rounded-[28px] p-6 space-y-4">
             <div className="flex items-center justify-between">
@@ -284,7 +314,7 @@ export const SettingsScreen: React.FC = () => {
             </div>
 
             <p className="text-xs text-slate-400 leading-relaxed">
-              Where the store gets your library and prices, and where Railbound launch passes are issued.
+              Where your account, library, prices and game downloads come from, and where launch passes are issued.
             </p>
 
             <div>
@@ -313,31 +343,9 @@ export const SettingsScreen: React.FC = () => {
             )}
           </section>
 
-          {/* Group: Developer telemetry mode */}
-          <section className="win11-card rounded-[28px] p-6 space-y-4">
-            <h2 className="text-sm font-semibold text-white flex items-center gap-2">
-              <Terminal className="w-4 h-4 text-accent" /> Developer options
-            </h2>
-
-            <div className="flex items-center justify-between py-1">
-              <div className="space-y-0.5 max-w-md">
-                <span className="text-xs font-semibold text-slate-200 block">
-                  Show developer debug info
-                </span>
-                <span className="text-xs text-slate-400 leading-relaxed block">
-                  Display process IDs, account switcher, and low-level CLI execution arguments.
-                </span>
-              </div>
-              <Switch
-                checked={settings.devTelemetryMode}
-                onChange={(v) => updateSettings({ devTelemetryMode: v })}
-                label="Developer telemetry mode"
-              />
-            </div>
-          </section>
         </div>
 
-        {/* Right Column: Maintenance & About (includes moved v2.6) */}
+        {/* Right Column: Maintenance & About */}
         <div className="space-y-6">
           {/* Maintenance diagnostics */}
           <section className="win11-card rounded-[28px] p-6 space-y-5">
@@ -347,32 +355,14 @@ export const SettingsScreen: React.FC = () => {
 
             <div className="space-y-3">
               <button
-                onClick={clearShaderCache}
-                className="w-full py-2.5 bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.08] text-slate-200 text-xs font-medium rounded-full flex items-center justify-center gap-2 transition-surface cursor-default"
-              >
-                <Trash2 className="w-3.5 h-3.5 text-slate-400" />
-                <span>Clear shader cache (4.2 GB)</span>
-              </button>
-
-              <button
                 onClick={() => verifyGameFiles()}
                 className="w-full py-2.5 bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.08] text-slate-200 text-xs font-medium rounded-full flex items-center justify-center gap-2 transition-surface cursor-default"
               >
                 <CheckCircle className="w-3.5 h-3.5 text-slate-400" />
-                <span>Verify file integrity</span>
+                <span>Check installed games</span>
               </button>
             </div>
 
-            <div className="pt-3 border-t border-white/[0.06] space-y-2 text-xs">
-              <div className="flex justify-between text-slate-400">
-                <span>Graphics device</span>
-                <span className="text-slate-200 font-medium">NVIDIA RTX 4070</span>
-              </div>
-              <div className="flex justify-between text-slate-400">
-                <span>Display rate</span>
-                <span className="text-slate-200 font-medium tabular-nums">120 Hz</span>
-              </div>
-            </div>
           </section>
 
           {/* About & Runtime information */}
@@ -384,15 +374,11 @@ export const SettingsScreen: React.FC = () => {
             <div className="space-y-2 text-xs text-slate-400">
               <div className="flex justify-between">
                 <span>Client version</span>
-                <span className="text-white font-semibold tabular-nums">v2.6.4</span>
+                <span className="text-white font-semibold tabular-nums">v{__APP_VERSION__}</span>
               </div>
               <div className="flex justify-between">
                 <span>Desktop runtime</span>
                 <span className="text-slate-200 font-medium">{getRuntimeInfo()}</span>
-              </div>
-              <div className="flex justify-between">
-                <span>Release branch</span>
-                <span className="text-slate-200">Stable release</span>
               </div>
             </div>
 

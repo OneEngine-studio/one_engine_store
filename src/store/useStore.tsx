@@ -1,17 +1,17 @@
-import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
-import { 
-  Game, 
-  DownloadItem, 
-  UserProfile, 
-  NavigationTab, 
-  AppSettings, 
-  Article, 
-  ClientNotification, 
-  ToastNotification 
+import React, { createContext, useContext, useState, useEffect, useRef, useMemo } from 'react';
+import {
+  Game,
+  DownloadItem,
+  UserProfile,
+  NavigationTab,
+  AppSettings,
+  ClientNotification,
+  ToastNotification,
 } from '../types/store';
-import { platformApi, type PlatformProduct } from '../lib/platformApi';
+import { platformApi, PlatformError, type PlatformProduct, type PlatformUser } from '../lib/platformApi';
 import { recordPlayDay } from '../lib/playLog';
 import { LauncherBridge } from '../lib/launcherBridge';
+import type { InstallProgress, InstallRecord } from '../types/launcher';
 
 // Synthetic Tactical Audio Engine via Web Audio API (zero audio files needed)
 const playSynthesizerSound = (type: 'click' | 'launch' | 'hover' | 'alert' | 'purchase', enabled: boolean) => {
@@ -75,225 +75,190 @@ const playSynthesizerSound = (type: 'click' | 'launch' | 'hover' | 'alert' | 'pu
   }
 };
 
-const INITIAL_GAMES: Game[] = [
-  {
-    id: 'railbound',
-    title: 'Railbound: Tactical Protocol',
-    tagline: 'High-speed tactical railway logistics & automated rail defense systems.',
-    description: 'Lead an automated rail defense vanguard across hostile industrial zones. Reconfigure track matrices, repel mechanized raiders, and deploy armored rolling artillery to secure planetary resource arteries.',
-    price: 29.99,
-    discountPercent: 20,
-    coverImage: './images/railbound-theme.jpg',
-    heroBanner: './images/railbound-theme.jpg',
-    screenshots: [],
-    tags: ['Tactical', 'Automation', 'Defense', 'Strategy', 'Sci-fi'],
-    rating: 96,
-    ratingBreakdown: { positivePercent: 96, totalReviews: 4820 },
-    developer: 'Afterburn Foundry',
-    publisher: 'OneEngine Interactive',
-    releaseDate: 'October 2026',
-    installed: true,
-    installSizeGb: 38.4,
-    isFavorite: true,
-    playHours: 42.6,
-    lastPlayed: '2 hours ago',
-    status: 'INSTALLED',
-    downloadProgress: 100,
-    downloadSpeedMbps: 0,
-    category: 'FEATURED',
-    achievements: { unlocked: 18, total: 24 },
-    dlcs: [
-      { id: 'rb-dlc-1', title: 'Heavy Rolling Artillery Expansion Pack', description: 'Adds 6 dual-rail super-heavy artillery cars and planetary defense scenarios.', price: 9.99, owned: true },
-      { id: 'rb-dlc-2', title: 'Subterranean Mag-Lev Soundtracks & Skins', description: 'Official FLAC dynamic soundtrack and foundry camouflage chassis coats.', price: 4.99, owned: false }
-    ],
-    patchNotes: [
-      {
-        version: 'v2.4.0',
-        date: 'Oct 26, 2026',
-        notes: [
-          'Direct OneEngine Store headless bypass integration (--auth-token payload).',
-          'Automated GameLobby scene handoff with zero manual credential prompting.',
-          'Reduced load-in latency by 45% using native IPC session validation.',
-        ],
-      },
-      {
-        version: 'v2.3.8',
-        date: 'Oct 12, 2026',
-        notes: [
-          'Resolved collision glitch on junction Switch-7.',
-          'Updated shader cache for DirectX 12 render pipelines.',
-        ],
-      },
-    ],
-    systemRequirements: {
-      minimum: {
-        os: 'Windows 10 64-bit',
-        processor: 'Intel Core i5-6600K / AMD Ryzen 3 1300X',
-        memory: '8 GB RAM',
-        graphics: 'NVIDIA GeForce GTX 960 / AMD Radeon R9 380',
-        storage: '40 GB available high-speed SSD space',
-      },
-      recommended: {
-        os: 'Windows 11 64-bit',
-        processor: 'Intel Core i7-10700K / AMD Ryzen 7 3700X',
-        memory: '16 GB RAM',
-        graphics: 'NVIDIA GeForce RTX 3060 / AMD Radeon RX 6600 XT',
-        storage: '40 GB NVMe PCIe 4.0 SSD space',
-      }
-    },
-  },
-];
+const GB = 1024 ** 3;
+const MB = 1024 ** 2;
+const ACTIVE_STATUSES: DownloadItem['status'][] = ['DOWNLOADING', 'VERIFYING', 'EXTRACTING'];
+
+// Artwork that ships with the launcher, by product id. Games without any simply show no picture.
+const ARTWORK: Record<string, string> = {
+  railbound: './images/railbound-theme.jpg',
+};
 
 export const DEFAULT_GUEST_USER: UserProfile = {
   id: '',
   callsign: 'Guest',
   email: '',
-  rank: 'GUEST OPERATIVE',
-  level: 1,
   avatarUrl: 'https://api.dicebear.com/7.x/bottts/svg?seed=OneEngineGuest',
   status: 'ONLINE',
   currentGame: undefined,
-  walletBalance: 0.00,
-  role: 'OPERATOR',
   ownedGameIds: [],
+  emailVerified: false,
 };
 
-const profileFrom = (
-  me: { userId: string; email: string; displayName: string },
-  library: PlatformProduct[]
-): UserProfile => ({
+const profileFrom = (me: PlatformUser, library: PlatformProduct[]): UserProfile => ({
   ...DEFAULT_GUEST_USER,
   id: me.userId,
   callsign: me.displayName,
   email: me.email,
-  rank: 'VERIFIED OPERATIVE',
+  emailVerified: me.emailVerified,
   avatarUrl: `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(me.displayName)}`,
   ownedGameIds: library.map((p) => p.productId),
 });
 
-/** Price and discount are decided by the server; everything else on the card stays local. */
-const applyServerPrice = (game: Game, items: PlatformProduct[]): Game => {
-  const price = items.find((i) => i.productId === game.id)?.price;
-  if (!price) return game;
+// What the launcher itself remembers per game on this PC: favourite, and play time counted while it runs.
+interface LocalGameState {
+  favorite?: boolean;
+  playSeconds?: number;
+  lastPlayedAt?: string;
+}
+
+const LOCAL_KEY = 'oneengine_game_local';
+const SETTINGS_KEY = 'oneengine_settings';
+
+const readJson = <T,>(key: string, fallback: T): T => {
+  try {
+    const raw = localStorage.getItem(key);
+    const parsed = raw ? (JSON.parse(raw) as unknown) : null;
+    return parsed && typeof parsed === 'object' ? (parsed as T) : fallback;
+  } catch {
+    return fallback;
+  }
+};
+
+const writeJson = (key: string, value: unknown) => {
+  try {
+    localStorage.setItem(key, JSON.stringify(value));
+  } catch {
+    // storage unavailable: nothing is remembered between runs
+  }
+};
+
+const toGame = (
+  product: PlatformProduct,
+  local: LocalGameState,
+  install: InstallRecord | undefined,
+  download: DownloadItem | undefined,
+  latestBuildId: string | undefined,
+  running: boolean
+): Game => {
+  const art = ARTWORK[product.productId] ?? '';
+  const price = product.price;
+  const active = download && ACTIVE_STATUSES.includes(download.status);
+  const status: Game['status'] = running
+    ? 'RUNNING'
+    : active
+      ? 'DOWNLOADING'
+      : download?.status === 'PAUSED'
+        ? 'PAUSED'
+        : install
+          ? 'INSTALLED'
+          : 'UNINSTALLED';
   return {
-    ...game,
-    price: price.amountMinor === 0 ? 'FREE' : price.amountMinor / 100,
-    discountPercent: price.discountPercent || undefined,
+    id: product.productId,
+    title: product.title,
+    tagline: product.summary ?? '',
+    description: product.summary ?? '',
+    price: !price || price.amountMinor === 0 ? 'FREE' : price.amountMinor / 100,
+    discountPercent: price?.discountPercent || undefined,
+    coverImage: art,
+    heroBanner: art,
+    tags: product.tags,
+    developer: product.developer ?? '',
+    installed: !!install,
+    installedVersion: install?.version,
+    updateAvailable: !!install && !!latestBuildId && latestBuildId !== install.buildId,
+    installSizeGb: install ? +(install.sizeBytes / GB).toFixed(2) : 0,
+    isFavorite: !!local.favorite,
+    playHours: +((local.playSeconds ?? 0) / 3600).toFixed(1),
+    lastPlayed: local.lastPlayedAt,
+    status,
+    downloadProgress: download && download.status !== 'COMPLETED' ? download.progress : install ? 100 : 0,
   };
 };
 
-const INITIAL_ARTICLES: Article[] = [
-  {
-    id: 'art-01',
-    title: 'FOUNDRY LOG #44: LOW-LATENCY IPC RUNNER FOR RAILBOUND',
-    gameTitle: 'RAILBOUND',
-    gameId: 'railbound',
-    category: 'DEV_LOGS',
-    date: 'OCTOBER 26, 2026',
-    author: 'Lead Architect @ Spectre',
-    cover: './images/railbound-theme.jpg',
-    summary: 'Today we deployed v2.4.0 containing direct OneEngine Store session injection hooks. No more in-game login prompt delays. Read the full benchmark teardown.',
-    content: [
-      'With patch 2.4.0, Railbound now completely transitions from desktop click to active GameLobby in under 1.2 seconds.',
-      'By injecting cryptographic token arguments (--auth-token, --player-name, and --user-id) directly via low-level OS command vectors, we bypass the legacy Unity LoginMenu scene entirely.',
-      'Network tick rates have been stabilized at 128Hz, ensuring seamless mechanical switch synchronization across multi-track defensive lines.'
-    ],
-    likes: 1240,
-    hasLiked: false,
-    comments: 184,
-  },
-  {
-    id: 'art-05',
-    title: 'FOUNDRY ARCHITECTURE: REDUCING DESKTOP CLIENT OVERHEAD',
-    gameTitle: 'ONEENGINE STORE',
-    gameId: 'railbound',
-    category: 'DEV_LOGS',
-    date: 'OCTOBER 10, 2026',
-    author: 'Desktop Systems Architect',
-    cover: 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?q=80&w=800&auto=format&fit=crop',
-    summary: 'How we achieved near-zero RAM footprint and instantaneous navigation without heavy browser bloatware.',
-    content: [
-      'By decoupling background disk operations and running memory-efficient state management, OneEngine Store consumes 70% less standby memory than legacy launchers.',
-      'UI rendering is optimized for GPU rasterization, maintaining a locked 120 FPS on all supported display standards.',
-      'Local session persistence guarantees immediate access to installed game binaries even during offline operations.'
-    ],
-    likes: 3120,
-    hasLiked: true,
-    comments: 420,
-  },
-];
-
-const INITIAL_NOTIFICATIONS: ClientNotification[] = [
-  {
-    id: 'notif-1',
-    title: 'Railbound v2.4.0 Installed',
-    description: 'Direct OneEngine session injection protocol verified and ready.',
-    time: '12m ago',
-    read: false,
-    type: 'update',
-  },
-  {
-    id: 'notif-2',
-    title: "Operative 'Apex_09' is in-game",
-    description: 'Playing Railbound: Tactical Protocol (Squad slot open).',
-    time: '45m ago',
-    read: false,
-    type: 'friend',
-  },
-  {
-    id: 'notif-3',
-    title: 'Foundry Maintenance Complete',
-    description: 'All high-speed CDN distribution nodes operating at 100% capacity.',
-    time: '2h ago',
-    read: true,
-    type: 'system',
+const applyProgress = (item: DownloadItem, p: InstallProgress): DownloadItem => {
+  const received = p.received ?? item.receivedBytes;
+  const total = p.total || item.totalBytes;
+  const base = { ...item, receivedBytes: received, totalBytes: total };
+  switch (p.phase) {
+    case 'downloading': {
+      const speed = p.speedBps ?? 0;
+      return {
+        ...base,
+        status: 'DOWNLOADING',
+        speedBps: speed,
+        progress: total ? Math.min(100, (received / total) * 100) : 0,
+        etaSeconds: speed > 0 ? Math.round((total - received) / speed) : 0,
+        message: undefined,
+      };
+    }
+    case 'verifying':
+      return { ...base, status: 'VERIFYING', speedBps: 0, progress: 100, etaSeconds: 0 };
+    case 'extracting':
+      return { ...base, status: 'EXTRACTING', speedBps: 0, progress: 100, etaSeconds: 0 };
+    case 'paused':
+      return { ...base, status: 'PAUSED', speedBps: 0, etaSeconds: 0 };
+    case 'error':
+      return { ...base, status: 'FAILED', speedBps: 0, etaSeconds: 0, message: p.message };
+    case 'done':
+      return { ...base, status: 'COMPLETED', speedBps: 0, progress: 100, etaSeconds: 0 };
+    default:
+      return base;
   }
-];
+};
+
+export type AuthResult = { success: boolean; error?: string };
+export type CatalogStatus = 'loading' | 'ready' | 'error';
 
 interface StoreContextType {
   activeTab: NavigationTab;
   selectedGameId: string;
   games: Game[];
+  catalogStatus: CatalogStatus;
+  catalogError: string;
+  refreshCatalog: () => void;
+  /** True inside the desktop app, where games can be installed and started. */
+  desktopAvailable: boolean;
   downloads: DownloadItem[];
   currentUser: UserProfile;
   searchQuery: string;
   isAuthModalOpen: boolean;
   isCommandPaletteOpen: boolean;
-  selectedArticle: Article | null;
   settings: AppSettings;
   runningGameId: string | null;
   launchingGameId: string | null;
   sessionElapsedSeconds: number;
+  /** Recent download speed samples in MB/s, one per second while something downloads. */
   speedTelemetryHistory: number[];
-  articles: Article[];
   notifications: ClientNotification[];
   toasts: ToastNotification[];
   canGoBack: boolean;
   canGoForward: boolean;
-  isPausedAll: boolean;
-  
+
   isAuthenticated: boolean;
-  signIn: (email: string, displayName: string) => Promise<{ success: boolean; error?: string }>;
+  signIn: (email: string, password: string) => Promise<AuthResult>;
+  register: (email: string, password: string, displayName: string) => Promise<AuthResult>;
+  verifyEmail: (code: string) => Promise<AuthResult>;
+  resendVerification: () => Promise<AuthResult>;
+  forgotPassword: (email: string) => Promise<AuthResult>;
+  resetPassword: (email: string, code: string, newPassword: string) => Promise<AuthResult>;
+  changePassword: (currentPassword: string, newPassword: string) => Promise<AuthResult>;
   logout: () => void;
-  
+
   navigate: (tab: NavigationTab, gameId?: string) => void;
   goBack: () => void;
   goForward: () => void;
   openAuthModal: () => void;
   closeAuthModal: () => void;
   setCommandPaletteOpen: (open: boolean) => void;
-  openArticle: (article: Article) => void;
-  closeArticle: () => void;
-  toggleArticleLike: (articleId: string) => void;
   setSearchQuery: (query: string) => void;
-  switchUserPreset: (preset: 'DEVELOPER' | 'COMPETITIVE' | 'GUEST') => void;
   startDownload: (gameId: string) => void;
   pauseDownload: (gameId: string) => void;
   resumeDownload: (gameId: string) => void;
   cancelDownload: (gameId: string) => void;
-  togglePauseAllDownloads: () => void;
   launchGame: (gameId: string) => void;
   stopGame: (gameId: string) => void;
+  uninstallGame: (gameId: string) => Promise<void>;
   toggleFavorite: (gameId: string) => void;
   purchaseGame: (gameId: string) => Promise<boolean>;
   updateSettings: (newSettings: Partial<AppSettings>) => void;
@@ -301,8 +266,7 @@ interface StoreContextType {
   addToast: (message: string, type?: 'info' | 'success' | 'warning') => void;
   removeToast: (id: string) => void;
   markAllNotificationsRead: () => void;
-  clearShaderCache: () => void;
-  verifyGameFiles: (gameId?: string) => void;
+  verifyGameFiles: (gameId?: string) => Promise<void>;
   minimizeWindow: () => void;
   toggleMaximizeWindow: () => void;
   closeWindow: () => void;
@@ -312,49 +276,82 @@ const StoreContext = createContext<StoreContextType | null>(null);
 
 export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [activeTab, setActiveTab] = useState<NavigationTab>('store');
-  const [selectedGameId, setSelectedGameId] = useState<string>('railbound');
-  const [games, setGames] = useState<Game[]>(INITIAL_GAMES);
+  const [selectedGameId, setSelectedGameId] = useState<string>('');
+  const [catalog, setCatalog] = useState<PlatformProduct[]>([]);
+  const [catalogStatus, setCatalogStatus] = useState<CatalogStatus>('loading');
+  const [catalogError, setCatalogError] = useState('');
+  const [catalogTick, setCatalogTick] = useState(0);
+  const [installs, setInstalls] = useState<Record<string, InstallRecord>>({});
+  const [latestBuilds, setLatestBuilds] = useState<Record<string, string>>({});
+  const [localState, setLocalState] = useState<Record<string, LocalGameState>>(() => readJson(LOCAL_KEY, {}));
   const [downloads, setDownloads] = useState<DownloadItem[]>([]);
   const [currentUser, setCurrentUser] = useState<UserProfile>(DEFAULT_GUEST_USER);
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
-  const [selectedArticle, setSelectedArticle] = useState<Article | null>(null);
   const [runningGameId, setRunningGameId] = useState<string | null>(null);
   const [launchingGameId, setLaunchingGameId] = useState<string | null>(null);
   const [sessionElapsedSeconds, setSessionElapsedSeconds] = useState<number>(0);
-  const [isPausedAll, setIsPausedAll] = useState(false);
-  
-  const [speedTelemetryHistory, setSpeedTelemetryHistory] = useState<number[]>([
-    42, 48, 55, 59, 64, 68, 62, 65, 71, 64, 66, 68, 65, 72, 65
-  ]);
-
-  const [articles, setArticles] = useState<Article[]>(INITIAL_ARTICLES);
-  const [notifications, setNotifications] = useState<ClientNotification[]>(INITIAL_NOTIFICATIONS);
+  const [speedTelemetryHistory, setSpeedTelemetryHistory] = useState<number[]>([]);
+  const [notifications, setNotifications] = useState<ClientNotification[]>([]);
   const [toasts, setToasts] = useState<ToastNotification[]>([]);
 
   // Navigation History Stack
-  const [history, setHistory] = useState<Array<{ tab: NavigationTab; gameId?: string }>>([
-    { tab: 'store', gameId: 'railbound' }
-  ]);
+  const [history, setHistory] = useState<Array<{ tab: NavigationTab; gameId?: string }>>([{ tab: 'store' }]);
   const [historyIndex, setHistoryIndex] = useState(0);
 
-  const [settings, setSettings] = useState<AppSettings>(() => ({
-    launchOnStartup: true,
-    downloadDirectory: 'C:\\OneEngine\\GameLibrary',
-    primaryAccent: '#FF7A00',
-    enableTactileAudio: true,
-    hardwareAcceleration: true,
-    devTelemetryMode: false,
-    bandwidthThrottleMbps: 0,
-    platformApiUrl: platformApi.getUrl(),
-  }));
+  const [settings, setSettings] = useState<AppSettings>(() => {
+    const saved = readJson<Partial<AppSettings>>(SETTINGS_KEY, {});
+    return {
+      downloadDirectory: typeof saved.downloadDirectory === 'string' ? saved.downloadDirectory : '',
+      enableTactileAudio: saved.enableTactileAudio !== false,
+      bandwidthLimitMBps: typeof saved.bandwidthLimitMBps === 'number' ? saved.bandwidthLimitMBps : 0,
+      platformApiUrl: platformApi.getUrl(),
+    };
+  });
 
+  const games = useMemo<Game[]>(
+    () =>
+      catalog.map((p) =>
+        toGame(
+          p,
+          localState[p.productId] ?? {},
+          installs[p.productId],
+          downloads.find((d) => d.gameId === p.productId),
+          latestBuilds[p.productId],
+          runningGameId === p.productId
+        )
+      ),
+    [catalog, localState, installs, downloads, latestBuilds, runningGameId]
+  );
+
+  // Event handlers registered once need the latest values without re-subscribing.
   const settingsRef = useRef(settings);
+  const gamesRef = useRef(games);
+  const downloadsRef = useRef(downloads);
+  const userRef = useRef(currentUser);
+  const launchedAt = useRef<Record<string, number>>({});
+  const stoppedByUser = useRef<Set<string>>(new Set());
+  const lastSpeedSample = useRef(0);
   useEffect(() => {
     settingsRef.current = settings;
-  }, [settings]);
+    gamesRef.current = games;
+    downloadsRef.current = downloads;
+    userRef.current = currentUser;
+  });
+
+  useEffect(() => {
+    writeJson(LOCAL_KEY, localState);
+  }, [localState]);
+
+  useEffect(() => {
+    writeJson(SETTINGS_KEY, {
+      downloadDirectory: settings.downloadDirectory,
+      enableTactileAudio: settings.enableTactileAudio,
+      bandwidthLimitMBps: settings.bandwidthLimitMBps,
+    });
+  }, [settings.downloadDirectory, settings.enableTactileAudio, settings.bandwidthLimitMBps]);
 
   // Sound wrapper
   const triggerSound = (type: 'click' | 'launch' | 'hover' | 'alert' | 'purchase') => {
@@ -373,35 +370,76 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     setToasts((prev) => prev.filter((t) => t.id !== id));
   };
 
-  // Prices come from the server, so the catalog is refreshed whenever the service address changes.
+  const notify = (title: string, description: string, type: ClientNotification['type'] = 'system') => {
+    const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    setNotifications((prev) =>
+      [{ id: `n_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`, title, description, time, read: false, type }, ...prev].slice(0, 30)
+    );
+  };
+
+  // The catalog (titles, prices, discounts) is the server's; it is reloaded whenever the service address changes.
   useEffect(() => {
     let active = true;
+    setCatalogStatus('loading');
     platformApi
       .catalog()
       .then((items) => {
-        if (active) setGames((prev) => prev.map((g) => applyServerPrice(g, items)));
+        if (!active) return;
+        setCatalog(items.filter((i) => i.kind === 'game'));
+        setCatalogStatus('ready');
+        setCatalogError('');
       })
-      .catch((e) => console.warn('[OneEngine] Catalog unavailable:', e));
+      .catch((e) => {
+        if (!active) return;
+        setCatalogStatus('error');
+        setCatalogError(e instanceof Error ? e.message : 'The game catalog could not be loaded.');
+      });
     return () => {
       active = false;
     };
-  }, [settings.platformApiUrl]);
+  }, [settings.platformApiUrl, catalogTick]);
 
-  // Sign back in on startup with the identity used last time (development sign-in only).
+  // Open the first game when the page has none selected yet.
+  useEffect(() => {
+    if (!selectedGameId && catalog.length > 0) setSelectedGameId(catalog[0].productId);
+  }, [catalog, selectedGameId]);
+
+  // The install folder defaults to a per-user folder chosen by the desktop app.
+  useEffect(() => {
+    if (settings.downloadDirectory || !LauncherBridge.isAvailable()) return;
+    void LauncherBridge.defaultLibraryDir().then((dir) => {
+      if (dir) setSettings((prev) => (prev.downloadDirectory ? prev : { ...prev, downloadDirectory: dir }));
+    });
+  }, [settings.downloadDirectory]);
+
+  // What is installed is read from the disk, never remembered.
+  const rescanInstalls = async (dir: string) => {
+    if (!dir || !LauncherBridge.isAvailable()) {
+      setInstalls({});
+      return;
+    }
+    const found = await LauncherBridge.scan(dir);
+    setInstalls(Object.fromEntries(found.map((r) => [r.gameId, r])));
+  };
+  useEffect(() => {
+    void rescanInstalls(settings.downloadDirectory);
+  }, [settings.downloadDirectory]);
+
+  // Sign back in on startup from the session the desktop app saved (encrypted) last time.
   useEffect(() => {
     // Profiles cached by older builds (including offline passes) are never trusted.
     try {
       localStorage.removeItem('oneengine_user_profile');
+      localStorage.removeItem('oneengine_dev_identity');
     } catch {
       // ignore
     }
-    const remembered = platformApi.rememberedIdentity();
-    if (!remembered) return;
     let active = true;
     (async () => {
       try {
-        const me = await platformApi.signIn(remembered.email, remembered.displayName);
-        const library = await platformApi.library();
+        if (!(await platformApi.restore())) return;
+        const me = await platformApi.me();
+        const library = me.emailVerified ? await platformApi.library() : [];
         if (active) {
           setCurrentUser(profileFrom(me, library));
           setIsAuthenticated(true);
@@ -415,6 +453,30 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     };
   }, []);
 
+  // For every installed game the player owns, ask the server whether a newer build exists.
+  const installedKey = Object.values(installs)
+    .map((r) => r.gameId)
+    .sort()
+    .join(',');
+  useEffect(() => {
+    if (!isAuthenticated || !currentUser.emailVerified || !installedKey) return;
+    let active = true;
+    const owned = installedKey.split(',').filter((id) => currentUser.ownedGameIds.includes(id));
+    owned.forEach((id) => {
+      platformApi
+        .latestBuild(id)
+        .then((b) => {
+          if (active) setLatestBuilds((prev) => (prev[id] === b.buildId ? prev : { ...prev, [id]: b.buildId }));
+        })
+        .catch(() => {
+          // no build published, or the service is unreachable: nothing to offer
+        });
+    });
+    return () => {
+      active = false;
+    };
+  }, [isAuthenticated, currentUser.emailVerified, currentUser.ownedGameIds, installedKey]);
+
   // Keyboard shortcut listener for Command Palette (Ctrl+K)
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -422,19 +484,10 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         e.preventDefault();
         setIsCommandPaletteOpen((prev) => !prev);
       } else if (e.key === 'Escape') {
-        // Close topmost overlay only (priority: CommandPalette > Article > AuthModal)
+        // Close topmost overlay only (priority: CommandPalette > AuthModal)
         setIsCommandPaletteOpen((prev) => {
-          if (prev) return false; // close palette, stop propagation via early return
-          // Not open — try closing article next
-          setSelectedArticle((prevA) => {
-            if (prevA) return null;
-            // Not open — close auth modal
-            setIsAuthModalOpen((prevM) => {
-              if (prevM) return false;
-              return prevM;
-            });
-            return prevA;
-          });
+          if (prev) return false;
+          setIsAuthModalOpen((prevM) => (prevM ? false : prevM));
           return prev;
         });
       }
@@ -445,7 +498,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   // Running game session timer
   useEffect(() => {
-    let timer: NodeJS.Timeout;
+    let timer: ReturnType<typeof setInterval> | undefined;
     if (runningGameId) {
       timer = setInterval(() => {
         setSessionElapsedSeconds((prev) => prev + 1);
@@ -456,65 +509,43 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     return () => clearInterval(timer);
   }, [runningGameId]);
 
-  // Live simulation tick for active downloads & speed telemetry
+  // Live progress from the installer in the desktop app's main process.
   useEffect(() => {
-    const interval = setInterval(() => {
-      setDownloads((prevDownloads) => {
-        const activeDownload = prevDownloads.find((d) => d.status === 'DOWNLOADING');
-        if (!activeDownload || isPausedAll) return prevDownloads;
+    return LauncherBridge.onInstallProgress((p) => {
+      setDownloads((prev) => prev.map((d) => (d.gameId === p.gameId ? applyProgress(d, p) : d)));
+      const now = Date.now();
+      if (p.phase === 'downloading' && p.speedBps && now - lastSpeedSample.current >= 1000) {
+        lastSpeedSample.current = now;
+        setSpeedTelemetryHistory((prev) => [...prev.slice(-59), +(p.speedBps! / MB).toFixed(1)]);
+      }
+    });
+  }, []);
 
-        // Realistic bandwidth jitter around 64.8 MB/s
-        const jitter = (Math.random() - 0.48) * 6;
-        const currentSpeed = Math.max(18, Math.min(95, +(64.8 + jitter).toFixed(1)));
-        const diskSpeed = +(currentSpeed * 1.72).toFixed(1);
-
-        // Update telemetry graph
-        setSpeedTelemetryHistory((prev) => [...prev.slice(1), currentSpeed]);
-
-        return prevDownloads.map((item) => {
-          if (item.status !== 'DOWNLOADING' || isPausedAll) return item;
-          const increment = 0.5;
-          const nextProgress = Math.min(100, +(item.progress + increment).toFixed(1));
-          const nextDownloadedGb = +((nextProgress / 100) * item.totalGb).toFixed(1);
-
-          if (nextProgress >= 100) {
-            // Complete download
-            setGames((gList) =>
-              gList.map((g) =>
-                g.id === item.gameId
-                  ? { ...g, installed: true, status: 'INSTALLED', downloadProgress: 100 }
-                  : g
-              )
-            );
-            addToast(`Installation of ${item.title} complete and verified.`, 'success');
-            return {
-              ...item,
-              progress: 100,
-              downloadedGb: item.totalGb,
-              speedMbps: 0,
-              diskSpeedMbps: 0,
-              status: 'COMPLETED',
-              etaSeconds: 0,
-            };
-          }
-
-          const remainingGb = item.totalGb - nextDownloadedGb;
-          const remainingSeconds = Math.round((remainingGb * 1024) / (currentSpeed || 1));
-
-          return {
-            ...item,
-            progress: nextProgress,
-            downloadedGb: nextDownloadedGb,
-            speedMbps: currentSpeed,
-            diskSpeedMbps: diskSpeed,
-            etaSeconds: remainingSeconds,
-          };
-        });
-      });
-    }, 1000);
-
-    return () => clearInterval(interval);
-  }, [isPausedAll]);
+  // A game process ended, whether the player closed it or we did: bank the play time.
+  useEffect(() => {
+    return LauncherBridge.onGameExited(({ gameId, code }) => {
+      const startedAt = launchedAt.current[gameId];
+      delete launchedAt.current[gameId];
+      if (startedAt) {
+        const seconds = Math.max(0, Math.round((Date.now() - startedAt) / 1000));
+        setLocalState((prev) => ({
+          ...prev,
+          [gameId]: {
+            ...prev[gameId],
+            playSeconds: (prev[gameId]?.playSeconds ?? 0) + seconds,
+            lastPlayedAt: new Date().toISOString(),
+          },
+        }));
+      }
+      setRunningGameId((current) => (current === gameId ? null : current));
+      setLaunchingGameId((current) => (current === gameId ? null : current));
+      setCurrentUser((prev) => ({ ...prev, status: 'ONLINE', currentGame: undefined }));
+      if (stoppedByUser.current.delete(gameId)) return;
+      if (code !== 0 && code !== null) {
+        addToast(`The game closed unexpectedly (exit code ${code}).`, 'warning');
+      }
+    });
+  }, []);
 
   const navigate = (tab: NavigationTab, gameId?: string) => {
     triggerSound('click');
@@ -545,12 +576,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       const prevEntry = history[historyIndex - 1];
       setHistoryIndex((prev) => prev - 1);
       setActiveTab(prevEntry.tab);
-      // Always restore gameId for game-detail; fallback to first game if missing
-      if (prevEntry.tab === 'game-detail') {
-        setSelectedGameId(prevEntry.gameId ?? games[0]?.id ?? 'railbound');
-      } else if (prevEntry.gameId) {
-        setSelectedGameId(prevEntry.gameId);
-      }
+      if (prevEntry.gameId) setSelectedGameId(prevEntry.gameId);
     }
   };
 
@@ -560,84 +586,133 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       const nextEntry = history[historyIndex + 1];
       setHistoryIndex((prev) => prev + 1);
       setActiveTab(nextEntry.tab);
-      if (nextEntry.tab === 'game-detail') {
-        setSelectedGameId(nextEntry.gameId ?? games[0]?.id ?? 'railbound');
-      } else if (nextEntry.gameId) {
-        setSelectedGameId(nextEntry.gameId);
-      }
+      if (nextEntry.gameId) setSelectedGameId(nextEntry.gameId);
     }
   };
 
-  const startDownload = (gameId: string) => {
+  // ---------------------------------------------------------------- install / update
+  const startDownload = async (gameId: string) => {
     triggerSound('click');
-    const target = games.find((g) => g.id === gameId);
-    if (!target) return;
+    const game = gamesRef.current.find((g) => g.id === gameId);
+    if (!game) return;
+    if (!LauncherBridge.isAvailable()) {
+      addToast('Installing games needs the OneEngine Store desktop app.', 'warning');
+      return;
+    }
+    if (!isAuthenticated) {
+      addToast('Sign in to install games.', 'warning');
+      setIsAuthModalOpen(true);
+      return;
+    }
+    if (!userRef.current.ownedGameIds.includes(gameId)) {
+      addToast('Add this game to your library first.', 'warning');
+      return;
+    }
+    if (downloadsRef.current.some((d) => d.gameId === gameId && ACTIVE_STATUSES.includes(d.status))) return;
 
-    setGames((prev) =>
-      prev.map((g) => (g.id === gameId ? { ...g, status: 'DOWNLOADING', downloadProgress: 0 } : g))
-    );
+    const libraryDir = settingsRef.current.downloadDirectory;
+    let build;
+    try {
+      build = await platformApi.latestBuild(gameId);
+    } catch (err) {
+      reportApiError(err, 'Could not get the download.');
+      return;
+    }
 
-    setDownloads((prev) => {
-      const existing = prev.find((d) => d.gameId === gameId);
-      if (existing) {
-        return prev.map((d) => (d.gameId === gameId ? { ...d, status: 'DOWNLOADING' } : d));
-      }
-      return [
-        {
-          gameId: target.id,
-          title: target.title,
-          coverImage: target.coverImage,
-          progress: 0,
-          downloadedGb: 0,
-          totalGb: target.installSizeGb,
-          speedMbps: 64.8,
-          diskSpeedMbps: 112.4,
-          status: 'DOWNLOADING',
-          etaSeconds: Math.round((target.installSizeGb * 1024) / 64),
-        },
-        ...prev,
-      ];
-    });
+    setDownloads((prev) => [
+      {
+        gameId,
+        title: game.title,
+        coverImage: game.coverImage,
+        progress: 0,
+        receivedBytes: 0,
+        totalBytes: build.sizeBytes,
+        speedBps: 0,
+        status: 'DOWNLOADING',
+        etaSeconds: 0,
+        version: build.version,
+      },
+      ...prev.filter((d) => d.gameId !== gameId),
+    ]);
+    addToast(`${game.installed ? 'Updating' : 'Installing'} ${game.title}…`, 'info');
 
-    addToast(`Queued ${target.title} for download [${target.installSizeGb} GB].`, 'info');
+    const result = await LauncherBridge.install(gameId, libraryDir, build, settingsRef.current.bandwidthLimitMBps);
+
+    if (result.status === 'done') {
+      if (result.install) setInstalls((prev) => ({ ...prev, [gameId]: result.install! }));
+      setLatestBuilds((prev) => ({ ...prev, [gameId]: build.buildId }));
+      setDownloads((prev) =>
+        prev.map((d) => (d.gameId === gameId ? { ...d, status: 'COMPLETED', progress: 100, speedBps: 0, etaSeconds: 0 } : d))
+      );
+      triggerSound('purchase');
+      addToast(`${game.title} is installed and verified.`, 'success');
+      notify(`${game.title} ${build.version} installed`, 'The download matched its checksum and is ready to play.', 'update');
+    } else if (result.status === 'cancelled') {
+      setDownloads((prev) => prev.filter((d) => d.gameId !== gameId));
+    } else if (result.status === 'error') {
+      const message = result.message || 'The install failed.';
+      setDownloads((prev) =>
+        prev.map((d) => (d.gameId === gameId ? { ...d, status: 'FAILED', speedBps: 0, etaSeconds: 0, message } : d))
+      );
+      triggerSound('alert');
+      addToast(message, 'warning');
+      notify(`${game.title} could not be installed`, message);
+    }
   };
 
   const pauseDownload = (gameId: string) => {
     triggerSound('click');
-    setDownloads((prev) =>
-      prev.map((d) => (d.gameId === gameId ? { ...d, status: 'PAUSED', speedMbps: 0, diskSpeedMbps: 0 } : d))
-    );
+    void LauncherBridge.pauseInstall(gameId);
   };
 
+  // A paused download continues from the partial file, with a fresh download link from the server.
   const resumeDownload = (gameId: string) => {
-    triggerSound('click');
-    setDownloads((prev) =>
-      prev.map((d) => (d.gameId === gameId ? { ...d, status: 'DOWNLOADING', speedMbps: 64.8, diskSpeedMbps: 112.4 } : d))
-    );
+    void startDownload(gameId);
   };
 
-  const cancelDownload = (gameId: string) => {
+  const cancelDownload = async (gameId: string) => {
     triggerSound('click');
+    const item = downloadsRef.current.find((d) => d.gameId === gameId);
+    if (item?.status === 'COMPLETED') {
+      setDownloads((prev) => prev.filter((d) => d.gameId !== gameId));
+      return;
+    }
+    await LauncherBridge.cancelInstall(settingsRef.current.downloadDirectory, gameId);
     setDownloads((prev) => prev.filter((d) => d.gameId !== gameId));
-    setGames((prev) =>
-      prev.map((g) => (g.id === gameId ? { ...g, status: 'UNINSTALLED', downloadProgress: 0 } : g))
-    );
     addToast('Download cancelled.', 'warning');
   };
 
-  const togglePauseAllDownloads = () => {
+  const uninstallGame = async (gameId: string) => {
     triggerSound('click');
-    setIsPausedAll((prev) => !prev);
-    setDownloads((prev) =>
-      prev.map((d) =>
-        d.status === 'COMPLETED'
-          ? d
-          : { ...d, status: isPausedAll ? 'DOWNLOADING' : 'PAUSED' }
-      )
-    );
-    addToast(isPausedAll ? 'Resumed all downloads' : 'Paused all downloads', 'info');
+    const title = gamesRef.current.find((g) => g.id === gameId)?.title ?? 'the game';
+    const res = await LauncherBridge.uninstall(settingsRef.current.downloadDirectory, gameId);
+    if (!res.ok) {
+      triggerSound('alert');
+      addToast(res.message || `Could not uninstall ${title}.`, 'warning');
+      return;
+    }
+    setInstalls((prev) => {
+      const { [gameId]: _removed, ...rest } = prev;
+      return rest;
+    });
+    setDownloads((prev) => prev.filter((d) => d.gameId !== gameId));
+    addToast(`${title} was uninstalled.`, 'info');
   };
 
+  const verifyGameFiles = async (gameId?: string) => {
+    triggerSound('click');
+    const targets = gameId ? gamesRef.current.filter((g) => g.id === gameId) : gamesRef.current.filter((g) => g.installed);
+    if (targets.length === 0) {
+      addToast('No installed games to check.', 'info');
+      return;
+    }
+    for (const g of targets) {
+      const res = await LauncherBridge.verify(settingsRef.current.downloadDirectory, g.id);
+      addToast(res.ok ? `${g.title}: files are intact.` : `${g.title}: ${res.message}`, res.ok ? 'success' : 'warning');
+    }
+  };
+
+  // ---------------------------------------------------------------- play
   const launchGame = async (gameId: string) => {
     triggerSound('click');
     if (!isAuthenticated || !currentUser.id) {
@@ -646,10 +721,17 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       setIsAuthModalOpen(true);
       return;
     }
+    const target = gamesRef.current.find((g) => g.id === gameId);
+    if (!target?.installed) {
+      addToast('Install the game first.', 'warning');
+      return;
+    }
+    if (target.updateAvailable) {
+      addToast(`${target.title} has an update. Update it before playing.`, 'info');
+      return;
+    }
+    if (runningGameId) return;
     setLaunchingGameId(gameId);
-
-    const target = games.find((g) => g.id === gameId);
-    const exePath = `${settings.downloadDirectory}\\${gameId}\\${gameId}.exe`;
 
     // The server decides whether this player owns the game and hands back a one-time ticket.
     // The game trades the ticket for a Nakama session; no password or session token is passed on.
@@ -657,75 +739,57 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     try {
       ticket = (await platformApi.launchTicket(gameId)).ticket;
     } catch (err) {
-      triggerSound('alert');
       setLaunchingGameId(null);
-      addToast(err instanceof Error ? err.message : 'Could not start the game.', 'warning');
+      reportApiError(err, 'Could not start the game.');
       return;
     }
 
-    try {
-      const result = await LauncherBridge.launchGame({
-        gamePath: exePath,
-        ticket,
-        playerName: currentUser.callsign,
-        userId: currentUser.id,
-      });
-      if (!result.success) {
-        triggerSound('alert');
-        setLaunchingGameId(null);
-        addToast(result.message || 'The game did not start.', 'warning');
-        return;
-      }
-    } catch (err) {
-      console.warn('[OneEngine Launcher] Process bridge dispatch:', err);
+    const result = await LauncherBridge.launchGame({
+      libraryDir: settingsRef.current.downloadDirectory,
+      gameId,
+      ticket,
+      playerName: currentUser.callsign,
+      userId: currentUser.id,
+    });
+    setLaunchingGameId(null);
+    if (!result.success) {
+      triggerSound('alert');
+      addToast(result.message || 'The game did not start.', 'warning');
+      return;
     }
+
     recordPlayDay();
-
-    setTimeout(() => {
-      triggerSound('launch');
-      setLaunchingGameId(null);
-      setRunningGameId(gameId);
-      setSessionElapsedSeconds(0);
-
-      setGames((prev) =>
-        prev.map((g) => (g.id === gameId ? { ...g, status: 'RUNNING' } : g))
-      );
-      setCurrentUser((prev) => ({
-        ...prev,
-        status: 'IN_GAME',
-        currentGame: target?.title || 'Tactical Title',
-      }));
-
-      addToast(`Session handoff verified: ${target?.title} is running.`, 'success');
-    }, 1500);
+    launchedAt.current[gameId] = Date.now();
+    triggerSound('launch');
+    setRunningGameId(gameId);
+    setSessionElapsedSeconds(0);
+    setCurrentUser((prev) => ({ ...prev, status: 'IN_GAME', currentGame: target.title }));
+    addToast(`${target.title} is starting.`, 'success');
   };
 
-  const stopGame = (gameId: string) => {
+  const stopGame = async (gameId: string) => {
     triggerSound('click');
-    setRunningGameId(null);
-    setLaunchingGameId(null);
-    setGames((prev) =>
-      prev.map((g) => (g.id === gameId ? { ...g, status: 'INSTALLED' } : g))
-    );
-    setCurrentUser((prev) => ({
-      ...prev,
-      status: 'ONLINE',
-      currentGame: undefined,
-    }));
-    addToast('Game process terminated.', 'info');
+    stoppedByUser.current.add(gameId);
+    const killed = await LauncherBridge.killGame(gameId);
+    if (!killed) {
+      // Nothing to kill (already gone): make sure the launcher does not keep showing it as running.
+      stoppedByUser.current.delete(gameId);
+      setRunningGameId((current) => (current === gameId ? null : current));
+      setCurrentUser((prev) => ({ ...prev, status: 'ONLINE', currentGame: undefined }));
+    } else {
+      addToast('Closing the game…', 'info');
+    }
   };
 
   const toggleFavorite = (gameId: string) => {
     triggerSound('click');
-    setGames((prev) =>
-      prev.map((g) => (g.id === gameId ? { ...g, isFavorite: !g.isFavorite } : g))
-    );
+    setLocalState((prev) => ({ ...prev, [gameId]: { ...prev[gameId], favorite: !prev[gameId]?.favorite } }));
   };
 
   // Ownership is the server's call. In development the API lets any signed-in player claim a game;
   // in production it answers "payment required" until the checkout flow exists.
   const purchaseGame = async (gameId: string): Promise<boolean> => {
-    const target = games.find((g) => g.id === gameId);
+    const target = gamesRef.current.find((g) => g.id === gameId);
     if (!target) return false;
     if (!isAuthenticated) {
       triggerSound('alert');
@@ -741,94 +805,138 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       addToast(`${target.title} added to your library.`, 'success');
       return true;
     } catch (err) {
-      triggerSound('alert');
-      addToast(err instanceof Error ? err.message : 'Could not add this game.', 'warning');
+      reportApiError(err, 'Could not add this game.');
       return false;
     }
   };
 
-  const signIn = async (email: string, displayName: string): Promise<{ success: boolean; error?: string }> => {
+  // ---------------------------------------------------------------- account
+  const failure = (err: unknown): AuthResult => {
+    triggerSound('alert');
+    return { success: false, error: err instanceof Error ? err.message : String(err) };
+  };
+
+  const startSession = async (me: PlatformUser) => {
+    const library = me.emailVerified ? await platformApi.library() : [];
+    const profile = profileFrom(me, library);
+    setCurrentUser(profile);
+    setIsAuthenticated(true);
+    return profile;
+  };
+
+  const signIn = async (email: string, password: string): Promise<AuthResult> => {
     triggerSound('click');
     try {
-      const me = await platformApi.signIn(email, displayName);
-      const library = await platformApi.library();
-      const profile = profileFrom(me, library);
-      setCurrentUser(profile);
-      setIsAuthenticated(true);
-      addToast(`Welcome, ${profile.callsign}!`, 'success');
+      const profile = await startSession(await platformApi.login(email, password));
+      addToast(`Welcome back, ${profile.callsign}!`, 'success');
       return { success: true };
-    } catch (err: unknown) {
-      triggerSound('alert');
-      return { success: false, error: err instanceof Error ? err.message : String(err) };
+    } catch (err) {
+      return failure(err);
+    }
+  };
+
+  const register = async (email: string, password: string, displayName: string): Promise<AuthResult> => {
+    triggerSound('click');
+    try {
+      const profile = await startSession(await platformApi.register(email, password, displayName));
+      addToast(
+        profile.emailVerified ? `Account created. Welcome, ${profile.callsign}!` : 'Account created. Check your email for a code.',
+        'success'
+      );
+      return { success: true };
+    } catch (err) {
+      return failure(err);
+    }
+  };
+
+  const refreshProfile = async () => {
+    const me = await platformApi.me();
+    await startSession(me);
+  };
+
+  const verifyEmail = async (code: string): Promise<AuthResult> => {
+    triggerSound('click');
+    try {
+      await platformApi.verifyEmail(code);
+      await refreshProfile();
+      addToast('Email confirmed. You can add games and play now.', 'success');
+      return { success: true };
+    } catch (err) {
+      return failure(err);
+    }
+  };
+
+  const resendVerification = async (): Promise<AuthResult> => {
+    try {
+      await platformApi.resendVerification();
+      addToast('A new code is on its way.', 'info');
+      return { success: true };
+    } catch (err) {
+      return failure(err);
+    }
+  };
+
+  const forgotPassword = async (email: string): Promise<AuthResult> => {
+    try {
+      await platformApi.forgotPassword(email);
+      return { success: true };
+    } catch (err) {
+      return failure(err);
+    }
+  };
+
+  const resetPassword = async (email: string, code: string, newPassword: string): Promise<AuthResult> => {
+    try {
+      await platformApi.resetPassword(email, code, newPassword);
+      addToast('Password changed. Sign in with the new one.', 'success');
+      return { success: true };
+    } catch (err) {
+      return failure(err);
+    }
+  };
+
+  const changePassword = async (currentPassword: string, newPassword: string): Promise<AuthResult> => {
+    try {
+      await platformApi.changePassword(currentPassword, newPassword);
+      addToast('Password changed. Other devices were signed out.', 'success');
+      return { success: true };
+    } catch (err) {
+      return failure(err);
+    }
+  };
+
+  /** Shows an API error as a toast; a lost session or an unconfirmed email also opens the sign-in window. */
+  const reportApiError = (err: unknown, fallback: string) => {
+    triggerSound('alert');
+    const message = err instanceof Error ? err.message : fallback;
+    addToast(message, 'warning');
+    if (err instanceof PlatformError) {
+      if (err.code === 'auth_required' || err.code === 'auth_invalid') {
+        setIsAuthenticated(false);
+        setCurrentUser(DEFAULT_GUEST_USER);
+        setIsAuthModalOpen(true);
+      } else if (err.code === 'email_not_verified') {
+        setCurrentUser((prev) => ({ ...prev, emailVerified: false }));
+        setIsAuthModalOpen(true);
+      }
     }
   };
 
   const logout = () => {
     triggerSound('click');
     if (runningGameId) {
-      stopGame(runningGameId);
+      void stopGame(runningGameId);
     }
-    platformApi.signOut();
+    void platformApi.logout();
     setCurrentUser(DEFAULT_GUEST_USER);
     setIsAuthenticated(false);
+    setLatestBuilds({});
     addToast('Signed out from OneEngine.', 'info');
-  };
-
-  const switchUserPreset = (_preset: 'DEVELOPER' | 'COMPETITIVE' | 'GUEST') => {
-    triggerSound('click');
-    setIsAuthModalOpen(true);
-  };
-
-  const openArticle = (article: Article) => {
-    triggerSound('click');
-    setSelectedArticle(article);
-  };
-
-  const closeArticle = () => {
-    setSelectedArticle(null);
-  };
-
-  const toggleArticleLike = (articleId: string) => {
-    triggerSound('click');
-    setArticles((prev) =>
-      prev.map((art) => {
-        if (art.id !== articleId) return art;
-        const nextHasLiked = !art.hasLiked;
-        return {
-          ...art,
-          hasLiked: nextHasLiked,
-          likes: nextHasLiked ? art.likes + 1 : art.likes - 1,
-        };
-      })
-    );
-    if (selectedArticle && selectedArticle.id === articleId) {
-      setSelectedArticle((prev) =>
-        prev
-          ? {
-              ...prev,
-              hasLiked: !prev.hasLiked,
-              likes: !prev.hasLiked ? prev.likes + 1 : prev.likes - 1,
-            }
-          : null
-      );
-    }
   };
 
   const markAllNotificationsRead = () => {
     triggerSound('click');
     setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
-    addToast('All notifications marked as read', 'info');
-  };
-
-  const clearShaderCache = () => {
-    triggerSound('click');
-    addToast('Cleared 4.2 GB DX12 & Vulkan shader pipeline caches.', 'success');
-  };
-
-  const verifyGameFiles = (gameId?: string) => {
-    triggerSound('click');
-    const title = gameId ? games.find((g) => g.id === gameId)?.title : 'Railbound';
-    addToast(`Integrity check: All local blocks for ${title} verified (100% valid).`, 'success');
   };
 
   const updateSettings = (partial: Partial<AppSettings>) => {
@@ -846,11 +954,6 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     triggerSound('click');
     if (typeof window !== 'undefined' && window.electronAPI) {
       window.electronAPI.minimizeWindow();
-      return;
-    }
-    if (typeof window !== 'undefined' && '__TAURI_INTERNALS__' in window) {
-      const { getCurrentWindow } = await import('@tauri-apps/api/window');
-      await getCurrentWindow().minimize();
     }
   };
 
@@ -858,11 +961,6 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     triggerSound('click');
     if (typeof window !== 'undefined' && window.electronAPI) {
       window.electronAPI.maximizeWindow();
-      return;
-    }
-    if (typeof window !== 'undefined' && '__TAURI_INTERNALS__' in window) {
-      const { getCurrentWindow } = await import('@tauri-apps/api/window');
-      await getCurrentWindow().toggleMaximize();
     }
   };
 
@@ -870,11 +968,6 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     triggerSound('click');
     if (typeof window !== 'undefined' && window.electronAPI) {
       window.electronAPI.closeWindow();
-      return;
-    }
-    if (typeof window !== 'undefined' && '__TAURI_INTERNALS__' in window) {
-      const { getCurrentWindow } = await import('@tauri-apps/api/window');
-      await getCurrentWindow().close();
     }
   };
 
@@ -884,26 +977,33 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         activeTab,
         selectedGameId,
         games,
+        catalogStatus,
+        catalogError,
+        refreshCatalog: () => setCatalogTick((n) => n + 1),
+        desktopAvailable: LauncherBridge.isAvailable(),
         downloads,
         currentUser,
         isAuthenticated,
         signIn,
+        register,
+        verifyEmail,
+        resendVerification,
+        forgotPassword,
+        resetPassword,
+        changePassword,
         logout,
         searchQuery,
         isAuthModalOpen,
         isCommandPaletteOpen,
-        selectedArticle,
         settings,
         runningGameId,
         launchingGameId,
         sessionElapsedSeconds,
         speedTelemetryHistory,
-        articles,
         notifications,
         toasts,
         canGoBack: historyIndex > 0,
         canGoForward: historyIndex < history.length - 1,
-        isPausedAll,
         navigate,
         goBack,
         goForward,
@@ -913,18 +1013,14 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         },
         closeAuthModal: () => setIsAuthModalOpen(false),
         setCommandPaletteOpen: setIsCommandPaletteOpen,
-        openArticle,
-        closeArticle,
-        toggleArticleLike,
         setSearchQuery,
-        switchUserPreset,
         startDownload,
         pauseDownload,
         resumeDownload,
         cancelDownload,
-        togglePauseAllDownloads,
         launchGame,
         stopGame,
+        uninstallGame,
         toggleFavorite,
         purchaseGame,
         updateSettings,
@@ -932,7 +1028,6 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         addToast,
         removeToast,
         markAllNotificationsRead,
-        clearShaderCache,
         verifyGameFiles,
         minimizeWindow,
         toggleMaximizeWindow,

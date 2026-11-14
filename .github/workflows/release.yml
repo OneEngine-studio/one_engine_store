@@ -45,10 +45,22 @@ jobs:
 
       - run: npm ci
 
+      - name: Platform API address must be set
+        shell: bash
+        env:
+          PLATFORM_API_URL: ${{ vars.PLATFORM_API_URL }}
+        run: |
+          # The installer has this address built in. Without it the app would look for a server on the
+          # player's own PC and nobody could sign in.
+          case "$PLATFORM_API_URL" in
+            https://*) ;;
+            *) echo "Set the repository variable PLATFORM_API_URL to your public https:// Platform API address (Settings > Secrets and variables > Actions > Variables)."; exit 1 ;;
+          esac
+
       - name: Build installer
         run: npm run dist
         env:
-          # Address of the Platform API baked into this build (repository variable, optional)
+          # Address of the Platform API baked into this build (repository variable, required)
           VITE_PLATFORM_API_URL: ${{ vars.PLATFORM_API_URL }}
 
       - name: Write release notes

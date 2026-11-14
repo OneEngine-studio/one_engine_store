@@ -1,57 +1,65 @@
-import { LaunchGamePayload, LaunchResult } from '../types/launcher';
+import type { InstallBuild, InstallProgress, InstallRecord, InstallResult, LaunchGamePayload, LaunchResult } from '../types/launcher';
 
-// Dynamic invoke helper that checks if running inside Tauri runtime
-async function tauriInvoke<T>(cmd: string, args?: Record<string, unknown>): Promise<T> {
-  if (typeof window !== 'undefined' && '__TAURI_INTERNALS__' in window) {
-    const { invoke } = await import('@tauri-apps/api/core');
-    return invoke<T>(cmd, args);
-  }
-  
-  // Dev / Browser mock fallback
-  console.log(`[Browser Mock Invoke] ${cmd}:`, args);
-  if (cmd === 'launch_game') {
-    return { success: true, pid: 1337, message: 'Game launched in simulation mode' } as T;
-  }
-  if (cmd === 'check_game_installed') {
-    return true as T;
-  }
-  return null as T;
-}
+// Everything that touches the player's disk or starts a process lives in the Electron main process
+// (electron/installer.cjs). Opened in a plain browser there is no disk access, so these calls report
+// that plainly instead of pretending: the page itself is only used that way for UI development.
+
+const api = () => (typeof window !== 'undefined' ? window.electronAPI : undefined);
+
+const NEEDS_DESKTOP = 'Installing and playing games needs the OneEngine Store desktop app.';
 
 export const LauncherBridge = {
+  /** True inside the desktop app, where games can be installed and started. */
+  isAvailable(): boolean {
+    return !!api()?.library;
+  },
+
+  async defaultLibraryDir(): Promise<string> {
+    return (await api()?.library.defaultDir()) ?? '';
+  },
+
+  async scan(libraryDir: string): Promise<InstallRecord[]> {
+    const res = await api()?.library.scan({ libraryDir });
+    return res?.ok ? (res.installs ?? []) : [];
+  },
+
+  async install(gameId: string, libraryDir: string, build: InstallBuild, throttleMBps: number): Promise<InstallResult> {
+    const bridge = api();
+    if (!bridge) return { ok: false, status: 'error', message: NEEDS_DESKTOP };
+    return bridge.library.install({ gameId, libraryDir, build, throttleMBps });
+  },
+
+  async pauseInstall(gameId: string): Promise<boolean> {
+    return (await api()?.library.pause({ gameId })) ?? false;
+  },
+
+  async cancelInstall(libraryDir: string, gameId: string): Promise<boolean> {
+    return (await api()?.library.cancel({ libraryDir, gameId }))?.ok ?? false;
+  },
+
+  async uninstall(libraryDir: string, gameId: string): Promise<{ ok: boolean; message?: string }> {
+    return (await api()?.library.uninstall({ libraryDir, gameId })) ?? { ok: false, message: NEEDS_DESKTOP };
+  },
+
+  async verify(libraryDir: string, gameId: string): Promise<{ ok: boolean; message?: string }> {
+    return (await api()?.library.verify({ libraryDir, gameId })) ?? { ok: false, message: NEEDS_DESKTOP };
+  },
+
+  onInstallProgress(callback: (progress: InstallProgress) => void): () => void {
+    return api()?.library.onProgress(callback) ?? (() => {});
+  },
+
   async launchGame(payload: LaunchGamePayload): Promise<LaunchResult> {
-    if (typeof window !== 'undefined' && window.electronAPI) {
-      return window.electronAPI.launchGame(payload);
-    }
-    return tauriInvoke<LaunchResult>('launch_game', {
-      gamePath: payload.gamePath,
-      ticket: payload.ticket,
-      playerName: payload.playerName,
-      userId: payload.userId,
-    });
+    const bridge = api();
+    if (!bridge) return { success: false, message: NEEDS_DESKTOP };
+    return bridge.launchGame(payload);
   },
 
-  async checkInstalled(gamePath: string): Promise<boolean> {
-    return tauriInvoke<boolean>('check_game_installed', { gamePath });
+  async killGame(gameId: string): Promise<boolean> {
+    return (await api()?.killGame({ gameId })) ?? false;
   },
 
-  async killGameProcess(pid: number): Promise<boolean> {
-    if (typeof window !== 'undefined' && window.electronAPI) {
-      return window.electronAPI.killGame(pid);
-    }
-    return tauriInvoke<boolean>('kill_game_process', { pid });
+  onGameExited(callback: (status: { code: number; pid: number; gameId: string }) => void): () => void {
+    return api()?.onGameExited(callback) ?? (() => {});
   },
-
-  async onProcessExit(callback: (status: { code: number; pid: number }) => void) {
-    if (typeof window !== 'undefined' && window.electronAPI) {
-      return window.electronAPI.onGameExited(callback);
-    }
-    if (typeof window !== 'undefined' && '__TAURI_INTERNALS__' in window) {
-      const { listen } = await import('@tauri-apps/api/event');
-      return listen<{ code: number; pid: number }>('game-process-exited', (event) => {
-        callback(event.payload);
-      });
-    }
-    return () => {};
-  }
 };

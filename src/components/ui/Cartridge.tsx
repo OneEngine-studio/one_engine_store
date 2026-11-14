@@ -62,7 +62,7 @@ export const Cartridge: React.FC<CartridgeProps> = ({
     el.style.setProperty('--ry', '0deg');
   };
 
-  const action = running ? 'stop' : game.installed ? 'play' : 'install';
+  const action = running ? 'stop' : game.installed && !game.updateAvailable ? 'play' : 'install';
 
   return (
     <div className="flex flex-col items-center" style={{ width: w }}>
@@ -120,7 +120,11 @@ export const Cartridge: React.FC<CartridgeProps> = ({
               style={{ background: '#F2E8D5', boxShadow: 'inset 0 0 0 2px rgba(0,0,0,0.15)' }}
             >
               <div className="relative flex-1 m-[5px] mb-0 rounded-[3px] overflow-hidden bg-black">
-                <img src={game.coverImage} alt={game.title} className="w-full h-full object-cover" draggable={false} />
+                {game.coverImage ? (
+                  <img src={game.coverImage} alt={game.title} className="w-full h-full object-cover" draggable={false} />
+                ) : (
+                  <div className="w-full h-full" style={{ background: `linear-gradient(135deg, ${bodyLight}, ${bodyDark})` }} />
+                )}
                 <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
               </div>
               <div className="px-2 py-1.5 flex items-end justify-between gap-2">
@@ -130,9 +134,11 @@ export const Cartridge: React.FC<CartridgeProps> = ({
                 >
                   {game.title}
                 </span>
-                <span className="font-mono text-[8px] text-[#1b1510]/60 shrink-0">
-                  {String(game.installSizeGb).padStart(2, '0')}GB
-                </span>
+                {game.installSizeGb > 0 && (
+                  <span className="font-mono text-[8px] text-[#1b1510]/60 shrink-0">
+                    {game.installSizeGb < 10 ? game.installSizeGb.toFixed(1) : Math.round(game.installSizeGb)}GB
+                  </span>
+                )}
               </div>
               {/* barcode */}
               <div
@@ -199,7 +205,7 @@ export const Cartridge: React.FC<CartridgeProps> = ({
             {action === 'play' && <Play className="w-3.5 h-3.5 fill-current" />}
             {action === 'stop' && <Square className="w-3 h-3 fill-current" />}
             {action === 'install' && <Download className="w-3.5 h-3.5" />}
-            {action === 'play' ? 'Insert & play' : action === 'stop' ? 'Eject' : 'Install'}
+            {action === 'play' ? 'Insert & play' : action === 'stop' ? 'Eject' : game.installed ? 'Update' : 'Install'}
           </button>
         </div>
       </div>

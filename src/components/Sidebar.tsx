@@ -4,7 +4,6 @@ import {
   ShoppingBag,
   Gamepad2,
   Download,
-  Radio,
   BarChart3,
   Settings,
   Image as ImageIcon,
@@ -86,7 +85,6 @@ export const Sidebar: React.FC = () => {
       badge: activeDownloadCount > 0 ? activeDownloadCount : undefined,
     },
     { id: 'activity' as NavigationTab, label: 'Activity', icon: BarChart3 },
-    { id: 'community' as NavigationTab, label: 'Community', icon: Radio },
   ];
 
   const current = activeTab === 'game-detail' ? 'store' : activeTab;
@@ -192,7 +190,7 @@ export const Sidebar: React.FC = () => {
                     }`}
                     style={{ transition: `transform 200ms ${EASE}, border-color 200ms ${EASE}` }}
                   >
-                    {!hasError ? (
+                    {!hasError && game.coverImage ? (
                       <img
                         src={game.coverImage}
                         alt=""

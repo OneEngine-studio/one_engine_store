@@ -61,6 +61,29 @@ export function openDb(path: string): DatabaseSync {
     );
     CREATE UNIQUE INDEX IF NOT EXISTS entitlements_active
       ON entitlements (user_id, product_id) WHERE revoked_at IS NULL;
+    CREATE TABLE IF NOT EXISTS credentials (
+      user_id TEXT PRIMARY KEY REFERENCES accounts(user_id),
+      password_hash TEXT NOT NULL,
+      updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+    );
+    CREATE TABLE IF NOT EXISTS refresh_tokens (
+      token_hash TEXT PRIMARY KEY,
+      user_id TEXT NOT NULL REFERENCES accounts(user_id),
+      family_id TEXT NOT NULL,
+      created_at INTEGER NOT NULL,
+      expires_at INTEGER NOT NULL,
+      revoked_at INTEGER
+    );
+    CREATE INDEX IF NOT EXISTS refresh_tokens_user ON refresh_tokens (user_id);
+    CREATE TABLE IF NOT EXISTS email_codes (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id TEXT NOT NULL REFERENCES accounts(user_id),
+      kind TEXT NOT NULL,
+      code_hash TEXT NOT NULL,
+      expires_at INTEGER NOT NULL,
+      attempts INTEGER NOT NULL DEFAULT 0,
+      used_at INTEGER
+    );
     CREATE TABLE IF NOT EXISTS ticket_audit (
       ticket_hash TEXT PRIMARY KEY,
       user_id TEXT NOT NULL,
@@ -80,6 +103,7 @@ function migrate(db: DatabaseSync) {
   const cols = (db.prepare('PRAGMA table_info(builds)').all() as { name: string }[]).map((c) => c.name);
   if (!cols.includes('version')) db.exec("ALTER TABLE builds ADD COLUMN version TEXT NOT NULL DEFAULT ''");
   if (!cols.includes('sha256')) db.exec("ALTER TABLE builds ADD COLUMN sha256 TEXT NOT NULL DEFAULT ''");
+  if (!cols.includes('executable')) db.exec("ALTER TABLE builds ADD COLUMN executable TEXT NOT NULL DEFAULT ''");
 }
 
 function seed(db: DatabaseSync) {
@@ -98,7 +122,7 @@ function seed(db: DatabaseSync) {
   db.prepare('INSERT INTO prices (product_id, currency, amount_minor, discount_percent) VALUES (?, ?, ?, ?)').run(
     'railbound',
     'USD',
-    2999,
-    20
+    0,
+    0
   );
 }

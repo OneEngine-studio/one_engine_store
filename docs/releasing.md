@@ -9,8 +9,11 @@ repo, so the new version shows up there by itself, with its file, size and date.
 1. Create a fine-grained personal access token with **Contents: read and write** on `oneenginedev/oneengine`.
 2. In this repo: **Settings > Secrets and variables > Actions**
    - Secret `RELEASES_TOKEN`: the token from step 1.
-   - Variable `PLATFORM_API_URL` (optional): the Platform API address built into the app, for example
-     `https://api.example.com`. Without it the app defaults to `http://127.0.0.1:8080`.
+   - Variable `PLATFORM_API_URL` (**required**): the public address of your Platform API, for example
+     `https://api.example.com`. It is built into the installer; the release stops if it is missing or not
+     `https://`, because an app pointing at the player's own PC cannot sign anyone in. Players can still change
+     it in Settings, but they should never have to.
+3. Host the Platform API first (`docs/go-live.md`): the app is only as real as the server behind it.
 
 ## Each release
 
@@ -31,8 +34,10 @@ Run workflow**, enter the tag. Existing releases get the installer replaced, not
 ## Build locally
 
 ```bash
-npm run dist    # writes release/OneEngine-Store-Setup-<version>.exe (about 125 MB)
+VITE_PLATFORM_API_URL=https://api.example.com npm run dist    # release/OneEngine-Store-Setup-<version>.exe (about 125 MB)
 ```
+
+On Windows PowerShell: `$env:VITE_PLATFORM_API_URL='https://api.example.com'; npm run dist`.
 
 ## Known limits
 

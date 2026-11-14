@@ -6,12 +6,15 @@ import { join } from 'node:path';
 import type { DatabaseSync } from 'node:sqlite';
 import { z } from 'zod';
 import type { Config } from './config.js';
-import { makeVerifier, signDevToken, type AuthUser, type TokenVerifier } from './auth.js';
+import { makeVerifier, signAccessToken, type AuthUser, type TokenVerifier } from './auth.js';
+import { registerAccountRoutes } from './accounts.js';
+import { makeMailer, type Mailer } from './mailer.js';
 import { RateLimiter, TicketStore } from './tickets.js';
 
 declare module 'fastify' {
   interface FastifyRequest {
     user: AuthUser | null;
+    emailVerified: boolean;
   }
 }
 
@@ -20,6 +23,7 @@ interface Deps {
   db: DatabaseSync;
   tickets?: TicketStore;
   verify?: TokenVerifier;
+  mailer?: Mailer;
   now?: () => number;
 }
 
@@ -43,14 +47,22 @@ const safeEqual = (a: string, b: string) => {
   return timingSafeEqual(ha, hb);
 };
 
-export function buildServer({ cfg, db, tickets, verify, now = Date.now }: Deps) {
-  const app = Fastify({ logger: { level: cfg.logLevel }, trustProxy: cfg.production });
+export function buildServer({ cfg, db, tickets, verify, mailer, now = Date.now }: Deps) {
+  const app = Fastify({
+    logger: { level: cfg.logLevel, redact: ['req.headers.authorization'] },
+    trustProxy: cfg.production,
+    bodyLimit: 64 * 1024,
+  });
   const store = tickets ?? new TicketStore(now);
   const verifier = verify ?? makeVerifier(cfg);
   const ticketLimiter = new RateLimiter(10, 60_000, now);
 
   app.register(cors, { origin: cfg.corsOrigins });
   app.decorateRequest('user', null);
+  app.decorateRequest('emailVerified', false);
+  app.addHook('onSend', async (_req, reply) => {
+    reply.header('x-content-type-options', 'nosniff');
+  });
 
   // ---------- helpers ----------
   const getPrice = (productId: string, currency: string): PriceRow | undefined =>
@@ -88,17 +100,21 @@ export function buildServer({ cfg, db, tickets, verify, now = Date.now }: Deps) 
       .prepare('SELECT 1 FROM entitlements WHERE user_id = ? AND product_id = ? AND revoked_at IS NULL')
       .get(userId, productId);
 
-  const upsertAccount = (u: AuthUser) => {
-    const byId = db.prepare('SELECT user_id, display_name, status FROM accounts WHERE user_id = ?').get(u.sub) as
-      | { user_id: string; display_name: string; status: string }
+  type AccountState = { user_id: string; status: string; email_verified: number };
+
+  // With our own accounts a valid token for a deleted account must fail. Only an external identity
+  // provider may create accounts on first sight.
+  const loadAccount = (u: AuthUser): AccountState | undefined => {
+    const byId = db.prepare('SELECT user_id, status, email_verified FROM accounts WHERE user_id = ?').get(u.sub) as
+      | AccountState
       | undefined;
-    if (byId) return byId;
-    db.prepare('INSERT INTO accounts (user_id, email, display_name) VALUES (?, ?, ?)').run(
+    if (byId || !cfg.idpJwksUrl) return byId;
+    db.prepare('INSERT INTO accounts (user_id, email, display_name, email_verified) VALUES (?, ?, ?, 1)').run(
       u.sub,
       u.email || `${u.sub}@unknown.invalid`,
       u.name
     );
-    return { user_id: u.sub, display_name: u.name, status: 'active' };
+    return { user_id: u.sub, status: 'active', email_verified: 1 };
   };
 
   async function requireUser(req: FastifyRequest, reply: FastifyReply) {
@@ -110,9 +126,19 @@ export function buildServer({ cfg, db, tickets, verify, now = Date.now }: Deps) 
     } catch {
       return fail(reply, 401, 'auth_invalid', 'Your session is invalid or expired.');
     }
-    const account = upsertAccount(req.user);
+    const account = loadAccount(req.user);
+    if (!account) return fail(reply, 401, 'auth_invalid', 'Your session is invalid or expired.');
     if (account.status !== 'active') return fail(reply, 403, 'account_suspended', 'This account is suspended.');
+    req.emailVerified = !!account.email_verified;
   }
+
+  // Getting, downloading and starting games needs a confirmed email when verification is on.
+  async function requireVerified(req: FastifyRequest, reply: FastifyReply) {
+    if (cfg.requireVerifiedEmail && !req.emailVerified) {
+      return fail(reply, 403, 'email_not_verified', 'Confirm your email address first. We sent you a 6 digit code.');
+    }
+  }
+  const owner = [requireUser, requireVerified];
 
   // ---------- public ----------
   app.get('/healthz', async () => ({ ok: true }));
@@ -145,9 +171,13 @@ export function buildServer({ cfg, db, tickets, verify, now = Date.now }: Deps) 
         | undefined;
       const userId = existing?.user_id ?? randomUUID();
       if (!existing) {
-        db.prepare('INSERT INTO accounts (user_id, email, display_name) VALUES (?, ?, ?)').run(userId, email, displayName);
+        db.prepare('INSERT INTO accounts (user_id, email, display_name, email_verified) VALUES (?, ?, ?, 1)').run(
+          userId,
+          email,
+          displayName
+        );
       }
-      const accessToken = await signDevToken(cfg, { sub: userId, email, name: displayName });
+      const accessToken = await signAccessToken(cfg, { sub: userId, email, name: displayName }, 600);
       return { accessToken, expiresInSeconds: 600, userId };
     });
   }
@@ -175,7 +205,7 @@ export function buildServer({ cfg, db, tickets, verify, now = Date.now }: Deps) 
     return { items: rows.map((r) => productView(r, 'USD')) };
   });
 
-  app.post('/v1/library/:productId/claim', { preHandler: requireUser }, async (req, reply) => {
+  app.post('/v1/library/:productId/claim', { preHandler: owner }, async (req, reply) => {
     const { productId } = req.params as { productId: string };
     const exists = db.prepare("SELECT 1 FROM products WHERE product_id = ? AND visibility = 'public'").get(productId);
     if (!exists) return fail(reply, 404, 'not_found', 'Product not found.');
@@ -208,7 +238,7 @@ export function buildServer({ cfg, db, tickets, verify, now = Date.now }: Deps) 
     return safeEqual(sig, expected);
   };
 
-  app.post('/v1/products/:productId/download-token', { preHandler: requireUser }, async (req, reply) => {
+  app.post('/v1/products/:productId/download-token', { preHandler: owner }, async (req, reply) => {
     const { productId } = req.params as { productId: string };
     if (!hasEntitlement(req.user!.sub, productId)) return fail(reply, 403, 'not_entitled', 'You do not own this game.');
     return signDownloadToken(productId);
@@ -217,6 +247,7 @@ export function buildServer({ cfg, db, tickets, verify, now = Date.now }: Deps) 
   type BuildRow = {
     build_id: string;
     version: string;
+    executable: string;
     total_size: number;
     sha256: string;
     blocked: number;
@@ -224,14 +255,14 @@ export function buildServer({ cfg, db, tickets, verify, now = Date.now }: Deps) 
   const SAFE_NAME = /^[A-Za-z0-9._-]{1,128}$/;
 
   // Newest allowed build plus a short-lived link to fetch it. Owners only.
-  app.get('/v1/products/:productId/builds/latest', { preHandler: requireUser }, async (req, reply) => {
+  app.get('/v1/products/:productId/builds/latest', { preHandler: owner }, async (req, reply) => {
     const { productId } = req.params as { productId: string };
     const platform = z.string().regex(SAFE_NAME).catch('win64').parse((req.query as Record<string, string>).platform);
     if (!hasEntitlement(req.user!.sub, productId)) return fail(reply, 403, 'not_entitled', 'You do not own this game.');
 
     const build = db
       .prepare(
-        `SELECT build_id, version, total_size, sha256, blocked FROM builds
+        `SELECT build_id, version, executable, total_size, sha256, blocked FROM builds
          WHERE product_id = ? AND platform = ? AND blocked = 0 ORDER BY rowid DESC LIMIT 1`
       )
       .get(productId, platform) as BuildRow | undefined;
@@ -242,6 +273,7 @@ export function buildServer({ cfg, db, tickets, verify, now = Date.now }: Deps) 
     return {
       buildId: build.build_id,
       version: build.version,
+      executable: build.executable || `${productId}.exe`,
       platform,
       sizeBytes: build.total_size,
       sha256: build.sha256,
@@ -304,7 +336,7 @@ export function buildServer({ cfg, db, tickets, verify, now = Date.now }: Deps) 
     deviceId: z.string().min(8).max(128),
   });
 
-  app.post('/v1/launch-tickets', { preHandler: requireUser }, async (req, reply) => {
+  app.post('/v1/launch-tickets', { preHandler: owner }, async (req, reply) => {
     const parsed = ticketBody.safeParse(req.body);
     if (!parsed.success) return fail(reply, 400, 'bad_request', 'productId and deviceId are required.');
     const { productId, buildId, platform, deviceId } = parsed.data;
@@ -346,11 +378,20 @@ export function buildServer({ cfg, db, tickets, verify, now = Date.now }: Deps) 
     );
     // Re-check at redemption time: a refund or ban between issue and redeem must win.
     const entitled = hasEntitlement(payload.userId, payload.productId);
-    const status = (db.prepare('SELECT status FROM accounts WHERE user_id = ?').get(payload.userId) as {
-      status: string;
-    }).status;
-    if (!entitled || status !== 'active') return fail(reply, 403, 'not_entitled', 'Access has been revoked.');
+    const account = db.prepare('SELECT status, email_verified FROM accounts WHERE user_id = ?').get(payload.userId) as
+      | { status: string; email_verified: number }
+      | undefined;
+    if (!entitled || !account || account.status !== 'active') return fail(reply, 403, 'not_entitled', 'Access has been revoked.');
+    if (cfg.requireVerifiedEmail && !account.email_verified) return fail(reply, 403, 'email_not_verified', 'Email not confirmed.');
     return { userId: payload.userId, displayName: payload.displayName, productId: payload.productId, entitled: true };
+  });
+
+  registerAccountRoutes(app, {
+    cfg,
+    db,
+    mailer: mailer ?? makeMailer(cfg, app.log),
+    now,
+    requireUser,
   });
 
   return app;

@@ -5,7 +5,7 @@ import { Pill } from '../components/ui/Pill';
 import { StatStrip } from '../components/ui/StatStrip';
 import { Timeline } from '../components/ui/Timeline';
 import { Shelf } from '../components/ui/Shelf';
-import { ChevronRight, FileText, Search, Clock } from 'lucide-react';
+import { ChevronRight, Search, Clock, WifiOff } from 'lucide-react';
 
 const MOODS = [
   { id: 'all', label: 'Anything', hint: 'Everything on the shelf' },
@@ -22,8 +22,9 @@ export const StoreScreen: React.FC = () => {
     setSearchQuery,
     currentUser,
     downloads,
-    articles,
-    openArticle,
+    catalogStatus,
+    catalogError,
+    refreshCatalog,
     launchGame,
     stopGame,
     startDownload,
@@ -54,8 +55,7 @@ export const StoreScreen: React.FC = () => {
   const onBench = owned.filter((g) => g.installed).slice(0, 5);
   const spotlight = shelfGames[0];
   const installedCount = owned.filter((g) => g.installed).length;
-  const timeline = [...owned].sort((x, y) => (y.playHours ?? 0) - (x.playHours ?? 0)).slice(0, 4);
-  const recentArticles = articles.slice(0, 3);
+  const timeline = owned.filter((g) => g.playHours > 0).sort((x, y) => y.playHours - x.playHours).slice(0, 4);
 
   const cartProps = (g: (typeof games)[number]) => ({
     game: g,
@@ -78,6 +78,24 @@ export const StoreScreen: React.FC = () => {
           <button onClick={() => setSearchQuery('')} className="text-xs text-accent hover:underline cursor-default font-medium">
             Clear filter
           </button>
+        </div>
+      )}
+
+      {catalogStatus === 'error' && (
+        <div className="flex items-center justify-between gap-4 p-4 rounded-[28px] bg-bg-card border border-warning/30">
+          <div className="flex items-center gap-3 text-xs text-slate-300">
+            <WifiOff className="w-4 h-4 text-warning shrink-0" />
+            <span>{catalogError || 'The game catalog could not be loaded.'}</span>
+          </div>
+          <button onClick={refreshCatalog} className="text-xs text-accent hover:underline cursor-default font-medium shrink-0">
+            Try again
+          </button>
+        </div>
+      )}
+
+      {catalogStatus === 'ready' && games.length === 0 && (
+        <div className="p-6 rounded-[28px] bg-bg-card border border-white/[0.07] text-xs text-slate-400">
+          No games are published on this service yet.
         </div>
       )}
 
@@ -152,7 +170,7 @@ export const StoreScreen: React.FC = () => {
             items={timeline.map((g) => ({
               id: g.id,
               title: g.title,
-              meta: g.playHours ? `${g.playHours}h logged` : 'Not played yet',
+              meta: `${g.playHours}h logged`,
               cover: g.coverImage,
               onClick: () => navigate('game-detail', g.id),
             }))}
@@ -170,7 +188,7 @@ export const StoreScreen: React.FC = () => {
             </button>
           </div>
           <Shelf items={onBench} itemWidth={188} render={(g) => (
-            <Cartridge {...cartProps(g)} caption={`${g.playHours}h logged`} />
+            <Cartridge {...cartProps(g)} caption={g.playHours > 0 ? `${g.playHours}h logged` : 'Not played yet'} />
           )} />
         </section>
       )}
@@ -192,35 +210,6 @@ export const StoreScreen: React.FC = () => {
             : g.price;
           return <Cartridge {...cartProps(g)} caption={isOwned ? 'In your library' : price} />;
         }} />
-      </section>
-
-      {/* Dispatches */}
-      <section className="space-y-5">
-        <div className="flex items-center justify-between">
-          <h2 className="font-display text-2xl font-bold text-cream">Dispatches</h2>
-          <button onClick={() => navigate('community')} className="text-xs text-slate-400 hover:text-white flex items-center gap-1 cursor-default">
-            All community posts <ChevronRight className="w-4 h-4" />
-          </button>
-        </div>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
-          {recentArticles.map((a) => (
-            <button key={a.id} onClick={() => openArticle(a)}
-              className="group text-left rounded-[28px] bg-bg-card border border-white/[0.07] hover:border-accent/50 overflow-hidden cursor-default transition-colors">
-              <div className="relative aspect-[16/9] overflow-hidden bg-black">
-                <img src={a.cover} alt={a.title} className="w-full h-full object-cover opacity-80 group-hover:opacity-100 group-hover:scale-105 transition duration-300" />
-                <span className="absolute top-2.5 left-2.5 engine-label bg-black/60 px-2 py-1 rounded">{a.gameTitle}</span>
-              </div>
-              <div className="p-4 space-y-2">
-                <h3 className="font-display text-sm font-bold text-cream line-clamp-2 leading-snug">{a.title}</h3>
-                <p className="text-[11px] text-slate-400 line-clamp-2">{a.summary}</p>
-                <div className="flex items-center justify-between text-[11px] text-slate-400 pt-2 border-t border-white/[0.06]">
-                  <span>{a.date}</span>
-                  <span className="flex items-center gap-1 text-slate-300"><FileText className="w-3 h-3 text-accent" />Read notes</span>
-                </div>
-              </div>
-            </button>
-          ))}
-        </div>
       </section>
     </div>
   );

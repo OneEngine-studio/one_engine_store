@@ -18,21 +18,23 @@ The game never sees a password. The ticket is useless after one use, so a stolen
 
 | Piece | Job | State |
 |---|---|---|
-| Launcher | Store UI, library, downloads, starts the game | **Connected**: sign-in, library, prices and launch tickets come from the API. Downloads are still simulated |
-| Platform API | Catalog, library, ownership, download tokens, launch tickets | **Built (dev version)**: `services/platform-api` |
+| Launcher | Account sign-in, store, library, installs, starts the game | **Real**: accounts, library and launch tickets come from the API; builds are downloaded, checked against their SHA-256, unpacked and started from disk |
+| Platform API | Accounts, catalog, library, ownership, downloads, launch tickets | **Built**: `services/platform-api` (Docker kit included) |
 | Nakama | Game sign-in, matchmaking, friends, chat | Running; ticket hook **written**: `services/nakama-modules/index.js` |
-| Game SDK | Reads the ticket, signs in, no login screen in store builds | Not started (lives in the Railbound repo) |
+| Game SDK | Reads the ticket, signs in, no login screen in store builds | Receiver written: `unity/LauncherAuthReceiver.cs` |
 
-Later: sign-in page (OneEngine ID), file hosting for game builds (CDN), payments.
+Later: file hosting for game builds on a CDN, payments.
 
 ## What the API does today
 
 | Endpoint | Purpose |
 |---|---|
 | `GET /v1/catalog`, `GET /v1/catalog/:id` | Browse games and prices |
-| `POST /v1/dev/login` | Development sign-in (off unless `ALLOW_DEV_LOGIN=true`) |
+| `POST /v1/auth/register`, `/login`, `/refresh`, `/logout` | Email + password accounts, rotating refresh tokens |
+| `POST /v1/auth/verify-email`, `/forgot-password`, `/reset-password`, `/change-password` | 6-digit email codes and password changes |
+| `POST /v1/dev/login` | Test shortcut, off unless `ALLOW_DEV_LOGIN=true`, refused in production |
 | `GET /v1/me`, `GET /v1/library` | Profile and owned games |
-| `POST /v1/library/:id/claim` | Add a free game (any game, in dev mode) |
+| `POST /v1/library/:id/claim` | Add a free game (Railbound is free for now); paid games answer "payment required" |
 | `POST /v1/products/:id/download-token` | Short-lived download token, owners only |
 | `GET /v1/products/:id/builds/latest` | Newest allowed build with size, sha256 and a signed download link, owners only |
 | `GET /v1/depot/:id/:platform/:file` | Dev file server for builds (a CDN does this in production) |
@@ -43,17 +45,19 @@ Run it: see `services/platform-api/README.md`.
 
 ## Build order
 
-1. **Now:** run the API, then connect the launcher's library and launch button to it.
-2. **Game:** add ticket sign-in to Railbound (`--oe-ticket=...`), hide guest and email login in store builds.
-3. **Nakama:** load the hook, set the three environment values, block direct sign-in outside dev.
-4. **Downloads:** the API side is built (publish script, latest build, signed link). Next: the launcher downloads, checks the sha256 and unpacks; later move builds to a CDN.
-5. **Accounts:** replace dev login with a real sign-in service (email check, password reset).
-6. **Money:** hosted checkout and webhooks.
-7. **Before public:** change every default secret, sign the launcher, security review.
+Done: launcher, accounts, library, downloads, install, launch tickets, Railbound receiver, deploy kit.
+
+Still needs you (see `docs/go-live.md` for the exact steps):
+
+1. **Host the API** with a domain, HTTPS and SMTP for the email codes.
+2. **Nakama:** load the hook, set `PLATFORM_API_URL` and `PLATFORM_SERVICE_KEY`, change the console password and server key, block direct sign-in.
+3. **Publish a Railbound build** with `npm run publish-build`.
+4. **Release the launcher** (GitHub Release) built against your API address.
+5. **Later:** hosted checkout and webhooks, move builds to a CDN, sign the launcher.
 
 ## Rules that must not be skipped
 
 - Change all default secrets (`defaultkey` and friends) before any public build.
-- Dev login and direct Nakama sign-in exist for development only.
+- The dev login shortcut and direct Nakama sign-in exist for development only.
 - Prices, ownership and tickets are decided on the server, never in the launcher.
 - Tokens stay in the launcher's main process, never in the web page.

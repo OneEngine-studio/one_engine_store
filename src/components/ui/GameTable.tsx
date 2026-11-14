@@ -34,11 +34,13 @@ export const GameTable: React.FC<GameTableProps> = ({ games, onOpen }) => {
                     onClick={() => onOpen(g)}
                     className="flex items-center gap-3 text-left cursor-default min-w-0"
                   >
-                    <img src={g.coverImage} alt="" className="w-9 h-9 rounded-full object-cover bg-black shrink-0" />
+                    <span className="w-9 h-9 rounded-full overflow-hidden bg-black shrink-0">
+                      {g.coverImage && <img src={g.coverImage} alt="" className="w-full h-full object-cover" />}
+                    </span>
                     <span className="min-w-0">
                       <span className="block text-sm font-medium text-cream truncate">{g.title}</span>
                       <span className="block text-[11px] text-slate-500">
-                        {g.installed ? `Installed · ${g.installSizeGb} GB` : 'Not installed'}
+                        {g.installed ? g.updateAvailable ? `Update available · ${g.installSizeGb} GB` : `Installed · ${g.installSizeGb} GB` : 'Not installed'}
                       </span>
                     </span>
                   </button>

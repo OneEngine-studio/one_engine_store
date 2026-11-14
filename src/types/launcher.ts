@@ -1,42 +1,44 @@
-export type GameStatus = 'UNINSTALLED' | 'DOWNLOADING' | 'UPDATING' | 'READY' | 'RUNNING';
-
-export interface UserSession {
-  userId: string;
-  email: string;
-  callsign: string;
-  authToken: string;
-  avatarUrl?: string;
-  isOnline: boolean;
+export interface InstallRecord {
+  gameId: string;
+  buildId: string;
+  version: string;
+  executable: string;
+  executablePath: string;
+  sha256: string;
+  sizeBytes: number;
+  installedAt: string;
 }
 
-export interface GameInfo {
-  id: string;
-  title: string;
-  tagline: string;
+export interface InstallBuild {
+  buildId: string;
   version: string;
-  installedVersion?: string;
-  executableName: string;
-  installPath: string;
-  bannerImage: string;
-  status: GameStatus;
-  downloadProgress: number; // 0 - 100
-  sizeGb: number;
-  patchNotes: Array<{
-    version: string;
-    date: string;
-    notes: string[];
-  }>;
-  systemRequirements: {
-    os: string;
-    processor: string;
-    memory: string;
-    graphics: string;
-    storage: string;
-  };
+  executable: string;
+  sha256: string;
+  sizeBytes: number;
+  downloadUrl: string;
+}
+
+export type InstallPhase = 'downloading' | 'verifying' | 'extracting' | 'paused' | 'cancelled' | 'error' | 'done';
+
+export interface InstallProgress {
+  gameId: string;
+  phase: InstallPhase;
+  total: number;
+  received?: number;
+  speedBps?: number;
+  message?: string;
+}
+
+export interface InstallResult {
+  ok: boolean;
+  status: 'done' | 'paused' | 'cancelled' | 'error';
+  message?: string;
+  install?: InstallRecord | null;
 }
 
 export interface LaunchGamePayload {
-  gamePath: string;
+  libraryDir: string;
+  gameId: string;
   /** Single-use launch ticket from the Platform API; the game trades it for a Nakama session. */
   ticket: string;
   playerName: string;

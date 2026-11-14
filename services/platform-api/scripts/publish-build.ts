@@ -1,14 +1,19 @@
 // Development publisher: copies a game build (.zip) into the local depot and registers it.
-//   npm run publish-build -- railbound 2.4.0 C:\builds\railbound.zip [win64]
+//   npm run publish-build -- railbound 2.4.0 C:\builds\railbound.zip Railbound.exe [win64]
+// <game-exe-inside-zip> is the file the launcher starts, at the top level of the zip.
 import { createHash } from 'node:crypto';
 import { copyFileSync, createReadStream, mkdirSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 import { loadConfig } from '../src/config.js';
 import { openDb } from '../src/db.js';
 
-const [productId, version, zipPath, platform = 'win64'] = process.argv.slice(2);
-if (!productId || !version || !zipPath) {
-  console.error('Usage: npm run publish-build -- <productId> <version> <path-to.zip> [platform]');
+const [productId, version, zipPath, executable, platform = 'win64'] = process.argv.slice(2);
+if (!productId || !version || !zipPath || !executable) {
+  console.error('Usage: npm run publish-build -- <productId> <version> <path-to.zip> <game-exe-inside-zip> [platform]');
+  process.exit(1);
+}
+if (!/^[A-Za-z0-9._ -]{1,64}\.exe$/i.test(executable)) {
+  console.error('The executable must be a file name ending in .exe, at the top level of the zip.');
   process.exit(1);
 }
 if (!/^[A-Za-z0-9._-]{1,64}$/.test(version) || !/^[A-Za-z0-9._-]{1,32}$/.test(platform)) {
@@ -38,8 +43,8 @@ mkdirSync(dir, { recursive: true });
 copyFileSync(zipPath, join(dir, `${buildId}.zip`));
 
 db.prepare(
-  `INSERT OR REPLACE INTO builds (product_id, platform, build_id, manifest_url, total_size, version, sha256)
-   VALUES (?, ?, ?, ?, ?, ?, ?)`
-).run(productId, platform, buildId, `${productId}/${platform}/${buildId}.zip`, size, version, sha256);
+  `INSERT OR REPLACE INTO builds (product_id, platform, build_id, manifest_url, total_size, version, sha256, executable)
+   VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
+).run(productId, platform, buildId, `${productId}/${platform}/${buildId}.zip`, size, version, sha256, executable);
 
 console.log(`Published ${productId} ${version} (${platform}) as build ${buildId}: ${size} bytes, sha256 ${sha256}`);

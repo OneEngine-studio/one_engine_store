@@ -39,10 +39,6 @@ export const DEFAULT_AMBIENT = {
     spot: 'rgba(16, 185, 129, 0.10)',
     tint: 'rgba(16, 185, 129, 0.04)',
   },
-  community: {
-    spot: 'rgba(245, 158, 11, 0.10)',
-    tint: 'rgba(245, 158, 11, 0.04)',
-  },
   settings: {
     spot: 'rgba(148, 163, 184, 0.08)',
     tint: 'rgba(100, 116, 139, 0.03)',

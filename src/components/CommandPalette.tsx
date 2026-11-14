@@ -7,9 +7,7 @@ export const CommandPalette: React.FC = () => {
     isCommandPaletteOpen,
     setCommandPaletteOpen,
     games,
-    articles,
     navigate,
-    openArticle,
     currentUser,
   } = useStore();
 
@@ -35,15 +33,6 @@ export const CommandPalette: React.FC = () => {
           g.tags.some((t) => t.toLowerCase().includes(query.toLowerCase()))
       )
     : games.slice(0, 4);
-
-  const filteredArticles = query.trim()
-    ? articles.filter(
-        (a) =>
-          a.title.toLowerCase().includes(query.toLowerCase()) ||
-          a.gameTitle.toLowerCase().includes(query.toLowerCase()) ||
-          a.summary.toLowerCase().includes(query.toLowerCase())
-      )
-    : articles.slice(0, 3);
 
   return (
     <div
@@ -92,11 +81,9 @@ export const CommandPalette: React.FC = () => {
                     className="px-3.5 py-2.5 rounded-2xl hover:bg-white/[0.08] flex items-center justify-between cursor-default border border-transparent hover:border-white/[0.12] transition-surface duration-150 group"
                   >
                     <div className="flex items-center gap-3.5">
-                      <img
-                        src={game.coverImage}
-                        alt=""
-                        className="w-12 h-8 rounded-xl object-cover border border-white/10 shadow-sm"
-                      />
+                      <span className="w-12 h-8 rounded-xl overflow-hidden bg-black/60 border border-white/10 shadow-sm shrink-0">
+                        {game.coverImage && <img src={game.coverImage} alt="" className="w-full h-full object-cover" />}
+                      </span>
                       <div>
                         <div className="flex items-center gap-2">
                           <span className="text-xs font-semibold text-slate-200 group-hover:text-white transition-colors">
@@ -123,32 +110,6 @@ export const CommandPalette: React.FC = () => {
             </div>
           )}
 
-          {filteredArticles.length > 0 && (
-            <div className="space-y-1 pt-1 border-t border-white/[0.06]">
-              <span className="text-xs font-semibold text-slate-400 block px-3 pt-2 pb-1">
-                Dispatches and patch notes
-              </span>
-              {filteredArticles.map((article) => (
-                <div
-                  key={article.id}
-                  onClick={() => {
-                    setCommandPaletteOpen(false);
-                    openArticle(article);
-                  }}
-                  className="px-3.5 py-2.5 rounded-xl hover:bg-white/[0.08] flex items-center justify-between cursor-default border border-transparent hover:border-white/[0.1] transition-surface duration-150 group"
-                >
-                  <div className="space-y-0.5">
-                    <span className="text-xs font-medium text-slate-300 group-hover:text-accent transition-colors block">
-                      {article.title}
-                    </span>
-                    <span className="text-[11px] text-slate-500">
-                      {article.gameTitle} · {article.date}
-                    </span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
         </div>
       </div>
     </div>
