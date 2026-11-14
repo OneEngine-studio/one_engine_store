@@ -6,6 +6,8 @@ import { StatsCard } from '../components/ui/StatsCard';
 import { Timeline } from '../components/ui/Timeline';
 import { Shelf } from '../components/ui/Shelf';
 import { FocusCarousel } from '../components/ui/FocusCarousel';
+import { CategoryCarousel, CategoryItem } from '../components/ui/CategoryCarousel';
+import type { Icon3DKind } from '../components/ui/Icon3D';
 import { ChevronRight, Search, Clock, WifiOff, Flame, Gamepad2, Download, Heart } from 'lucide-react';
 
 const MOODS = [
@@ -13,6 +15,14 @@ const MOODS = [
   { id: 'cozy', label: 'Cozy', hint: 'Slow, calm, no pressure', words: ['relax', 'cozy', 'simulation', 'puzzle', 'builder'] },
   { id: 'focus', label: 'Focused', hint: 'Strategy and planning', words: ['strategy', 'tactical', 'management', 'logistics'] },
   { id: 'intense', label: 'Intense', hint: 'Fast and high stakes', words: ['action', 'shooter', 'survival', 'fps'] },
+];
+
+const CATEGORIES: Array<{ id: string; label: string; kind: Icon3DKind; words: string[] }> = [
+  { id: 'action', label: 'Action', kind: 'rocket', words: ['action', 'shooter', 'fps', 'survival', 'adventure'] },
+  { id: 'strategy', label: 'Strategy', kind: 'target', words: ['strategy', 'tactical', 'management', 'logistics'] },
+  { id: 'puzzle', label: 'Puzzle', kind: 'puzzle', words: ['puzzle', 'relax', 'cozy', 'casual'] },
+  { id: 'sim', label: 'Simulation', kind: 'gear', words: ['simulation', 'builder', 'sandbox', 'crafting'] },
+  { id: 'social', label: 'Multiplayer', kind: 'user', words: ['co-op', 'multiplayer', 'online', 'social'] },
 ];
 
 export const StoreScreen: React.FC = () => {
@@ -34,14 +44,22 @@ export const StoreScreen: React.FC = () => {
   } = useStore();
 
   const [moodIndex, setMoodIndex] = useState(0);
+  const [categoryId, setCategoryId] = useState('all');
 
   const hour = new Date().getHours();
   const greeting = hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening';
 
+  const gameWords = (g: (typeof games)[number]) => g.tags.concat(g.genre ?? '').map((t) => t.toLowerCase());
+  const inCategory = (g: (typeof games)[number], words: string[]) => gameWords(g).some((t) => words.some((w) => t.includes(w)));
+  const categoryItems: CategoryItem[] = [
+    { id: 'all', label: 'All games', count: games.length, kind: 'controller' },
+    ...CATEGORIES.map((c) => ({ id: c.id, label: c.label, kind: c.kind, count: games.filter((g) => inCategory(g, c.words)).length })).filter((c) => c.count > 0),
+  ];
+  const category = CATEGORIES.find((c) => c.id === categoryId);
+
   const q = searchQuery.toLowerCase();
-  const searched = searchQuery
-    ? games.filter((g) => g.title.toLowerCase().includes(q) || g.tags.some((t) => t.toLowerCase().includes(q)))
-    : games;
+  const searched = (category ? games.filter((g) => inCategory(g, category.words)) : games)
+    .filter((g) => !searchQuery || g.title.toLowerCase().includes(q) || g.tags.some((t) => t.toLowerCase().includes(q)));
 
   const mood = MOODS[moodIndex];
   const moodMatches = (g: (typeof games)[number]) =>
@@ -162,6 +180,21 @@ export const StoreScreen: React.FC = () => {
         />
       </section>
 
+      {/* Categories */}
+      {games.length > 0 && (
+        <section className="space-y-5">
+          <div className="flex items-center justify-between">
+            <h2 className="font-display text-2xl text-cream">Game</h2>
+            {categoryId !== 'all' && (
+              <button onClick={() => setCategoryId('all')} className="text-xs text-accent hover:underline cursor-default font-medium">
+                Clear category
+              </button>
+            )}
+          </div>
+          <CategoryCarousel items={categoryItems} selectedId={categoryId} onSelect={(id) => setCategoryId(id === categoryId ? 'all' : id)} />
+        </section>
+      )}
+
       {/* Play timeline */}
       {timeline.length > 0 && (
         <section className="space-y-6">
@@ -199,7 +232,7 @@ export const StoreScreen: React.FC = () => {
       <section className="space-y-5">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
-            <h2 className="font-display text-2xl text-cream">{mood.id === 'all' ? 'New games' : `${mood.label} picks`}</h2>
+            <h2 className="font-display text-2xl text-cream">{category ? `${category.label} games` : mood.id === 'all' ? 'New games' : `${mood.label} picks`}</h2>
             <p className="text-xs text-slate-400 mt-0.5">
               {moodFallback ? `Nothing tagged ${mood.label.toLowerCase()} yet, showing everything` : MOODS[moodIndex].hint}
             </p>
@@ -216,6 +249,7 @@ export const StoreScreen: React.FC = () => {
           games={shelfGames}
           running={runningGameId}
           actionsDisabled={!gamesEnabled}
+          glow={false}
           captionFor={(g) => {
             if (owned.some((o) => o.id === g.id)) return 'In your library';
             return typeof g.price === 'number'

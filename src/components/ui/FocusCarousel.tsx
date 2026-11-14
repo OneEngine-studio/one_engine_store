@@ -25,13 +25,15 @@ interface FocusCarouselProps {
   onOpen: (g: Game) => void;
   onAction: (g: Game) => void;
   actionsDisabled?: boolean;
+  /** Let the focused card colour the light behind the panel (default on). */
+  glow?: boolean;
 }
 
 /**
  * One strip of game cards. The focused card is wide and shows its details; the rest shrink to tiles and the
  * strip slides so the focus stays in view. The light behind the panel takes the focused card's colour.
  */
-export const FocusCarousel: React.FC<FocusCarouselProps> = ({ games, running, captionFor, actionLabel, onOpen, onAction, actionsDisabled }) => {
+export const FocusCarousel: React.FC<FocusCarouselProps> = ({ games, running, captionFor, actionLabel, onOpen, onAction, actionsDisabled, glow = true }) => {
   const [focus, setFocus] = useState(0);
   const [width, setWidth] = useState(0);
   const [auto, setAuto] = useState(true);
@@ -58,17 +60,19 @@ export const FocusCarousel: React.FC<FocusCarouselProps> = ({ games, running, ca
   }, [auto, hovered, n]);
 
   useEffect(() => {
+    if (!glow) return;
     const [spot, tint] = GLOWS[f % GLOWS.length];
     const root = document.documentElement.style;
     root.setProperty('--focus-spot', spot);
     root.setProperty('--focus-tint', tint);
-  }, [f]);
+  }, [f, glow]);
   useEffect(() => {
+    if (!glow) return;
     return () => {
       document.documentElement.style.removeProperty('--focus-spot');
       document.documentElement.style.removeProperty('--focus-tint');
     };
-  }, []);
+  }, [glow]);
 
   if (n === 0) return null;
 

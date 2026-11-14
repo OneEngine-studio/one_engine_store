@@ -4,6 +4,7 @@ import { Pause, Play, X, HardDrive, Activity, CheckCircle, Clock, Sliders, Alert
 import { NumberTicker } from '../components/ui/NumberTicker';
 import type { DownloadItem } from '../types/store';
 import { ComingSoon } from '../components/ui/ComingSoon';
+import { FocusCarousel } from '../components/ui/FocusCarousel';
 
 const MB = 1024 * 1024;
 const GB = 1024 * MB;
@@ -56,6 +57,9 @@ export const DownloadsScreen: React.FC = () => {
     launchGame,
     gamesEnabled,
     navigate,
+    stopGame,
+    startDownload,
+    runningGameId,
   } = useStore();
 
   const installedGames = games.filter((g) => g.installed);
@@ -184,6 +188,26 @@ export const DownloadsScreen: React.FC = () => {
           <span>{settings.bandwidthLimitMBps > 0 ? `Limit ${settings.bandwidthLimitMBps} MB/s` : 'Bandwidth limit'}</span>
         </button>
       </div>
+
+      {/* Installed games */}
+      {installedGames.length > 0 && (
+        <section className="space-y-4">
+          <h2 className="font-display text-2xl text-cream">Installed games</h2>
+          <FocusCarousel
+            games={installedGames.slice(0, 8)}
+            running={runningGameId}
+            actionsDisabled={!gamesEnabled}
+            captionFor={(g) => `${g.installSizeGb < 10 ? g.installSizeGb.toFixed(1) : Math.round(g.installSizeGb)} GB on disk`}
+            actionLabel={(g) => (runningGameId === g.id ? 'Stop' : g.updateAvailable ? 'Update' : 'Play')}
+            onOpen={(g) => navigate('game-detail', g.id)}
+            onAction={(g) => {
+              if (runningGameId === g.id) stopGame(g.id);
+              else if (g.updateAvailable) startDownload(g.id);
+              else launchGame(g.id);
+            }}
+          />
+        </section>
+      )}
 
       {/* Transfer status & Storage section */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

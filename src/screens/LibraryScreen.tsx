@@ -7,6 +7,7 @@ import { ComingSoon } from '../components/ui/ComingSoon';
 import { Pill } from '../components/ui/Pill';
 import { Shelf } from '../components/ui/Shelf';
 import { GameTable } from '../components/ui/GameTable';
+import { FocusCarousel } from '../components/ui/FocusCarousel';
 
 type CardSize = 'compact' | 'standard' | 'hero';
 const cartWidth: Record<CardSize, number> = { compact: 140, standard: 188, hero: 248 };
@@ -171,6 +172,26 @@ export const LibraryScreen: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Pick up where you left off */}
+      {sortedGames.length > 1 && (
+        <section className="space-y-4">
+          <h2 className="font-display text-2xl text-cream">Pick up where you left off</h2>
+          <FocusCarousel
+            games={sortedGames.slice(0, 8)}
+            running={runningGameId}
+            actionsDisabled={!gamesEnabled}
+            captionFor={(g) => (g.playHours ? `${g.playHours}h played` : g.installed ? 'Never played' : 'Not installed')}
+            actionLabel={(g) => (runningGameId === g.id ? 'Stop' : g.installed && !g.updateAvailable ? 'Play' : g.installed ? 'Update' : 'Install')}
+            onOpen={(g) => navigate('game-detail', g.id)}
+            onAction={(g) => {
+              if (runningGameId === g.id) stopGame(g.id);
+              else if (g.installed && !g.updateAvailable) launchGame(g.id);
+              else startDownload(g.id);
+            }}
+          />
+        </section>
+      )}
 
       {/* Shelf of cartridges */}
       {sortedGames.length === 0 ? (
