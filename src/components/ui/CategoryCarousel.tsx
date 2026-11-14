@@ -20,11 +20,18 @@ interface CategoryCarouselProps {
   onSelect: (id: string) => void;
 }
 
-const glowOf = (kind: Icon3DKind): [string, string] => {
-  const hex = ICON3D_TINT[kind][0].replace('#', '');
-  const [r, g, b] = [0, 2, 4].map((i) => parseInt(hex.slice(i, i + 2), 16));
-  return [`rgba(${r}, ${g}, ${b}, 0.26)`, `rgba(${r}, ${g}, ${b}, 0.09)`];
+// The light stays in the red family; each card leans a little warmer or cooler.
+const GLOW_RGB: Record<Icon3DKind, string> = {
+  controller: '187, 59, 59',
+  rocket: '200, 72, 72',
+  target: '176, 52, 76',
+  puzzle: '208, 96, 76',
+  gear: '190, 88, 100',
+  user: '198, 62, 98',
+  trophy: '196, 84, 84',
+  bolt: '210, 70, 60',
 };
+const glowOf = (kind: Icon3DKind): [string, string] => [`rgba(${GLOW_RGB[kind]}, 0.26)`, `rgba(${GLOW_RGB[kind]}, 0.09)`];
 
 /** Colourful category cards with a glossy 3D icon. The focused one widens; choosing it filters the games below. */
 export const CategoryCarousel: React.FC<CategoryCarouselProps> = ({ items, selectedId, onSelect }) => {
@@ -90,10 +97,11 @@ export const CategoryCarousel: React.FC<CategoryCarouselProps> = ({ items, selec
               style={{
                 width: active ? FOCUS_W : TILE_W,
                 height: HEIGHT,
-                background: `linear-gradient(145deg, ${from}, ${to})`,
+                background: `linear-gradient(150deg, ${from}, ${to} 78%)`,
+                border: `1px solid ${active ? 'rgba(226, 90, 90, 0.45)' : 'rgba(255, 255, 255, 0.08)'}`,
                 animationDelay: `${Math.min(i, 8) * 45}ms`,
-                transition: 'width 620ms cubic-bezier(0.23, 1, 0.32, 1), box-shadow 400ms',
-                boxShadow: active ? `0 20px 40px rgba(0,0,0,0.45), 0 0 34px ${to}66` : '0 8px 18px rgba(0,0,0,0.35)',
+                transition: 'width 620ms cubic-bezier(0.23, 1, 0.32, 1), box-shadow 400ms, border-color 300ms',
+                boxShadow: active ? `0 20px 40px rgba(0,0,0,0.5), 0 0 32px rgba(${GLOW_RGB[it.kind]}, 0.28)` : '0 8px 18px rgba(0,0,0,0.35)',
               }}
             >
               <button
@@ -102,7 +110,7 @@ export const CategoryCarousel: React.FC<CategoryCarouselProps> = ({ items, selec
                 aria-pressed={selected}
                 className="absolute inset-0 z-10 cursor-default"
               />
-              <div className="absolute inset-0 bg-[radial-gradient(90%_70%_at_20%_0%,rgba(255,255,255,0.28),transparent_60%)] pointer-events-none" />
+              <div className="absolute inset-0 bg-[radial-gradient(80%_80%_at_85%_10%,rgba(226,90,90,0.30),transparent_65%)] pointer-events-none" />
 
               {/* the icon leans out of the corner and grows when the card is focused */}
               <div
@@ -133,7 +141,7 @@ export const CategoryCarousel: React.FC<CategoryCarouselProps> = ({ items, selec
               <span
                 className="absolute left-4 top-4 inline-flex h-10 w-10 items-center justify-center rounded-full bg-white shadow-lg pointer-events-none"
                 style={{
-                  color: to,
+                  color: '#BB3B3B',
                   opacity: active ? 1 : 0,
                   transform: active ? 'scale(1)' : 'scale(0.85)',
                   transition: `opacity 300ms ease ${active ? 200 : 0}ms, transform 420ms cubic-bezier(0.23, 1, 0.32, 1) ${active ? 200 : 0}ms`,

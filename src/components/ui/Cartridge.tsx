@@ -1,6 +1,7 @@
 import React from 'react';
 import { Play, Square, Download } from 'lucide-react';
 import { Game } from '../../types/store';
+import { Icon3D } from './Icon3D';
 
 export type CartridgeSize = 'compact' | 'standard' | 'hero';
 
@@ -53,7 +54,9 @@ export const Cartridge: React.FC<CartridgeProps> = ({
             className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 ease-[cubic-bezier(0.23,1,0.32,1)] group-hover:scale-[1.04]"
           />
         ) : (
-          <div className="absolute inset-0 bg-gradient-to-br from-white/[0.08] to-transparent" />
+          <div className="absolute inset-0 bg-[radial-gradient(90%_80%_at_80%_0%,rgba(226,90,90,0.30),#4A1B1F_55%,#2A1113)] flex items-center justify-center">
+            <Icon3D kind="controller" className="w-16 h-auto opacity-70" />
+          </div>
         )}
         <div className="absolute inset-0 bg-gradient-to-t from-[#361518] via-[#361518]/20 to-transparent pointer-events-none" />
 

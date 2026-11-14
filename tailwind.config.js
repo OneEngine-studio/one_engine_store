@@ -27,8 +27,8 @@ export default {
 
         // Rose-tinted greys for text on maroon, white for headings and light fills
         slate: {
-          50: '#FBF4F4', 100: '#F3E6E6', 200: '#E6D2D2', 300: '#D1B4B5', 400: '#B38F90',
-          500: '#8F6B6C', 600: '#6E5051', 700: '#523A3B', 800: '#3C2829', 900: '#271718', 950: '#180D0E',
+          50: '#FBF4F4', 100: '#F3E6E6', 200: '#E6D2D2', 300: '#DEC6C7', 400: '#C7A7A8',
+          500: '#A98586', 600: '#86605F', 700: '#523A3B', 800: '#3C2829', 900: '#271718', 950: '#180D0E',
         },
         cream:  '#FFFFFF',
         brass:  '#D9A5A5',
