@@ -224,7 +224,7 @@ export const SettingsScreen: React.FC = () => {
                   Tactile interface audio
                 </span>
                 <span className="text-xs text-slate-400 leading-relaxed block">
-                  Subtle synthetic sound synthesis for clicks, navigation, and launch events.
+                  Soft interface sounds for clicks, confirmations and game launch.
                 </span>
               </div>
               <div className="flex items-center gap-3">
