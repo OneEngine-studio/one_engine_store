@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useStore } from '../../store/useStore';
-import { formatServerAddress, parseServerAddress } from '../../lib/nakama';
+import { normalizePlatformUrl } from '../../lib/platformApi';
 
 interface ServerAddressFieldProps {
   id: string;
@@ -9,19 +9,13 @@ interface ServerAddressFieldProps {
   onApplied?: () => void;
 }
 
-/** One field for the whole server address; paste a URL and the parts are filled in. */
+/** The OneEngine service address. Applies on blur or Enter once it parses as an http(s) URL. */
 export const ServerAddressField: React.FC<ServerAddressFieldProps> = ({ id, inputClassName, onApplied }) => {
   const { settings, updateSettings } = useStore();
-  const current = formatServerAddress({
-    host: settings.nakamaHost,
-    port: settings.nakamaPort,
-    useSsl: settings.nakamaUseSsl,
-    basePath: settings.nakamaBasePath,
-  });
+  const current = settings.platformApiUrl;
   const [text, setText] = useState(current);
   const [invalid, setInvalid] = useState(false);
 
-  // Follow changes made elsewhere (e.g. the individual fields in Settings).
   useEffect(() => {
     setText(current);
     setInvalid(false);
@@ -29,18 +23,13 @@ export const ServerAddressField: React.FC<ServerAddressFieldProps> = ({ id, inpu
 
   const apply = () => {
     if (text.trim() === current) return;
-    const parsed = parseServerAddress(text);
-    if (!parsed) {
+    const url = normalizePlatformUrl(text);
+    if (!url) {
       setInvalid(true);
       return;
     }
     setInvalid(false);
-    updateSettings({
-      nakamaHost: parsed.host,
-      nakamaPort: parsed.port,
-      nakamaUseSsl: parsed.useSsl,
-      nakamaBasePath: parsed.basePath,
-    });
+    updateSettings({ platformApiUrl: url });
     onApplied?.();
   };
 
@@ -61,7 +50,7 @@ export const ServerAddressField: React.FC<ServerAddressFieldProps> = ({ id, inpu
             apply();
           }
         }}
-        placeholder="https://play.example.com"
+        placeholder="http://127.0.0.1:8080"
         spellCheck={false}
         aria-invalid={invalid}
         aria-describedby={invalid ? `${id}-error` : undefined}
@@ -69,7 +58,7 @@ export const ServerAddressField: React.FC<ServerAddressFieldProps> = ({ id, inpu
       />
       {invalid && (
         <p id={`${id}-error`} className="text-[11px] text-danger mt-1">
-          That doesn't look like a server address. Try https://host or host:7350.
+          That doesn't look like an address. Try http://127.0.0.1:8080 or https://api.example.com.
         </p>
       )}
     </>

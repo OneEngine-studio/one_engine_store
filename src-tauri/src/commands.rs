@@ -17,17 +17,17 @@ pub struct ProcessExitPayload {
 }
 
 /// Verifies authorization payload and spawns the Unity game process (Railbound.exe)
-/// passing encrypted auth flags into command-line arguments.
+/// passing the one-time launch ticket from the Platform API on the command line.
 #[tauri::command]
 pub async fn launch_game(
     app: AppHandle,
     game_path: String,
-    auth_token: String,
+    ticket: String,
     player_name: String,
     user_id: String,
 ) -> Result<LaunchResult, String> {
-    if auth_token.trim().is_empty() {
-        return Err("Authentication failed: Missing or invalid session JWT token".into());
+    if ticket.trim().is_empty() {
+        return Err("Launch failed: missing launch ticket".into());
     }
 
     if player_name.trim().is_empty() {
@@ -45,12 +45,9 @@ pub async fn launch_game(
     let mut cmd = if path_ref.exists() {
         let mut c = Command::new(&game_path);
         c.args([
-            "--auth-token",
-            &auth_token,
-            "--player-name",
-            &player_name,
-            "--user-id",
-            &user_id,
+            format!("--oe-ticket={}", ticket),
+            format!("--oe-user={}", user_id),
+            format!("--oe-name={}", player_name),
         ]);
         c
     } else {
@@ -64,10 +61,7 @@ pub async fn launch_game(
             // Ping localhost to keep the mock process alive for ~10 seconds
             c.args([
                 "/C",
-                &format!(
-                    "echo [Railbound Mock] Launched with token: {} & ping 127.0.0.1 -n 15 > nul",
-                    auth_token
-                ),
+                "echo [Railbound Mock] Launched with a ticket & ping 127.0.0.1 -n 15 > nul",
             ]);
             c
         }
@@ -76,10 +70,7 @@ pub async fn launch_game(
             let mut c = Command::new("sh");
             c.args([
                 "-c",
-                &format!(
-                    "echo [Railbound Mock] Launched with token: {} && sleep 15",
-                    auth_token
-                ),
+                "echo [Railbound Mock] Launched with a ticket && sleep 15",
             ]);
             c
         }

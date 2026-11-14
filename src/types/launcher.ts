@@ -37,11 +37,10 @@ export interface GameInfo {
 
 export interface LaunchGamePayload {
   gamePath: string;
-  authToken: string;
+  /** Single-use launch ticket from the Platform API; the game trades it for a Nakama session. */
+  ticket: string;
   playerName: string;
   userId: string;
-  nakamaToken?: string;
-  nakamaRefreshToken?: string;
 }
 
 export interface LaunchResult {

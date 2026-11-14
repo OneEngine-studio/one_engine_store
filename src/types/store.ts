@@ -90,8 +90,6 @@ export interface UserProfile {
   walletBalance: number;
   role: 'OPERATOR' | 'DEVELOPER' | 'ADMIN';
   ownedGameIds: string[];
-  nakamaToken?: string;
-  nakamaRefreshToken?: string;
 }
 
 export type NavigationTab = 'store' | 'game-detail' | 'library' | 'downloads' | 'activity' | 'community' | 'settings';
@@ -104,11 +102,7 @@ export interface AppSettings {
   hardwareAcceleration: boolean;
   devTelemetryMode: boolean;
   bandwidthThrottleMbps: number;
-  nakamaHost: string;
-  nakamaPort: string;
-  nakamaUseSsl: boolean;
-  nakamaServerKey: string;
-  nakamaBasePath: string;
+  platformApiUrl: string;
 }
 
 export interface Article {

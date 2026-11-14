@@ -4,7 +4,7 @@ export interface ElectronAPI {
   closeWindow: () => void;
   launchGame: (payload: {
     gamePath: string;
-    authToken: string;
+    ticket: string;
     playerName: string;
     userId: string;
   }) => Promise<{ success: boolean; pid?: number; message?: string }>;

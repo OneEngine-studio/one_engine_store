@@ -148,7 +148,7 @@ export const WindowFrame: React.FC = () => {
           <button
             onClick={openAuthModal}
             className="flex items-center gap-2 pl-1 pr-3 py-1 bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.09] hover:border-white/[0.18] shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06)] rounded-full text-xs transition-surface cursor-default"
-            title="Account & Nakama session"
+            title="Account"
           >
             <div className="relative">
               <img

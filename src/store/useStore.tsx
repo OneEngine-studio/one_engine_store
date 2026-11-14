@@ -9,7 +9,7 @@ import {
   ClientNotification, 
   ToastNotification 
 } from '../types/store';
-import { nakamaService } from '../lib/nakama';
+import { platformApi, type PlatformProduct } from '../lib/platformApi';
 import { recordPlayDay } from '../lib/playLog';
 import { LauncherBridge } from '../lib/launcherBridge';
 
@@ -155,7 +155,31 @@ export const DEFAULT_GUEST_USER: UserProfile = {
   currentGame: undefined,
   walletBalance: 0.00,
   role: 'OPERATOR',
-  ownedGameIds: ['railbound'],
+  ownedGameIds: [],
+};
+
+const profileFrom = (
+  me: { userId: string; email: string; displayName: string },
+  library: PlatformProduct[]
+): UserProfile => ({
+  ...DEFAULT_GUEST_USER,
+  id: me.userId,
+  callsign: me.displayName,
+  email: me.email,
+  rank: 'VERIFIED OPERATIVE',
+  avatarUrl: `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(me.displayName)}`,
+  ownedGameIds: library.map((p) => p.productId),
+});
+
+/** Price and discount are decided by the server; everything else on the card stays local. */
+const applyServerPrice = (game: Game, items: PlatformProduct[]): Game => {
+  const price = items.find((i) => i.productId === game.id)?.price;
+  if (!price) return game;
+  return {
+    ...game,
+    price: price.amountMinor === 0 ? 'FREE' : price.amountMinor / 100,
+    discountPercent: price.discountPercent || undefined,
+  };
 };
 
 const INITIAL_ARTICLES: Article[] = [
@@ -249,9 +273,7 @@ interface StoreContextType {
   isPausedAll: boolean;
   
   isAuthenticated: boolean;
-  loginWithNakama: (email: string, pass: string) => Promise<{ success: boolean; error?: string }>;
-  registerWithNakama: (email: string, pass: string, username: string) => Promise<{ success: boolean; error?: string }>;
-  loginAsGuest: (username?: string) => Promise<{ success: boolean; error?: string }>;
+  signIn: (email: string, displayName: string) => Promise<{ success: boolean; error?: string }>;
   logout: () => void;
   
   navigate: (tab: NavigationTab, gameId?: string) => void;
@@ -273,7 +295,7 @@ interface StoreContextType {
   launchGame: (gameId: string) => void;
   stopGame: (gameId: string) => void;
   toggleFavorite: (gameId: string) => void;
-  purchaseGame: (gameId: string) => boolean;
+  purchaseGame: (gameId: string) => Promise<boolean>;
   updateSettings: (newSettings: Partial<AppSettings>) => void;
   playTactileSound: (type: 'click' | 'launch' | 'hover' | 'alert' | 'purchase') => void;
   addToast: (message: string, type?: 'info' | 'success' | 'warning') => void;
@@ -318,23 +340,16 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   ]);
   const [historyIndex, setHistoryIndex] = useState(0);
 
-  const [settings, setSettings] = useState<AppSettings>(() => {
-    const cfg = nakamaService.getConfig();
-    return {
-      launchOnStartup: true,
-      downloadDirectory: 'C:\\OneEngine\\GameLibrary',
-      primaryAccent: '#FF7A00',
-      enableTactileAudio: true,
-      hardwareAcceleration: true,
-      devTelemetryMode: false,
-      bandwidthThrottleMbps: 0,
-      nakamaHost: cfg.host,
-      nakamaPort: cfg.port,
-      nakamaUseSsl: cfg.useSsl,
-      nakamaServerKey: cfg.serverKey,
-      nakamaBasePath: cfg.basePath,
-    };
-  });
+  const [settings, setSettings] = useState<AppSettings>(() => ({
+    launchOnStartup: true,
+    downloadDirectory: 'C:\\OneEngine\\GameLibrary',
+    primaryAccent: '#FF7A00',
+    enableTactileAudio: true,
+    hardwareAcceleration: true,
+    devTelemetryMode: false,
+    bandwidthThrottleMbps: 0,
+    platformApiUrl: platformApi.getUrl(),
+  }));
 
   const settingsRef = useRef(settings);
   useEffect(() => {
@@ -358,27 +373,43 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     setToasts((prev) => prev.filter((t) => t.id !== id));
   };
 
-  // Restore Nakama session or cached profile on startup
+  // Prices come from the server, so the catalog is refreshed whenever the service address changes.
   useEffect(() => {
     let active = true;
-    const initAuth = async () => {
-      try {
-        const session = await nakamaService.restoreSession();
-        if (session && active) {
-          const profile = await nakamaService.getAccount();
-          if (profile && active) {
-            setCurrentUser(profile);
-            setIsAuthenticated(true);
-            return;
-          }
-        }
-        // Profiles cached by older builds (including offline passes) are never trusted.
-        localStorage.removeItem('oneengine_user_profile');
-      } catch (e) {
-        console.warn('[OneEngine] Session restore check:', e);
-      }
+    platformApi
+      .catalog()
+      .then((items) => {
+        if (active) setGames((prev) => prev.map((g) => applyServerPrice(g, items)));
+      })
+      .catch((e) => console.warn('[OneEngine] Catalog unavailable:', e));
+    return () => {
+      active = false;
     };
-    initAuth();
+  }, [settings.platformApiUrl]);
+
+  // Sign back in on startup with the identity used last time (development sign-in only).
+  useEffect(() => {
+    // Profiles cached by older builds (including offline passes) are never trusted.
+    try {
+      localStorage.removeItem('oneengine_user_profile');
+    } catch {
+      // ignore
+    }
+    const remembered = platformApi.rememberedIdentity();
+    if (!remembered) return;
+    let active = true;
+    (async () => {
+      try {
+        const me = await platformApi.signIn(remembered.email, remembered.displayName);
+        const library = await platformApi.library();
+        if (active) {
+          setCurrentUser(profileFrom(me, library));
+          setIsAuthenticated(true);
+        }
+      } catch (e) {
+        console.warn('[OneEngine] Session restore:', e);
+      }
+    })();
     return () => {
       active = false;
     };
@@ -609,33 +640,46 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   const launchGame = async (gameId: string) => {
     triggerSound('click');
-    if (!isAuthenticated || !currentUser.nakamaToken) {
+    if (!isAuthenticated || !currentUser.id) {
       triggerSound('alert');
       addToast('Sign in with your OneEngine account to play.', 'warning');
       setIsAuthModalOpen(true);
       return;
     }
     setLaunchingGameId(gameId);
-    recordPlayDay();
 
     const target = games.find((g) => g.id === gameId);
     const exePath = `${settings.downloadDirectory}\\${gameId}\\${gameId}.exe`;
-    const token = currentUser.nakamaToken;
-    const refreshToken = currentUser.nakamaRefreshToken || '';
 
-    // Invoke OS process launcher with session handoff
+    // The server decides whether this player owns the game and hands back a one-time ticket.
+    // The game trades the ticket for a Nakama session; no password or session token is passed on.
+    let ticket: string;
     try {
-      await LauncherBridge.launchGame({
+      ticket = (await platformApi.launchTicket(gameId)).ticket;
+    } catch (err) {
+      triggerSound('alert');
+      setLaunchingGameId(null);
+      addToast(err instanceof Error ? err.message : 'Could not start the game.', 'warning');
+      return;
+    }
+
+    try {
+      const result = await LauncherBridge.launchGame({
         gamePath: exePath,
-        authToken: token,
-        nakamaToken: token,
-        nakamaRefreshToken: refreshToken,
+        ticket,
         playerName: currentUser.callsign,
-        userId: currentUser.id || 'usr_anonymous',
+        userId: currentUser.id,
       });
+      if (!result.success) {
+        triggerSound('alert');
+        setLaunchingGameId(null);
+        addToast(result.message || 'The game did not start.', 'warning');
+        return;
+      }
     } catch (err) {
       console.warn('[OneEngine Launcher] Process bridge dispatch:', err);
     }
+    recordPlayDay();
 
     setTimeout(() => {
       triggerSound('launch');
@@ -678,103 +722,40 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     );
   };
 
-  const purchaseGame = (gameId: string): boolean => {
+  // Ownership is the server's call. In development the API lets any signed-in player claim a game;
+  // in production it answers "payment required" until the checkout flow exists.
+  const purchaseGame = async (gameId: string): Promise<boolean> => {
     const target = games.find((g) => g.id === gameId);
     if (!target) return false;
-
-    const price = typeof target.price === 'number' 
-      ? (target.discountPercent ? +(target.price * (1 - target.discountPercent / 100)).toFixed(2) : target.price)
-      : 0;
-
-    if (currentUser.walletBalance < price) {
+    if (!isAuthenticated) {
       triggerSound('alert');
-      addToast(`Insufficient wallet funds ($${currentUser.walletBalance.toFixed(2)}) for $${price.toFixed(2)} purchase.`, 'warning');
+      addToast('Sign in to add games to your library.', 'warning');
+      setIsAuthModalOpen(true);
       return false;
     }
-
-    triggerSound('purchase');
-    const newBalance = +(currentUser.walletBalance - price).toFixed(2);
-    
-    // Deduct wallet and add to user's owned games
-    setCurrentUser((prev) => ({
-      ...prev,
-      walletBalance: newBalance,
-      ownedGameIds: [...new Set([...prev.ownedGameIds, gameId])]
-    }));
-
-    // Record game entitlement in Nakama storage
-    nakamaService.claimGameEntitlement(gameId).catch(() => {});
-
-    addToast(`Purchase successful! Added ${target.title} to Tactical Library.`, 'success');
-    return true;
-  };
-
-  const loginWithNakama = async (
-    email: string,
-    pass: string
-  ): Promise<{ success: boolean; error?: string }> => {
-    triggerSound('click');
     try {
-      await nakamaService.authenticateEmail(email, pass, false);
-      const profile = await nakamaService.getAccount();
-      if (profile) {
-        setCurrentUser(profile);
-        setIsAuthenticated(true);
-        addToast(`Welcome back, ${profile.callsign}!`, 'success');
-        return { success: true };
-      }
-      return { success: false, error: 'Signed in, but the profile could not be loaded.' };
-    } catch (err: unknown) {
+      await platformApi.claim(gameId);
+      const library = await platformApi.library();
+      triggerSound('purchase');
+      setCurrentUser((prev) => ({ ...prev, ownedGameIds: library.map((p) => p.productId) }));
+      addToast(`${target.title} added to your library.`, 'success');
+      return true;
+    } catch (err) {
       triggerSound('alert');
-      return { success: false, error: err instanceof Error ? err.message : String(err) };
+      addToast(err instanceof Error ? err.message : 'Could not add this game.', 'warning');
+      return false;
     }
   };
 
-  const registerWithNakama = async (
-    email: string,
-    pass: string,
-    username: string
-  ): Promise<{ success: boolean; error?: string }> => {
+  const signIn = async (email: string, displayName: string): Promise<{ success: boolean; error?: string }> => {
     triggerSound('click');
     try {
-      await nakamaService.authenticateEmail(email, pass, true, username);
-      const profile = await nakamaService.getAccount();
-      if (profile) {
-        setCurrentUser(profile);
-        setIsAuthenticated(true);
-        addToast(`Account created. Welcome, ${profile.callsign}!`, 'success');
-        return { success: true };
-      }
-      return { success: false, error: 'Account created, but the profile could not be loaded.' };
-    } catch (err: unknown) {
-      triggerSound('alert');
-      return { success: false, error: err instanceof Error ? err.message : String(err) };
-    }
-  };
-
-  const loginAsGuest = async (username = 'Guest_Operative'): Promise<{ success: boolean; error?: string }> => {
-    triggerSound('click');
-    try {
-      let deviceId = '';
-      try {
-        deviceId = localStorage.getItem('oneengine_device_id') || '';
-      } catch {
-        // storage unavailable: use a throwaway id
-      }
-      if (!deviceId) {
-        deviceId = `dev_${crypto.randomUUID()}`;
-        try {
-          localStorage.setItem('oneengine_device_id', deviceId);
-        } catch {
-          // ignore
-        }
-      }
-      await nakamaService.authenticateDevice(deviceId, true, username);
-      const profile = await nakamaService.getAccount();
-      if (!profile) return { success: false, error: 'Signed in, but the profile could not be loaded.' };
+      const me = await platformApi.signIn(email, displayName);
+      const library = await platformApi.library();
+      const profile = profileFrom(me, library);
       setCurrentUser(profile);
       setIsAuthenticated(true);
-      addToast(`Signed in as ${profile.callsign}.`, 'info');
+      addToast(`Welcome, ${profile.callsign}!`, 'success');
       return { success: true };
     } catch (err: unknown) {
       triggerSound('alert');
@@ -787,8 +768,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     if (runningGameId) {
       stopGame(runningGameId);
     }
-    nakamaService.logout();
-    localStorage.removeItem('oneengine_user_profile');
+    platformApi.signOut();
     setCurrentUser(DEFAULT_GUEST_USER);
     setIsAuthenticated(false);
     addToast('Signed out from OneEngine.', 'info');
@@ -855,21 +835,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     triggerSound('click');
     setSettings((prev) => {
       const next = { ...prev, ...partial };
-      if (
-        partial.nakamaHost !== undefined ||
-        partial.nakamaPort !== undefined ||
-        partial.nakamaUseSsl !== undefined ||
-        partial.nakamaServerKey !== undefined ||
-        partial.nakamaBasePath !== undefined
-      ) {
-        nakamaService.updateConfig({
-          host: next.nakamaHost,
-          port: next.nakamaPort,
-          useSsl: next.nakamaUseSsl,
-          serverKey: next.nakamaServerKey,
-          basePath: next.nakamaBasePath,
-        });
-      }
+      if (partial.platformApiUrl !== undefined) platformApi.setUrl(next.platformApiUrl);
       return next;
     });
     addToast('Preferences updated', 'info');
@@ -921,9 +887,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         downloads,
         currentUser,
         isAuthenticated,
-        loginWithNakama,
-        registerWithNakama,
-        loginAsGuest,
+        signIn,
         logout,
         searchQuery,
         isAuthModalOpen,

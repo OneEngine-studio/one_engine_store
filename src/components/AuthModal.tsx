@@ -1,10 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useStore } from '../store/useStore';
-import { X, LogOut, AlertCircle, Eye, EyeOff, Copy, Check } from 'lucide-react';
-import { nakamaService } from '../lib/nakama';
+import { X, LogOut, AlertCircle } from 'lucide-react';
+import { platformApi } from '../lib/platformApi';
 import { ServerAddressField } from './ui/ServerAddressField';
 
-type Mode = 'LOGIN' | 'REGISTER';
 type ServerStatus = 'CHECKING' | 'ONLINE' | 'OFFLINE';
 
 const inputClass =
@@ -49,24 +48,18 @@ export const AuthModal: React.FC = () => {
     closeAuthModal,
     currentUser,
     isAuthenticated,
-    loginWithNakama,
-    registerWithNakama,
-    loginAsGuest,
+    signIn,
     logout,
     settings,
-    addToast,
   } = useStore();
 
-  const [mode, setMode] = useState<Mode>('LOGIN');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [username, setUsername] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
+  const last = platformApi.lastIdentity();
+  const [email, setEmail] = useState(last?.email ?? '');
+  const [displayName, setDisplayName] = useState(last?.displayName ?? '');
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [serverStatus, setServerStatus] = useState<ServerStatus>('CHECKING');
   const [serverMessage, setServerMessage] = useState('');
-  const [copiedToken, setCopiedToken] = useState(false);
   const [showServerDetails, setShowServerDetails] = useState(false);
 
   useEffect(() => {
@@ -82,7 +75,7 @@ export const AuthModal: React.FC = () => {
     if (!isAuthModalOpen) return;
     let isMounted = true;
     setServerStatus('CHECKING');
-    nakamaService.testConnection().then((res) => {
+    platformApi.health().then((res) => {
       if (!isMounted) return;
       setServerStatus(res.ok ? 'ONLINE' : 'OFFLINE');
       setServerMessage(res.message);
@@ -90,13 +83,13 @@ export const AuthModal: React.FC = () => {
     return () => {
       isMounted = false;
     };
-  }, [isAuthModalOpen, settings.nakamaHost, settings.nakamaPort, settings.nakamaUseSsl, settings.nakamaBasePath]);
+  }, [isAuthModalOpen, settings.platformApiUrl]);
 
   if (!isAuthModalOpen) return null;
 
   const recheck = () => {
     setServerStatus('CHECKING');
-    nakamaService.testConnection().then((r) => {
+    platformApi.health().then((r) => {
       setServerStatus(r.ok ? 'ONLINE' : 'OFFLINE');
       setServerMessage(r.message);
     });
@@ -106,49 +99,19 @@ export const AuthModal: React.FC = () => {
     e.preventDefault();
     setErrorMessage(null);
 
-    if (!email.trim() || !password.trim()) {
-      setErrorMessage('Enter both your email and password.');
+    const name = displayName.trim();
+    if (!email.trim() || name.length < 2) {
+      setErrorMessage('Enter your email and a callsign of at least 2 characters.');
       return;
     }
 
     setLoading(true);
     try {
-      if (mode === 'LOGIN') {
-        const res = await loginWithNakama(email.trim(), password);
-        if (res.success) closeAuthModal();
-        else setErrorMessage(res.error || 'Could not sign in to Nakama.');
-      } else {
-        if (!username.trim()) {
-          setErrorMessage('Choose a callsign to create your account.');
-          return;
-        }
-        const res = await registerWithNakama(email.trim(), password, username.trim());
-        if (res.success) closeAuthModal();
-        else setErrorMessage(res.error || 'Could not create the account. The callsign or email may already be taken.');
-      }
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleGuestLogin = async () => {
-    setLoading(true);
-    setErrorMessage(null);
-    try {
-      const res = await loginAsGuest(username.trim() || 'Operative_Guest');
+      const res = await signIn(email.trim(), name);
       if (res.success) closeAuthModal();
-      else setErrorMessage(res.error || 'Could not start a guest session.');
+      else setErrorMessage(res.error || 'Could not sign in.');
     } finally {
       setLoading(false);
-    }
-  };
-
-  const handleCopyToken = () => {
-    if (currentUser.nakamaToken) {
-      navigator.clipboard.writeText(currentUser.nakamaToken);
-      setCopiedToken(true);
-      setTimeout(() => setCopiedToken(false), 2000);
-      addToast('Launcher key copied.', 'info');
     }
   };
 
@@ -208,8 +171,8 @@ export const AuthModal: React.FC = () => {
                   <dd className="font-semibold capitalize">{currentUser.rank.toLowerCase()}</dd>
                 </div>
                 <div>
-                  <dt className="text-[#1b1510]/50">Wallet</dt>
-                  <dd className="font-semibold tabular-nums">${currentUser.walletBalance.toFixed(2)}</dd>
+                  <dt className="text-[#1b1510]/50">Games owned</dt>
+                  <dd className="font-semibold tabular-nums">{currentUser.ownedGameIds.length}</dd>
                 </div>
                 <div className="col-span-2">
                   <dt className="text-[#1b1510]/50">Account ID</dt>
@@ -217,22 +180,11 @@ export const AuthModal: React.FC = () => {
                 </div>
               </dl>
 
-              <div className="rounded-xl bg-[#1b1510]/[0.07] p-3.5 flex items-center justify-between gap-3">
-                <div className="min-w-0">
-                  <div className="text-xs font-semibold">Launcher key</div>
-                  <p className="text-[11px] text-[#1b1510]/60 leading-snug mt-0.5">
-                    Hands your session to the game when it starts.
-                  </p>
-                </div>
-                {currentUser.nakamaToken && (
-                  <button
-                    onClick={handleCopyToken}
-                    className="shrink-0 px-3 h-8 rounded-full bg-[#1b1510] text-cream text-xs font-semibold flex items-center gap-1.5 cursor-default active:scale-[0.97] transition-transform"
-                  >
-                    {copiedToken ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
-                    {copiedToken ? 'Copied' : 'Copy'}
-                  </button>
-                )}
+              <div className="rounded-xl bg-[#1b1510]/[0.07] p-3.5">
+                <div className="text-xs font-semibold">One-time launch pass</div>
+                <p className="text-[11px] text-[#1b1510]/60 leading-snug mt-0.5">
+                  Each launch hands the game a pass that works once for 60 seconds. Your sign-in never reaches the game.
+                </p>
               </div>
 
               <div className="flex items-center justify-between gap-3 pt-1">
@@ -276,33 +228,14 @@ export const AuthModal: React.FC = () => {
           </aside>
 
           <form onSubmit={handleSubmit} className="p-7 space-y-5">
-            <div role="tablist" className="flex gap-6 border-b border-white/[0.08]">
-              {(
-                [
-                  ['LOGIN', 'Sign in'],
-                  ['REGISTER', 'Create account'],
-                ] as const
-              ).map(([id, label]) => (
-                <button
-                  key={id}
-                  type="button"
-                  role="tab"
-                  aria-selected={mode === id}
-                  onClick={() => {
-                    setMode(id);
-                    setErrorMessage(null);
-                  }}
-                  className={`-mb-px pb-3 text-sm font-semibold cursor-default border-b-2 transition-surface ${
-                    mode === id ? 'border-accent text-cream' : 'border-transparent text-slate-500 hover:text-slate-300'
-                  }`}
-                >
-                  {label}
-                </button>
-              ))}
+            <div className="border-b border-white/[0.08] pb-3">
+              <h2 id="auth-title" className="text-sm font-semibold text-cream">
+                Sign in to OneEngine
+              </h2>
+              <p className="text-[11px] text-slate-500 mt-1 leading-snug">
+                Development sign-in: no password yet. The real OneEngine ID replaces this before release.
+              </p>
             </div>
-            <h2 id="auth-title" className="sr-only">
-              {mode === 'LOGIN' ? 'Sign in to OneEngine' : 'Create a OneEngine account'}
-            </h2>
 
             {errorMessage && (
               <div role="alert" className="p-3 rounded-input bg-danger/10 border border-danger/30 text-xs flex items-start gap-2.5">
@@ -314,23 +247,6 @@ export const AuthModal: React.FC = () => {
             )}
 
             <div className="space-y-4">
-              {mode === 'REGISTER' && (
-                <div>
-                  <label htmlFor="auth-username" className="block text-xs font-medium text-slate-300 mb-1.5">
-                    Callsign
-                  </label>
-                  <input
-                    id="auth-username"
-                    type="text"
-                    value={username}
-                    onChange={(e) => setUsername(e.target.value)}
-                    placeholder="Spectre_01"
-                    autoComplete="username"
-                    className={inputClass}
-                    required
-                  />
-                </div>
-              )}
               <div>
                 <label htmlFor="auth-email" className="block text-xs font-medium text-slate-300 mb-1.5">
                   Email
@@ -348,28 +264,21 @@ export const AuthModal: React.FC = () => {
                 />
               </div>
               <div>
-                <label htmlFor="auth-password" className="block text-xs font-medium text-slate-300 mb-1.5">
-                  Password
+                <label htmlFor="auth-username" className="block text-xs font-medium text-slate-300 mb-1.5">
+                  Callsign
                 </label>
-                <div className="relative">
-                  <input
-                    id="auth-password"
-                    type={showPassword ? 'text' : 'password'}
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    autoComplete={mode === 'LOGIN' ? 'current-password' : 'new-password'}
-                    className={`${inputClass} pr-11`}
-                    required
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword((prev) => !prev)}
-                    aria-label={showPassword ? 'Hide password' : 'Show password'}
-                    className="absolute right-1.5 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full flex items-center justify-center text-slate-400 hover:text-white cursor-default"
-                  >
-                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                  </button>
-                </div>
+                <input
+                  id="auth-username"
+                  type="text"
+                  value={displayName}
+                  onChange={(e) => setDisplayName(e.target.value)}
+                  placeholder="Spectre_01"
+                  autoComplete="nickname"
+                  minLength={2}
+                  maxLength={32}
+                  className={inputClass}
+                  required
+                />
               </div>
             </div>
 
@@ -381,24 +290,14 @@ export const AuthModal: React.FC = () => {
               {loading ? (
                 <>
                   <span className="w-4 h-4 border-2 border-[#1b1510] border-t-transparent rounded-full animate-spin" />
-                  Connecting…
+                  Signing in…
                 </>
-              ) : mode === 'LOGIN' ? (
-                'Sign in'
               ) : (
-                'Create account'
+                'Sign in'
               )}
             </button>
 
-            <div className="flex items-center justify-between text-xs pt-1">
-              <button
-                type="button"
-                onClick={handleGuestLogin}
-                disabled={loading}
-                className="text-slate-400 hover:text-cream cursor-default transition-colors"
-              >
-                Continue as guest
-              </button>
+            <div className="flex items-center justify-end text-xs pt-1">
               <button
                 type="button"
                 onClick={() => setShowServerDetails((prev) => !prev)}
@@ -413,7 +312,7 @@ export const AuthModal: React.FC = () => {
             {showServerDetails && (
               <div className="rounded-input border border-white/[0.08] p-3.5 text-xs space-y-2.5 animate-soft-enter">
                 <label htmlFor="nk-address" className="text-[11px] text-slate-400 block">
-                  Server address
+                  Service address
                 </label>
                 <ServerAddressField
                   id="nk-address"

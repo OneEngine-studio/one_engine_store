@@ -25,11 +25,9 @@ export const LauncherBridge = {
     }
     return tauriInvoke<LaunchResult>('launch_game', {
       gamePath: payload.gamePath,
-      authToken: payload.authToken,
+      ticket: payload.ticket,
       playerName: payload.playerName,
       userId: payload.userId,
-      nakamaToken: payload.nakamaToken,
-      nakamaRefreshToken: payload.nakamaRefreshToken,
     });
   },
 

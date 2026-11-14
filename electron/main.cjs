@@ -118,19 +118,15 @@ function createWindow() {
 
   // Handle Game Process Execution with Headless Session Token Flags
   ipcMain.handle('launch-game', async (_event, payload) => {
-    const { gamePath, authToken, playerName, userId, nakamaToken, nakamaRefreshToken } = payload;
+    const { gamePath, ticket, playerName, userId } = payload;
     console.log(`[OneEngine Electron] Launching game for: ${playerName} (${userId})`);
 
-    const effectiveToken = nakamaToken || authToken || '';
-    const effectiveRefreshToken = nakamaRefreshToken || '';
+    if (!ticket) {
+      return { success: false, message: 'No launch ticket. Sign in and try again.' };
+    }
 
-    const args = [
-      '--nakama-token', effectiveToken,
-      '--nakama-refresh-token', effectiveRefreshToken,
-      '--auth-token', effectiveToken,
-      '--player-name', playerName || '',
-      '--user-id', userId || '',
-    ];
+    // The ticket is single use and expires in 60 s, so it is safe on a command line.
+    const args = [`--oe-ticket=${ticket}`, `--oe-user=${userId || ''}`, `--oe-name=${playerName || ''}`];
 
     try {
       let child;
@@ -141,9 +137,9 @@ function createWindow() {
         // Dev fallback simulation process (alive for 15s)
         console.log(`[OneEngine Electron] Target '${gamePath}' not found on disk. Spawning mock process.`);
         if (process.platform === 'win32') {
-          child = spawn('cmd.exe', ['/c', `echo [Railbound Mock] Launched with token: ${authToken} & ping 127.0.0.1 -n 15 > nul`]);
+          child = spawn('cmd.exe', ['/c', 'echo [Railbound Mock] Launched with a ticket & ping 127.0.0.1 -n 15 > nul']);
         } else {
-          child = spawn('sh', ['-c', `echo [Railbound Mock] Launched with token: ${authToken} && sleep 15`]);
+          child = spawn('sh', ['-c', 'echo [Railbound Mock] Launched with a ticket && sleep 15']);
         }
       }
 

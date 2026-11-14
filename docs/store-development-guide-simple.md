@@ -18,7 +18,7 @@ The game never sees a password. The ticket is useless after one use, so a stolen
 
 | Piece | Job | State |
 |---|---|---|
-| Launcher | Store UI, library, downloads, starts the game | UI exists, data is still mock |
+| Launcher | Store UI, library, downloads, starts the game | **Connected**: sign-in, library, prices and launch tickets come from the API. Downloads are still simulated |
 | Platform API | Catalog, library, ownership, download tokens, launch tickets | **Built (dev version)**: `services/platform-api` |
 | Nakama | Game sign-in, matchmaking, friends, chat | Running; ticket hook **written**: `services/nakama-modules/index.js` |
 | Game SDK | Reads the ticket, signs in, no login screen in store builds | Not started (lives in the Railbound repo) |
