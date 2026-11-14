@@ -1,0 +1,64 @@
+name: Release launcher
+
+# Push a tag like v1.0.1 (matching package.json) to build the Windows installer and publish it as a
+# GitHub Release on the public OneEngine repo. The download page reads releases from that repo.
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: read
+
+env:
+  RELEASES_REPO: oneenginedev/oneengine
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Tag must match package.json version
+        shell: bash
+        run: |
+          version=$(node -p "require('./package.json').version")
+          if [ "$GITHUB_REF_NAME" != "v$version" ]; then
+            echo "Tag $GITHUB_REF_NAME does not match package.json version v$version"
+            exit 1
+          fi
+
+      - run: npm ci
+
+      - name: Build installer
+        run: npm run dist
+        env:
+          # Address of the Platform API baked into this build (repository variable, optional)
+          VITE_PLATFORM_API_URL: ${{ vars.PLATFORM_API_URL }}
+
+      - name: Publish release
+        shell: bash
+        env:
+          # Fine-grained token with "Contents: read and write" on the releases repo
+          GH_TOKEN: ${{ secrets.RELEASES_TOKEN }}
+        run: |
+          if [ -z "$GH_TOKEN" ]; then
+            echo "Add the RELEASES_TOKEN repository secret first."
+            exit 1
+          fi
+          previous=$(git describe --tags --abbrev=0 "$GITHUB_REF_NAME^" 2>/dev/null || true)
+          if [ -n "$previous" ]; then range="$previous..$GITHUB_REF_NAME"; else range="$GITHUB_REF_NAME"; fi
+          git log --no-merges --pretty='- %s' "$range" > notes.md
+          flags=""
+          case "$GITHUB_REF_NAME" in *-*) flags="--prerelease" ;; esac
+          gh release create "$GITHUB_REF_NAME" release/OneEngine-Store-Setup-*.exe \
+            --repo "$RELEASES_REPO" \
+            --title "OneEngine Store $GITHUB_REF_NAME" \
+            --notes-file notes.md $flags

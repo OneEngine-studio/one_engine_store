@@ -154,3 +154,6 @@ src-tauri/gen/
 
 # Screenshots
 screenshots/
+
+# Installer build output
+release/

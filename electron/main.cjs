@@ -12,7 +12,8 @@ function createWindow() {
     minWidth: 960,
     minHeight: 640,
     frame: false,
-    icon: path.join(__dirname, '../public/images/logo.png'),
+    // vite copies public/ into dist/, which is what ships in the installer
+    icon: path.join(__dirname, app.isPackaged ? '../dist/images/logo.png' : '../public/images/logo.png'),
     backgroundColor: '#090B0E',
     webPreferences: {
       preload: path.join(__dirname, 'preload.cjs'),
@@ -25,7 +26,7 @@ function createWindow() {
 
   const devUrl = 'http://localhost:1420';
 
-  if (process.env.NODE_ENV === 'production') {
+  if (app.isPackaged || process.env.NODE_ENV === 'production') {
     mainWindow.loadFile(path.join(__dirname, '../dist/index.html'));
   } else {
     mainWindow.loadURL(devUrl);
