@@ -27,6 +27,7 @@ export const SettingsScreen: React.FC = () => {
     isAuthenticated,
     currentUser,
     changePassword,
+    setPassword,
     updateDisplayName,
     logout,
     gamesEnabled,
@@ -79,6 +80,23 @@ export const SettingsScreen: React.FC = () => {
       } else {
         setPwError(res.error || 'Could not change the password.');
       }
+    } finally {
+      setPwBusy(false);
+    }
+  };
+
+  const handleSetPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setPwError(null);
+    if (newPw.length < 8) {
+      setPwError('Use a password of at least 8 characters.');
+      return;
+    }
+    setPwBusy(true);
+    try {
+      const res = await setPassword(newPw);
+      if (res.success) setNewPw('');
+      else setPwError(res.error || 'Could not add the password.');
     } finally {
       setPwBusy(false);
     }
@@ -315,6 +333,41 @@ export const SettingsScreen: React.FC = () => {
                   </span>
                 )}
               </form>
+              {currentUser.hasPassword === false ? (
+                <form onSubmit={handleSetPassword} className="grid grid-cols-1 md:grid-cols-2 gap-3" noValidate>
+                  <p className="md:col-span-2 text-[11px] text-slate-400 leading-snug">
+                    You signed in with Google, so this account has no password yet. Add one to also sign in with your email.
+                  </p>
+                  <div>
+                    <label htmlFor="pw-add" className="text-[11px] font-medium text-slate-400 block mb-1">
+                      New password
+                    </label>
+                    <input
+                      id="pw-add"
+                      type="password"
+                      autoComplete="new-password"
+                      value={newPw}
+                      onChange={(e) => setNewPw(e.target.value)}
+                      className="w-full bg-bg-app border border-white/[0.08] focus:border-accent rounded-thumb px-3 py-1.5 text-xs text-slate-200 outline-none select-text"
+                      required
+                    />
+                  </div>
+                  <div className="md:col-span-2 flex items-center gap-3">
+                    <button
+                      type="submit"
+                      disabled={pwBusy || !newPw}
+                      className="px-4 py-1.5 rounded-full bg-accent hover:bg-accent-hover text-xs font-bold text-[#0A0A0A] disabled:opacity-50 transition-surface"
+                    >
+                      {pwBusy ? 'Saving…' : 'Add password'}
+                    </button>
+                    {pwError && (
+                      <span role="alert" className="text-[11px] text-danger">
+                        {pwError}
+                      </span>
+                    )}
+                  </div>
+                </form>
+              ) : (
               <form onSubmit={handleChangePassword} className="grid grid-cols-1 md:grid-cols-2 gap-3" noValidate>
                 <div>
                   <label htmlFor="pw-current" className="text-[11px] font-medium text-slate-400 block mb-1">
@@ -359,6 +412,7 @@ export const SettingsScreen: React.FC = () => {
                   )}
                 </div>
               </form>
+              )}
               <div className="pt-3 border-t border-white/[0.06]">
                 <button
                   onClick={logout}

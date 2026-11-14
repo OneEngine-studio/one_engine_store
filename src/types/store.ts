@@ -53,6 +53,8 @@ export interface UserProfile {
   currentGame?: string;
   ownedGameIds: string[];
   emailVerified: boolean;
+  /** False until a Google-created account adds a password (Settings). */
+  hasPassword?: boolean;
 }
 
 export type NavigationTab = 'store' | 'game-detail' | 'library' | 'downloads' | 'activity' | 'community' | 'settings';

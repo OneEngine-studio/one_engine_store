@@ -196,6 +196,38 @@ describe('Google sign-in', () => {
     expect(me.statusCode).toBe(200);
   });
 
+  it('lets a signed-in Google player add a password without an email code, once', async () => {
+    const ctx = withGoogle();
+    const first = await signIn(ctx);
+    const token = first.json().accessToken;
+    const meOf = async (t: string) =>
+      (await ctx.app.inject({ method: 'GET', url: '/v1/me', headers: { authorization: `Bearer ${t}` } })).json();
+    expect((await meOf(token)).hasPassword).toBe(false);
+
+    expect((await post(ctx, '/v1/auth/set-password', { newPassword: 'short' }, token)).statusCode).toBe(400);
+    expect((await post(ctx, '/v1/auth/set-password', { newPassword: GOOD })).statusCode).toBe(401); // needs a session
+
+    const set = await post(ctx, '/v1/auth/set-password', { newPassword: GOOD }, token);
+    expect(set.statusCode).toBe(200);
+    expect(set.json().refreshToken).toBeTruthy();
+    expect((await meOf(set.json().accessToken)).hasPassword).toBe(true);
+    expect((await post(ctx, '/v1/auth/refresh', { refreshToken: first.json().refreshToken })).statusCode).toBe(401);
+
+    // email and password now works, and a second set is refused
+    expect((await post(ctx, '/v1/auth/login', { email: 'gamer@gmail.com', password: GOOD })).statusCode).toBe(200);
+    expect((await post(ctx, '/v1/auth/set-password', { newPassword: 'another good pass' }, set.json().accessToken)).statusCode).toBe(409);
+  });
+
+  it('points a failed password sign-in at Google without saying whether the email exists', async () => {
+    const ctx = withGoogle();
+    await signIn(ctx);
+    const known = await post(ctx, '/v1/auth/login', { email: 'gamer@gmail.com', password: GOOD });
+    const unknown = await post(ctx, '/v1/auth/login', { email: 'nobody@gmail.com', password: GOOD });
+    expect(known.statusCode).toBe(401);
+    expect(known.json()).toEqual(unknown.json());
+    expect(known.json().message ?? known.json().error?.message ?? '').toContain('Continue with Google');
+  });
+
   it('has no password until the player sets one, which the reset flow allows', async () => {
     const ctx = withGoogle();
     await signIn(ctx);

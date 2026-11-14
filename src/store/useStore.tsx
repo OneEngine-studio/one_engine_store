@@ -97,7 +97,7 @@ export const DEFAULT_GUEST_USER: UserProfile = {
 
 // A local avatar made from the display name: no third-party image service ever sees it.
 function initialsAvatar(name: string): string {
-  const initials = (name.trim().split(/s+/).map((w) => Array.from(w)[0] ?? '').join('').slice(0, 2) || '?').toUpperCase();
+  const initials = (name.trim().split(/\s+/).map((w) => Array.from(w)[0] ?? '').join('').slice(0, 2) || '?').toUpperCase();
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" fill="#1A1A1A"/><text x="32" y="41" font-family="Inter,Arial,sans-serif" font-size="26" font-weight="700" text-anchor="middle" fill="#F5F5F5">${initials.replace(/[<>&"']/g, '')}</text></svg>`;
   return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
 }
@@ -108,6 +108,7 @@ const profileFrom = (me: PlatformUser, library: PlatformProduct[]): UserProfile 
   callsign: me.displayName,
   email: me.email,
   emailVerified: me.emailVerified,
+  hasPassword: me.hasPassword,
   avatarUrl: initialsAvatar(me.displayName),
   ownedGameIds: library.map((p) => p.productId),
 });
@@ -255,6 +256,7 @@ interface StoreContextType {
   forgotPassword: (email: string) => Promise<AuthResult>;
   resetPassword: (email: string, code: string, newPassword: string) => Promise<AuthResult>;
   changePassword: (currentPassword: string, newPassword: string) => Promise<AuthResult>;
+  setPassword: (newPassword: string) => Promise<AuthResult>;
   signInWithGoogle: () => Promise<AuthResult>;
   cancelGoogleSignIn: () => void;
   logout: () => void;
@@ -963,6 +965,17 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }
   };
 
+  const setPassword = async (newPassword: string): Promise<AuthResult> => {
+    try {
+      await platformApi.setPassword(newPassword);
+      setCurrentUser((prev) => ({ ...prev, hasPassword: true }));
+      addToast('Password added. You can now sign in with your email and password.', 'success');
+      return { success: true };
+    } catch (err) {
+      return failure(err);
+    }
+  };
+
   const changePassword = async (currentPassword: string, newPassword: string): Promise<AuthResult> => {
     try {
       await platformApi.changePassword(currentPassword, newPassword);
@@ -1062,6 +1075,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         forgotPassword,
         resetPassword,
         changePassword,
+        setPassword,
         signInWithGoogle,
         cancelGoogleSignIn,
         logout,

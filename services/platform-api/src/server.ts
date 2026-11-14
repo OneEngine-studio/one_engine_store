@@ -189,11 +189,13 @@ export function buildServer({ cfg, db, tickets, verify, mailer, now = Date.now, 
     const row = db.prepare('SELECT user_id, email, email_verified, display_name FROM accounts WHERE user_id = ?').get(
       req.user!.sub
     ) as { user_id: string; email: string; email_verified: number; display_name: string };
+    const hasPassword = !!db.prepare('SELECT 1 FROM credentials WHERE user_id = ?').get(req.user!.sub);
     return {
       userId: row.user_id,
       email: row.email,
       emailVerified: !!row.email_verified,
       displayName: row.display_name,
+      hasPassword,
     };
   });
 

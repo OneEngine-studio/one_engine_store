@@ -204,7 +204,7 @@ export function registerAccountRoutes(app: FastifyInstance, { cfg, db, mailer, n
   // ---- login ----
   app.post('/v1/auth/login', async (req, reply) => {
     const parsed = z.object({ email, password }).safeParse(req.body);
-    if (!parsed.success) return fail(reply, 401, 'invalid_credentials', 'Wrong email or password.');
+    if (!parsed.success) return fail(reply, 401, 'invalid_credentials', 'Wrong email or password. If you signed up with Google, use Continue with Google, or choose Forgot password to add a password.');
     const { email: addr, password: pw } = parsed.data;
     if (!loginIpLimiter.allow(req.ip) || !loginLimiter.allow(`${req.ip}|${addr}`)) {
       return fail(reply, 429, 'rate_limited', 'Too many sign-in attempts. Wait 15 minutes and try again.');
@@ -212,7 +212,7 @@ export function registerAccountRoutes(app: FastifyInstance, { cfg, db, mailer, n
 
     const row = findByEmail(addr);
     const ok = await verifyPassword(pw, row?.password_hash ?? (await dummy()));
-    if (!row || !row.password_hash || !ok) return fail(reply, 401, 'invalid_credentials', 'Wrong email or password.');
+    if (!row || !row.password_hash || !ok) return fail(reply, 401, 'invalid_credentials', 'Wrong email or password. If you signed up with Google, use Continue with Google, or choose Forgot password to add a password.');
     if (row.status !== 'active') return fail(reply, 403, 'account_suspended', 'This account is suspended.');
     if (needsRehash(row.password_hash, cfg.passwordCost)) {
       // Older accounts and lower-cost hashes are upgraded to the current Argon2id settings now that the password is known.
@@ -420,6 +420,28 @@ export function registerAccountRoutes(app: FastifyInstance, { cfg, db, mailer, n
     db.prepare('UPDATE accounts SET email_verified = 1 WHERE user_id = ?').run(row.user_id); // the code proves the mailbox
     revokeAllSessions(row.user_id);
     return { ok: true };
+  });
+
+  // A signed-in player whose account came from Google has no password yet; this lets them add one without an email code.
+  app.post('/v1/auth/set-password', { preHandler: requireUser }, async (req, reply) => {
+    const parsed = z.object({ newPassword: password }).safeParse(req.body);
+    if (!parsed.success) return badRequest(reply, 'Enter a new password.');
+    const userId = req.user!.sub;
+    if (!loginLimiter.allow(`setpw|${userId}`)) return fail(reply, 429, 'rate_limited', 'Too many attempts. Try again later.');
+    const row = db
+      .prepare('SELECT a.email, c.password_hash FROM accounts a LEFT JOIN credentials c ON c.user_id = a.user_id WHERE a.user_id = ?')
+      .get(userId) as { email: string; password_hash: string | null };
+    if (row.password_hash) return fail(reply, 409, 'has_password', 'This account already has a password. Use change password instead.');
+    const problem = passwordProblem(parsed.data.newPassword, row.email);
+    if (problem) return badRequest(reply, problem);
+    const hash = await hashPassword(parsed.data.newPassword, cfg.passwordCost);
+    db.prepare('INSERT INTO credentials (user_id, password_hash) VALUES (?, ?)').run(userId, hash);
+    // Same as a password change: other devices are signed out, this one gets a fresh session.
+    revokeAllSessions(userId);
+    const account = db
+      .prepare('SELECT user_id, email, display_name, email_verified, status FROM accounts WHERE user_id = ?')
+      .get(userId) as AccountRow;
+    return issueSession(account);
   });
 
   app.post('/v1/auth/change-password', { preHandler: requireUser }, async (req, reply) => {

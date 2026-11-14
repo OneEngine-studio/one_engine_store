@@ -113,7 +113,7 @@ const ROUTES = [
   ['GET', /^\/v1\/catalog$/, false],
   ['GET', new RegExp(`^/v1/catalog/${ID}$`), false],
   ['POST', /^\/v1\/auth\/(register|login|forgot-password|reset-password)$/, false],
-  ['POST', /^\/v1\/auth\/(verify-email|resend-verification|change-password)$/, true],
+  ['POST', /^\/v1\/auth\/(verify-email|resend-verification|change-password|set-password)$/, true],
   ['GET', /^\/v1\/me$/, true],
   ['PATCH', /^\/v1\/me$/, true],
   ['GET', /^\/v1\/library$/, true],

@@ -45,6 +45,8 @@ export interface PlatformUser {
   email: string;
   displayName: string;
   emailVerified: boolean;
+  /** False for an account made with Google that has not added a password yet. */
+  hasPassword?: boolean;
 }
 
 export interface PlatformBuild {
@@ -315,6 +317,10 @@ class PlatformApi {
 
   async resetPassword(email: string, code: string, newPassword: string): Promise<void> {
     await this.call('/v1/auth/reset-password', { method: 'POST', body: { email, code, newPassword } });
+  }
+
+  async setPassword(newPassword: string): Promise<void> {
+    await this.call('/v1/auth/set-password', { method: 'POST', body: { newPassword }, auth: true });
   }
 
   async changePassword(currentPassword: string, newPassword: string): Promise<void> {
