@@ -7,7 +7,7 @@ import type { DatabaseSync } from 'node:sqlite';
 import { z } from 'zod';
 import type { Config } from './config.js';
 import { makeVerifier, signAccessToken, type AuthUser, type TokenVerifier } from './auth.js';
-import { displayNameSchema, registerAccountRoutes } from './accounts.js';
+import { accountValidationError, displayNameSchema, registerAccountRoutes } from './accounts.js';
 import { makeMailer, type Mailer } from './mailer.js';
 import { RateLimiter, TicketStore } from './tickets.js';
 
@@ -161,7 +161,7 @@ export function buildServer({ cfg, db, tickets, verify, mailer, now = Date.now }
 
   // ---------- development login (disabled unless ALLOW_DEV_LOGIN=true) ----------
   if (cfg.allowDevLogin) {
-    const body = z.object({ email: z.string().email(), displayName: z.string().min(2).max(32) });
+    const body = z.object({ email: z.email(), displayName: z.string().min(2).max(32) });
     app.post('/v1/dev/login', async (req, reply) => {
       const parsed = body.safeParse(req.body);
       if (!parsed.success) return fail(reply, 400, 'bad_request', 'Provide a valid email and display name.');
@@ -196,7 +196,7 @@ export function buildServer({ cfg, db, tickets, verify, mailer, now = Date.now }
   });
 
   app.patch('/v1/me', { preHandler: requireUser }, async (req, reply) => {
-    const parsed = z.object({ displayName: displayNameSchema }).safeParse(req.body);
+    const parsed = z.object({ displayName: displayNameSchema }).safeParse(req.body, { error: accountValidationError });
     if (!parsed.success) {
       return fail(reply, 400, 'bad_request', parsed.error.issues[0]?.message || 'Enter a display name of 2 to 32 characters.');
     }

@@ -59,6 +59,9 @@ describe('registration', () => {
   it('rejects a bad email, a weak password and a duplicate', async () => {
     const ctx = setup();
     expect((await post(ctx, '/v1/auth/register', { email: 'nope', password: GOOD, displayName: 'Abc' })).statusCode).toBe(400);
+    const missingPassword = await post(ctx, '/v1/auth/register', { email: 'a@example.com', displayName: 'Abc' });
+    expect(missingPassword.statusCode).toBe(400);
+    expect(missingPassword.json().error).toEqual({ code: 'bad_request', message: 'Required' });
     const weak = await post(ctx, '/v1/auth/register', { email: 'a@example.com', password: 'password123', displayName: 'Abc' });
     expect(weak.statusCode).toBe(400);
     expect(weak.json().error.message).toMatch(/common/);
@@ -139,8 +142,12 @@ describe('profile', () => {
     const ok = await patch(ctx, { displayName: '  Nova Prime ', email: 'evil@example.com', emailVerified: true }, body.accessToken);
     expect(ok.statusCode).toBe(200);
     expect(ok.json()).toMatchObject({ displayName: 'Nova Prime', email: 'new@example.com', emailVerified: false });
-    expect((await patch(ctx, { displayName: 'x' }, body.accessToken)).statusCode).toBe(400);
-    expect((await patch(ctx, { displayName: '<script>' }, body.accessToken)).statusCode).toBe(400);
+    const tooShort = await patch(ctx, { displayName: 'x' }, body.accessToken);
+    expect(tooShort.statusCode).toBe(400);
+    expect(tooShort.json().error.message).toBe('String must contain at least 2 character(s)');
+    const invalidCharacters = await patch(ctx, { displayName: '<script>' }, body.accessToken);
+    expect(invalidCharacters.statusCode).toBe(400);
+    expect(invalidCharacters.json().error.message).toBe('Use letters, numbers, spaces, dots, dashes and underscores.');
   });
 });
 

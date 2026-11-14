@@ -34,7 +34,7 @@ const fail = (reply: FastifyReply, status: number, code: string, message: string
 
 const sha256 = (value: string) => createHash('sha256').update(value).digest('hex');
 
-const email = z.string().trim().toLowerCase().email().max(254);
+const email = z.string().trim().toLowerCase().pipe(z.email().max(254));
 const password = z.string().min(1).max(128);
 export const displayNameSchema = z
   .string()
@@ -44,6 +44,20 @@ export const displayNameSchema = z
   .regex(/^[\p{L}\p{N} _.-]+$/u, 'Use letters, numbers, spaces, dots, dashes and underscores.');
 const displayName = displayNameSchema;
 const code = z.string().trim().regex(/^\d{6}$/);
+
+// Keep the validation messages already returned by the registration and profile APIs.
+export const accountValidationError: z.core.$ZodErrorMap = (issue) => {
+  switch (issue.code) {
+    case 'invalid_type':
+      return issue.input === undefined
+        ? 'Required'
+        : `Expected ${issue.expected}, received ${z.core.util.getParsedType(issue.input)}`;
+    case 'too_small':
+      return `String must contain at least ${issue.minimum} character(s)`;
+    case 'too_big':
+      return `String must contain at most ${issue.maximum} character(s)`;
+  }
+};
 
 export function registerAccountRoutes(app: FastifyInstance, { cfg, db, mailer, now, requireUser }: Deps) {
   const loginLimiter = new RateLimiter(8, 15 * 60_000, now); // per ip + email
@@ -150,7 +164,7 @@ export function registerAccountRoutes(app: FastifyInstance, { cfg, db, mailer, n
 
   // ---- register ----
   app.post('/v1/auth/register', async (req, reply) => {
-    const parsed = z.object({ email, password, displayName }).safeParse(req.body);
+    const parsed = z.object({ email, password, displayName }).safeParse(req.body, { error: accountValidationError });
     if (!parsed.success) {
       const field = parsed.error.issues[0]?.path[0];
       const message =
