@@ -1,7 +1,8 @@
 # Going live: what only you can do
 
-The launcher, accounts, downloads, installs and launch tickets are built and tested. A player can only use
-them once these five things exist. Do them in this order.
+The launcher, accounts and the catalog are built and tested, and so are game downloads, installs and launch tickets,
+which the first public launcher release keeps switched off (see `docs/releasing.md`). Nothing below has been done for
+you: the API is not hosted anywhere yet. A player can only use the launcher once these things exist. Do them in this order.
 
 ## 1. Host the Platform API
 
@@ -24,7 +25,19 @@ You need a small server (any VPS with Docker) and a domain name, for example `ap
    ```
 6. Check `https://api.yourdomain.com/healthz` in a browser. It must show `{"ok":true}`.
 
-Back up the `oneengine-data` Docker volume: it holds every account and every published build.
+Passwords are stored as Argon2id hashes (older scrypt hashes are upgraded when that player next signs in). Verification
+codes are only ever sent by email; they are never returned by the API or written to the production log.
+
+**Backups.** The volume `oneengine-data` holds every account and every published build. Take a consistent copy of the
+database while the API runs, daily, and copy it off the server:
+
+```bash
+docker compose exec api npx tsx scripts/backup.ts /data/backups
+```
+
+It writes `platform-<time>.db`, checks the copy opens cleanly and keeps the 14 newest. Restore by stopping the API,
+replacing `/data/platform.db` with a copy (and deleting `platform.db-wal` and `-shm`), then starting it. Published
+builds live in `/data/depot` as plain files: back those up too.
 
 ## 2. Connect Nakama
 
@@ -70,6 +83,9 @@ which part (service unreachable, email not confirmed, no build published, checks
 ## Known limits for a first public release
 
 - The installer is not code-signed, so Windows SmartScreen shows a warning the first time.
-- The launcher does not update itself yet; players download a newer installer.
-- One API instance only (SQLite). Fine for a launch; move to Postgres before it needs to scale.
+- The launcher does not update itself; players download a newer installer (reasons in `docs/releasing.md`).
+- One API instance only, on SQLite with scripted backups. Fine for a launch; moving to PostgreSQL (with migrations) is
+  the next step before running several instances. That migration is not written.
+- Rate limits and launch tickets are kept in memory, so they reset when the API restarts.
+- Game downloads, installs and play are not part of the first launcher release.
 - Railbound is free. Paid games need the checkout flow, which is not built.

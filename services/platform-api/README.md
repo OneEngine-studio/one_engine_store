@@ -13,7 +13,7 @@ npm run dev         # http://127.0.0.1:8080
 
 ## How a player gets from the launcher into the game
 
-1. The player creates an account in the launcher (email + password). The server stores only a scrypt hash,
+1. The player creates an account in the launcher (email + password). The server stores only an Argon2id hash,
    emails a 6-digit code to confirm the address, and returns a short-lived access token plus a rotating
    refresh token. The launcher keeps the refresh token encrypted with the operating system's key store.
 2. The player adds a game to their library (`POST /v1/library/:id/claim`). Railbound is free for now; a paid
@@ -27,7 +27,7 @@ npm run dev         # http://127.0.0.1:8080
 
 ## Account rules
 
-- Passwords: at least 8 characters, hashed with scrypt (cost 2^16). Production refuses a lower cost.
+- Passwords: at least 8 characters, hashed with Argon2id (64 MiB memory, 3 passes; `PASSWORD_COST` is the memory in KiB). Production refuses less than 19 MiB. Older scrypt hashes still work and are replaced at the next sign-in.
 - Email codes: 6 digits, hashed at rest, valid 15 minutes, 5 attempts.
 - Refresh tokens rotate on every use; reusing an old one signs that device out of the whole family.
   Changing or resetting a password signs out every other device.

@@ -107,6 +107,28 @@ export const AuthModal: React.FC = () => {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isAuthModalOpen, closeAuthModal]);
 
+  // Signing out returns to the sign-in form with nothing typed left behind.
+  useEffect(() => {
+    if (signedIn) return;
+    setView('signin');
+    setErrorMessage(null);
+    setNotice(null);
+    setPassword('');
+    setConfirmPassword('');
+    setCode('');
+  }, [signedIn]);
+
+  // Each time the dialog opens it starts on sign-in, not on whichever form was left open last time.
+  useEffect(() => {
+    if (!isAuthModalOpen) return;
+    setView('signin');
+    setErrorMessage(null);
+    setNotice(null);
+    setPassword('');
+    setConfirmPassword('');
+    setCode('');
+  }, [isAuthModalOpen]);
+
   useEffect(() => {
     if (!isAuthModalOpen) return;
     let isMounted = true;
