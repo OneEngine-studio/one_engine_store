@@ -107,7 +107,7 @@ const MainViewport: React.FC = () => {
 
         {/* Floating single content panel (24px radius, inset from window) */}
         <main
-          className="flex-1 flex flex-col overflow-hidden relative rounded-panel bg-bg-panel border border-white/[0.06] shadow-panel transition-colors duration-500"
+          className="app-panel-in flex-1 flex flex-col overflow-hidden relative rounded-panel bg-bg-panel border border-white/[0.06] shadow-panel transition-colors duration-500"
           style={
             {
               '--ambient-spot': ambient.spot,

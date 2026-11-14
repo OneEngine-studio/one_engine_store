@@ -5,6 +5,7 @@ import { Pill } from '../components/ui/Pill';
 import { StatsCard } from '../components/ui/StatsCard';
 import { Timeline } from '../components/ui/Timeline';
 import { Shelf } from '../components/ui/Shelf';
+import { FocusCarousel } from '../components/ui/FocusCarousel';
 import { ChevronRight, Search, Clock, WifiOff, Flame, Gamepad2, Download, Heart } from 'lucide-react';
 
 const MOODS = [
@@ -211,13 +212,24 @@ export const StoreScreen: React.FC = () => {
             ))}
           </div>
         </div>
-        <Shelf items={shelfGames} itemWidth={188} render={(g) => {
-          const isOwned = owned.some((o) => o.id === g.id);
-          const price = typeof g.price === 'number'
-            ? `$${(g.discountPercent ? g.price * (1 - g.discountPercent / 100) : g.price).toFixed(2)}`
-            : g.price;
-          return <Cartridge {...cartProps(g)} caption={isOwned ? 'In your library' : price} />;
-        }} />
+        <FocusCarousel
+          games={shelfGames}
+          running={runningGameId}
+          actionsDisabled={!gamesEnabled}
+          captionFor={(g) => {
+            if (owned.some((o) => o.id === g.id)) return 'In your library';
+            return typeof g.price === 'number'
+              ? `$${(g.discountPercent ? g.price * (1 - g.discountPercent / 100) : g.price).toFixed(2)}`
+              : String(g.price ?? '');
+          }}
+          actionLabel={(g) => (runningGameId === g.id ? 'Stop' : g.installed && !g.updateAvailable ? 'Play' : g.installed ? 'Update' : 'Install')}
+          onOpen={(g) => navigate('game-detail', g.id)}
+          onAction={(g) => {
+            if (runningGameId === g.id) stopGame(g.id);
+            else if (g.installed && !g.updateAvailable) launchGame(g.id);
+            else startDownload(g.id);
+          }}
+        />
       </section>
     </div>
   );

@@ -110,13 +110,19 @@
 }
 
 /* ── Floating main panel ambient tint ──────────────────── */
+/* Registered so the light can fade between colours when the focused game card changes. */
+@property --glow-spot { syntax: '<color>'; inherits: false; initial-value: rgba(187, 59, 59, 0.16); }
+@property --glow-tint { syntax: '<color>'; inherits: false; initial-value: rgba(187, 59, 59, 0.06); }
 .panel-ambient-glow {
+  --glow-spot: var(--focus-spot, var(--ambient-spot, rgba(187, 59, 59, 0.16)));
+  --glow-tint: var(--focus-tint, var(--ambient-tint, rgba(187, 59, 59, 0.06)));
   background-image: radial-gradient(
     ellipse 85% 55% at 50% -10%,
-    var(--ambient-spot, rgba(187, 59, 59, 0.16)) 0%,
-    var(--ambient-tint, rgba(187, 59, 59, 0.06)) 45%,
+    var(--glow-spot) 0%,
+    var(--glow-tint) 45%,
     transparent 75%
   );
+  transition: --glow-spot 800ms ease, --glow-tint 800ms ease;
   pointer-events: none;
 }
 
@@ -149,8 +155,35 @@
 }
 
 .animate-screen-in {
-  animation: screenIn 240ms var(--ease-out) both;
+  animation: screenFade 200ms ease-out both;
 }
+/* Every top-level block of a screen rises in just after the one above it. */
+@keyframes screenFade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes blockRise {
+  from { opacity: 0; transform: translateY(16px) scale(0.985); }
+  to { opacity: 1; transform: none; }
+}
+.animate-screen-in > * > * { animation: blockRise 560ms var(--ease-out) backwards; }
+.animate-screen-in > * > *:nth-child(1) { animation-delay: 0ms; }
+.animate-screen-in > * > *:nth-child(2) { animation-delay: 60ms; }
+.animate-screen-in > * > *:nth-child(3) { animation-delay: 120ms; }
+.animate-screen-in > * > *:nth-child(4) { animation-delay: 180ms; }
+.animate-screen-in > * > *:nth-child(5) { animation-delay: 240ms; }
+.animate-screen-in > * > *:nth-child(6) { animation-delay: 300ms; }
+.animate-screen-in > * > *:nth-child(n+7) { animation-delay: 360ms; }
+
+/* App start: the panel settles in, the rail slides in and its icons follow one by one. */
+@keyframes panelIn { from { opacity: 0; transform: translateY(14px) scale(0.985); } to { opacity: 1; transform: none; } }
+@keyframes railIn { from { opacity: 0; transform: translateX(-18px); } to { opacity: 1; transform: none; } }
+@keyframes railItemIn { from { opacity: 0; transform: translateX(-10px) scale(0.9); } to { opacity: 1; transform: none; } }
+.app-panel-in { animation: panelIn 640ms var(--ease-out) 80ms backwards; }
+.rail-in { animation: railIn 520ms var(--ease-out) backwards; }
+.rail-in nav > *:not(:first-child) { animation: railItemIn 460ms var(--ease-out) backwards; }
+.rail-in nav > *:nth-child(2) { animation-delay: 160ms; }
+.rail-in nav > *:nth-child(3) { animation-delay: 210ms; }
+.rail-in nav > *:nth-child(4) { animation-delay: 260ms; }
+.rail-in nav > *:nth-child(5) { animation-delay: 310ms; }
+.rail-in nav > *:nth-child(n+6) { animation-delay: 360ms; }
 
 /* ── Modal transition ──────────────────────────────────── */
 @keyframes modalScaleIn {

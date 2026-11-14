@@ -99,7 +99,7 @@ export const Sidebar: React.FC = () => {
   const settingsActive = activeTab === 'settings';
 
   return (
-    <aside className="w-[76px] shrink-0 z-30 h-full px-1.5 select-none">
+    <aside className="rail-in w-[76px] shrink-0 z-30 h-full px-1.5 select-none">
       <div className="h-full rounded-[32px] bg-bg-sidebar border border-white/[0.05] flex flex-col items-center justify-between py-4">
         <div className="flex flex-col items-center gap-3 w-full min-h-0">
           {/* Brand logo */}
