@@ -39,7 +39,7 @@ export const Cartridge: React.FC<CartridgeProps> = ({
   return (
     <div className="group flex flex-col" style={{ width: WIDTHS[size] }}>
       <div
-        className="relative w-full overflow-hidden rounded-card bg-bg-card border border-white/[0.08] transition-[transform,border-color,box-shadow] duration-300 ease-[cubic-bezier(0.23,1,0.32,1)] group-hover:-translate-y-1 group-hover:border-white/[0.22] group-hover:shadow-[0_18px_36px_rgba(0,0,0,0.55)] group-focus-within:-translate-y-1 group-focus-within:border-white/[0.22]"
+        className="relative w-full overflow-hidden rounded-card bg-bg-card border border-white/[0.06] shadow-card transition-[transform,border-color,box-shadow] duration-300 ease-[cubic-bezier(0.23,1,0.32,1)] group-hover:-translate-y-1 group-hover:border-accent/60 group-hover:shadow-[0_18px_36px_rgba(0,0,0,0.5),0_0_0_1px_rgba(187,59,59,0.35)] group-focus-within:-translate-y-1 group-focus-within:border-accent/60"
         style={{ aspectRatio: '4 / 5' }}
       >
         {/* keyboard + screen-reader entry point */}
@@ -50,12 +50,12 @@ export const Cartridge: React.FC<CartridgeProps> = ({
             src={game.coverImage}
             alt=""
             draggable={false}
-            className="absolute inset-0 w-full h-full object-cover grayscale-[0.15] transition-transform duration-500 ease-[cubic-bezier(0.23,1,0.32,1)] group-hover:scale-[1.04]"
+            className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 ease-[cubic-bezier(0.23,1,0.32,1)] group-hover:scale-[1.04]"
           />
         ) : (
           <div className="absolute inset-0 bg-gradient-to-br from-white/[0.08] to-transparent" />
         )}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent pointer-events-none" />
+        <div className="absolute inset-0 bg-gradient-to-t from-[#361518] via-[#361518]/20 to-transparent pointer-events-none" />
 
         {/* state */}
         {(running || game.installed) && (
@@ -67,7 +67,7 @@ export const Cartridge: React.FC<CartridgeProps> = ({
 
         {progress !== undefined && (
           <div className="absolute left-0 right-0 bottom-0 h-[3px] bg-white/15 pointer-events-none">
-            <div className="h-full bg-white transition-[width] duration-300" style={{ width: `${progress}%` }} />
+            <div className="h-full bg-accent transition-[width] duration-300" style={{ width: `${progress}%` }} />
           </div>
         )}
 
@@ -80,7 +80,7 @@ export const Cartridge: React.FC<CartridgeProps> = ({
               else onInstall?.();
             }}
             className={`absolute z-20 left-3 right-3 bottom-3 h-9 rounded-full flex items-center justify-center gap-1.5 text-xs font-semibold cursor-default opacity-0 translate-y-1.5 group-hover:opacity-100 group-hover:translate-y-0 group-focus-within:opacity-100 group-focus-within:translate-y-0 transition-[opacity,transform,background-color] duration-200 ease-[cubic-bezier(0.23,1,0.32,1)] active:scale-[0.97] ${
-              action === 'stop' ? 'bg-danger text-white hover:bg-danger/90' : 'bg-white text-[#0A0A0A] hover:bg-white/90'
+              action === 'stop' ? 'bg-danger text-white hover:bg-danger/90' : 'bg-accent text-white hover:bg-accent-hover shadow-glow'
             }`}
           >
             {action === 'play' && <Play className="w-3.5 h-3.5 fill-current" />}

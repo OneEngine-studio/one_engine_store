@@ -4,8 +4,8 @@
 
 @layer base {
   :root {
-    --ambient-tint: rgba(255, 255, 255, 0.02);
-    --ambient-spot: rgba(255, 255, 255, 0.05);
+    --ambient-tint: rgba(187, 59, 59, 0.06);
+    --ambient-spot: rgba(187, 59, 59, 0.16);
     --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
   }
 
@@ -14,11 +14,10 @@
   }
 
   body {
-    background-color: #050505;
+    background-color: #0B0405;
     color: #FAFAFA;
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    font-feature-settings: "cv11", "ss01";
-    -webkit-font-smoothing: antialiased;
+    font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        -webkit-font-smoothing: antialiased;
     user-select: none;
     overflow: hidden;
   }
@@ -62,15 +61,15 @@
   background: rgba(255, 255, 255, 0.28);
 }
 
-/* ── Surfaces: solid neutral panels, depth from tone and a soft drop shadow ── */
+/* ── Surfaces: maroon panels, depth from tone and a soft drop shadow ── */
 .win11-acrylic {
-  background-color: #111111;
+  background-color: #2A1113;
   border: 1px solid rgba(255, 255, 255, 0.1);
   box-shadow: 0 24px 60px rgba(0, 0, 0, 0.6);
 }
 
 .win11-popover {
-  background-color: #141414;
+  background-color: #361518;
   border: 1px solid rgba(255, 255, 255, 0.12);
   box-shadow: 0 18px 40px rgba(0, 0, 0, 0.55);
   border-radius: 18px;
@@ -78,33 +77,33 @@
 
 .win11-tile,
 .win11-card {
-  background-color: #141414;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 16px;
+  background-color: #361518;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 22px;
   transition: background-color 0.2s var(--ease-out), border-color 0.2s var(--ease-out);
 }
 
 @media (hover: hover) and (pointer: fine) {
   .win11-tile:hover,
   .win11-card:hover {
-    background-color: #1A1A1A;
-    border-color: rgba(255, 255, 255, 0.2);
+    background-color: #45201F;
+    border-color: rgba(255, 255, 255, 0.14);
   }
 }
 
 .win11-tile-active {
-  background-color: rgba(255, 255, 255, 0.08) !important;
-  border-color: rgba(255, 255, 255, 0.55) !important;
-  border-radius: 16px !important;
+  background-color: rgba(187, 59, 59, 0.18) !important;
+  border-color: rgba(187, 59, 59, 0.8) !important;
+  border-radius: 22px !important;
 }
 
 .win11-dock {
-  background-color: #111111;
+  background-color: #2A1113;
   border: 1px solid rgba(255, 255, 255, 0.12);
   box-shadow: 0 16px 36px rgba(0, 0, 0, 0.6);
 }
 
-/* ── Focus-visible 2px white ring ──────────────────────── */
+/* ── Focus-visible 2px ring ─────────────────────────────── */
 :focus-visible {
   outline: 2px solid rgba(255, 255, 255, 0.9) !important;
   outline-offset: 2px !important;
@@ -114,8 +113,8 @@
 .panel-ambient-glow {
   background-image: radial-gradient(
     ellipse 85% 55% at 50% -10%,
-    var(--ambient-spot, rgba(255, 255, 255, 0.05)) 0%,
-    var(--ambient-tint, rgba(255, 255, 255, 0.02)) 45%,
+    var(--ambient-spot, rgba(187, 59, 59, 0.16)) 0%,
+    var(--ambient-tint, rgba(187, 59, 59, 0.06)) 45%,
     transparent 75%
   );
   pointer-events: none;
@@ -182,10 +181,10 @@
 }
 
 /* ── Type and detail helpers ───────────────────────────── */
-.font-display { font-family: 'Bricolage Grotesque Variable', 'Inter', sans-serif; }
+.font-display { font-family: 'Poppins', 'Segoe UI', sans-serif; }
 
 .blueprint-grid {
-  background-image: radial-gradient(rgba(255, 255, 255, 0.06) 1px, transparent 1px);
+  background-image: radial-gradient(rgba(255, 255, 255, 0.035) 1px, transparent 1px);
   background-size: 22px 22px;
   pointer-events: none;
 }

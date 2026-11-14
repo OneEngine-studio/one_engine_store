@@ -105,3 +105,34 @@ test('starting a second sign-in cancels the first', async () => {
   await firstDone;
   assert.equal((await second.promise).code, 'two');
 });
+
+test('a browser that keeps its connection open and asks again after sign-in cannot crash the app', async () => {
+  const uncaught = [];
+  const onUncaught = (err) => uncaught.push(err);
+  process.on('uncaughtException', onUncaught);
+  try {
+    const agent = new http.Agent({ keepAlive: true, maxSockets: 1 });
+    const ask = (u, path) =>
+      new Promise((resolve, reject) => {
+        http
+          .get({ host: u.hostname, port: u.port, path, agent }, (res) => {
+            res.resume();
+            res.on('end', () => resolve(res.statusCode));
+          })
+          .on('error', reject);
+      });
+    const flow = run(async ({ url, params }) => {
+      const redirect = new URL(params.get('redirect_uri'));
+      await ask(redirect, `/callback?code=the-code&state=${params.get('state')}`);
+      // Browsers ask for /favicon.ico on the same connection, often after the listener has closed.
+      await new Promise((r) => setTimeout(r, 900));
+      await ask(redirect, '/favicon.ico').catch(() => {});
+    });
+    await flow.promise;
+    await new Promise((r) => setTimeout(r, 1500));
+    agent.destroy();
+    assert.deepEqual(uncaught.map((e) => e.message), [], 'no exception escaped the listener');
+  } finally {
+    process.off('uncaughtException', onUncaught);
+  }
+});

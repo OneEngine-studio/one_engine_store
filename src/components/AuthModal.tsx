@@ -9,16 +9,16 @@ type ServerStatus = 'CHECKING' | 'ONLINE' | 'OFFLINE';
 const inputClass =
   'w-full px-3 py-2.5 rounded-input bg-bg-app border border-white/[0.1] focus:border-accent text-sm text-cream placeholder-slate-600 outline-none transition-surface select-text';
 const primaryButton =
-  'w-full h-11 rounded-full bg-accent hover:bg-accent-hover text-[#0A0A0A] text-sm font-bold transition-[background-color,transform] active:scale-[0.98] flex items-center justify-center gap-2 disabled:opacity-60 cursor-default';
+  'w-full h-11 rounded-full bg-accent hover:bg-accent-hover text-white text-sm font-bold transition-[background-color,transform] active:scale-[0.98] flex items-center justify-center gap-2 disabled:opacity-60 cursor-default';
 const linkButton = 'text-slate-400 hover:text-cream cursor-default transition-colors';
 
 /** Brand mark for the sign-in panel. Purely decorative. */
 const SlotArt: React.FC = () => (
   <svg viewBox="0 0 220 260" className="w-full h-auto" aria-hidden="true">
     <g style={{ animation: 'softFadeIn 500ms cubic-bezier(0.23, 1, 0.32, 1) both' }}>
-      <rect x="46" y="46" width="128" height="128" rx="32" fill="#F5F5F5" />
+      <rect x="46" y="46" width="128" height="128" rx="32" fill="#BB3B3B" />
       <rect x="46" y="46" width="128" height="128" rx="32" fill="url(#shine)" />
-      <path d="M84 92h52M84 110h52M84 128h30" stroke="#0A0A0A" strokeWidth="9" strokeLinecap="round" />
+      <path d="M84 92h52M84 110h52M84 128h30" stroke="#FFFFFF" strokeWidth="9" strokeLinecap="round" />
     </g>
     <rect x="70" y="208" width="80" height="6" rx="3" fill="rgba(255,255,255,0.14)" />
     <rect x="90" y="224" width="40" height="4" rx="2" fill="rgba(255,255,255,0.08)" />
@@ -410,7 +410,7 @@ export const AuthModal: React.FC = () => {
                 </button>
                 <button
                   onClick={closeAuthModal}
-                  className="px-7 h-10 rounded-full bg-accent hover:bg-accent-hover text-sm font-bold text-[#0A0A0A] cursor-default active:scale-[0.97] transition-[background-color,transform]"
+                  className="px-7 h-10 rounded-full bg-accent hover:bg-accent-hover text-sm font-bold text-white cursor-default active:scale-[0.97] transition-[background-color,transform]"
                 >
                   Done
                 </button>

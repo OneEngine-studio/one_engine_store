@@ -141,7 +141,7 @@ export const BottomDock: React.FC = () => {
                   ? resumeDownload(activeDownload.gameId)
                   : pauseDownload(activeDownload.gameId)
               }
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-accent hover:bg-accent-hover text-bg-app text-xs font-semibold transition-surface cursor-default"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-accent hover:bg-accent-hover text-white text-xs font-semibold transition-surface cursor-default"
               title={activeDownload.status === 'PAUSED' ? 'Resume download' : 'Pause download'}
             >
               {activeDownload.status === 'PAUSED' ? (

@@ -6,11 +6,11 @@
 
 ## 1. Principles
 
-**Black and white, quiet, precise, calm depth.**
+**Maroon and red on black, rounded, warm, modern.**
 
-1. **Floating surfaces & calm depth:** The window background sits as the deepest layer (`#050505`). The primary content lives inside an inset, floating panel (`#0D0D0D`) with generous 24px rounded corners and a 1px specular inner border (`rgba(255,255,255,0.06)`).
+1. **Floating surfaces & calm depth:** The window background sits as the deepest layer (`#0B0405`). The primary content lives inside an inset, floating panel (`#24100F`) with generous 24px rounded corners and a 1px specular inner border (`rgba(255,255,255,0.06)`).
 2. **Radius hierarchy over monotony:** Never apply one universal radius. Outer containers dictate inner container radii (`R_inner = R_outer - padding`).
-3. **Restrained color & functional ambient tint:** Pure neutral black, white and grey. White (`#FFFFFF`) is the accent and is reserved for primary actions, active state indicators, and focus rings. The only colour in the interface is functional status: green for running or online, amber for warnings, red for errors and destructive actions. The ambient glow behind the panel is a fixed 2–5% white wash, the same for every game and view.
+3. **Restrained color & functional ambient tint:** Brand palette: white `#FFFFFF`, red `#BB3B3B`, maroon `#361518`, black `#000000`. Red is the accent for primary actions, the active nav item, selected chips, progress and stat rings; it carries a soft red glow (`shadow-glow`). Cards are maroon on a darker panel. Status colours stay functional (green online/running, amber warning). The ambient glow behind the panel is a soft red wash.
 4. **Sentence case & human copy:** All headings, labels, tags, and settings use natural sentence case. Game titles are shown as published—never forced into uppercase blocks.
 
 ---
@@ -32,10 +32,10 @@ Configured in `tailwind.config.js` and `src/index.css`.
 
 | Layer | Token / Hex | Usage |
 |---|---|---|
-| Window Base (darkest) | `bg-app` (`#050505`) | Shell window background visible around inset panel |
-| Floating Main Panel | `bg-panel` (`#0D0D0D`) | Inset floating surface with 24px radius and 1px inner border |
-| Card & Tile Layer | `bg-card` (`#141414`) | Flat content cards, separated by tone rather than harsh borders |
-| Card Elevated / Hover | `tech-elevated` (`#1C1C1C`) | Hover state for interactive cards and list rows |
+| Window Base (darkest) | `bg-app` (`#0B0405`) | Shell window background visible around inset panel |
+| Floating Main Panel | `bg-panel` (`#24100F`) | Inset floating surface with 24px radius and 1px inner border |
+| Card & Tile Layer | `bg-card` (`#361518`) | Flat content cards, separated by tone rather than harsh borders |
+| Card Elevated / Hover | `tech-elevated` (`#45201F`) | Hover state for interactive cards and list rows |
 | Generic Hover Surface | `bg-hover` (`rgba(255,255,255,0.06)`) | Button hover, icon hover, subtle list hover |
 | Pressed / Active Surface | `bg-pressed` (`rgba(255,255,255,0.10)`) | Active button press, selected segmented tab |
 | Modal Scrim | `bg-overlay` (`rgba(0,0,0,0.72)`) | Backdrop overlay paired with `backdrop-blur-md` |
@@ -51,9 +51,8 @@ Configured in `tailwind.config.js` and `src/index.css`.
 
 ### Typography
 
-- **Font family:** `Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`
-- **Display face:** Bricolage Grotesque Variable (self-hosted via `@fontsource-variable/bricolage-grotesque`), extrabold, used for page headings and game titles via `font-display`.
-- **Features:** `font-feature-settings: "cv11", "ss01"`
+- **Font family:** Poppins (self-hosted via `@fontsource/poppins`, weights 400/500/600/700), falling back to Segoe UI.
+- **Display face:** Poppins as well (`font-display`), bold for page headings and game titles.
 - **Numbers:** `tabular-nums` on all prices, file sizes, download speeds, percentages, and timestamps.
 - **Casing:** Sentence case everywhere. Never uppercase for game titles or section headers.
 
@@ -167,12 +166,11 @@ Shadows are applied strictly to floating layers, never to flat in-panel cards:
 
 ---
 
-## 7. Monochrome system
+## 7. Maroon system
 
-- **Palette:** `bg-app` #050505, `bg-sidebar` #080808, `bg-panel` #0D0D0D, `bg-dock` #111111, `bg-card` #141414, elevated #1C1C1C. Text ramp is Tailwind `neutral` (`slate` is aliased to it); `cream` (#F5F5F5) is the primary text and light fill, `brass` (#A3A3A3) the mid grey. Accent is white; text on an accent fill is #0A0A0A. No hue anywhere except the status colours.
-- **Game card** (`components/ui/Cartridge.tsx`, name kept for imports): 4:5 cover art on a flat card, title and one quiet line beneath. State pill (Playing / Installed / Update) top right. The Play / Stop / Install button is a white pill that rises in on hover or keyboard focus. The card lifts 4px on hover.
-- **Grid** (`components/ui/Shelf.tsx`): even auto-fill grid; each card eases in 30ms after the previous one, capped at eight.
-- **Gauge** (`components/ui/Gauge.tsx`): white arc on a faint ring, grey ticks.
-- **Motion:** one easing, `cubic-bezier(0.23, 1, 0.32, 1)` (`--ease-out`, `ease-out-strong`). Screen changes fade and rise 8px over 240ms (`animate-screen-in`), modals scale from 0.97 over 200ms, hover and colour changes 200ms, press feedback `scale(0.97)`. Everything is disabled under `prefers-reduced-motion`.
-- **Rules:** no eyebrow labels above headings; no glow halos; every card has a real focusable button named "Open <title>".
-
+- **Palette:** `bg-app` #0B0405, `bg-sidebar` #1A0A0B, `bg-panel` #24100F, `bg-dock` #2A1113, `bg-card` #361518, elevated #45201F. Text ramp `slate` is rose-tinted grey (300 #D1B4B5, 400 #B38F90, 500 #8F6B6C); `cream` is white. Accent `#BB3B3B` (hover `#A53232`) with white text.
+- **Radii:** panel 32px, modal 28px, card 22px, tile 20px, buttons and chips full pills, nav items 14px squares.
+- **Navigation rail:** dark maroon pill-shaped rail; the active item is a red rounded square with a white icon and a red glow that slides between items.
+- **Store:** spotlight banner (cover art fading into maroon, white "Popular" chip, title, description, red "View game" button, tag chips) beside a "Your statistic" card (red gradient ring around total play time, three red icon buttons). Below, "New games" with mood chips on the right.
+- **Game card** (`components/ui/Cartridge.tsx`): 4:5 cover on a maroon card fading to maroon at the bottom, red border glow on hover, red Play / Install pill rising in on hover or focus, red progress bar.
+- **Motion:** one easing, `cubic-bezier(0.23, 1, 0.32, 1)`. Screens fade and rise 8px over 240ms, cards ease in 30ms apart, the nav indicator slides over 320ms, the stat ring fills over 900ms, press feedback `scale(0.97)`. Off under `prefers-reduced-motion`.

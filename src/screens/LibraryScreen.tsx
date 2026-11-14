@@ -120,7 +120,7 @@ export const LibraryScreen: React.FC = () => {
               aria-pressed={view === 'shelf'}
               aria-label="Shelf view"
               className={`p-1.5 rounded-full transition-surface cursor-default ${
-                view === 'shelf' ? 'bg-cream text-[#0A0A0A]' : 'text-slate-400 hover:text-white'
+                view === 'shelf' ? 'bg-accent text-white' : 'text-slate-400 hover:text-white'
               }`}
               title="Shelf view"
             >
@@ -131,7 +131,7 @@ export const LibraryScreen: React.FC = () => {
               aria-pressed={view === 'table'}
               aria-label="Table view"
               className={`p-1.5 rounded-full transition-surface cursor-default ${
-                view === 'table' ? 'bg-cream text-[#0A0A0A]' : 'text-slate-400 hover:text-white'
+                view === 'table' ? 'bg-accent text-white' : 'text-slate-400 hover:text-white'
               }`}
               title="Table view"
             >
@@ -179,7 +179,7 @@ export const LibraryScreen: React.FC = () => {
           <p className="text-xs text-slate-500">Adjust your filters, or browse the store to find your next game.</p>
           <button
             onClick={() => navigate('store')}
-            className="px-4 py-2 rounded-full bg-accent hover:bg-accent-hover text-bg-app font-semibold text-xs transition-surface cursor-default"
+            className="px-4 py-2 rounded-full bg-accent hover:bg-accent-hover text-white font-semibold text-xs transition-surface cursor-default"
           >
             Explore store
           </button>
@@ -219,7 +219,7 @@ export const LibraryScreen: React.FC = () => {
                 <button
                   onClick={() => toggleFavorite(game.id)}
                   className={`absolute -top-2 -right-2 w-7 h-7 rounded-full flex items-center justify-center cursor-default shadow-md transition-surface ${
-                    game.isFavorite ? 'bg-accent text-bg-app' : 'bg-bg-card text-slate-400 hover:text-white border border-white/10'
+                    game.isFavorite ? 'bg-accent text-white' : 'bg-bg-card text-slate-400 hover:text-white border border-white/10'
                   }`}
                   title="Wishlist"
                 >

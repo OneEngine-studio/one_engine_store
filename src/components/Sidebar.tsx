@@ -100,7 +100,7 @@ export const Sidebar: React.FC = () => {
 
   return (
     <aside className="w-[76px] shrink-0 z-30 h-full px-1.5 select-none">
-      <div className="h-full rounded-[28px] bg-bg-panel border border-white/[0.06] flex flex-col items-center justify-between py-3">
+      <div className="h-full rounded-[32px] bg-bg-sidebar border border-white/[0.05] flex flex-col items-center justify-between py-4">
         <div className="flex flex-col items-center gap-3 w-full min-h-0">
           {/* Brand logo */}
           <Tip label="OneEngine Store">
@@ -122,7 +122,7 @@ export const Sidebar: React.FC = () => {
           <nav aria-label="Main" className="relative flex flex-col" style={{ gap: GAP }}>
             <span
               aria-hidden
-              className="absolute left-0 top-0 rounded-[14px] bg-accent"
+              className="absolute left-0 top-0 rounded-[14px] bg-accent shadow-glow"
               style={{
                 width: ITEM,
                 height: ITEM,
@@ -141,7 +141,7 @@ export const Sidebar: React.FC = () => {
                     aria-label={item.label}
                     aria-current={isActive ? 'page' : undefined}
                     className={`relative z-10 flex items-center justify-center rounded-[14px] cursor-default active:scale-[0.94] ${
-                      isActive ? 'text-[#0A0A0A]' : 'text-slate-400 hover:text-cream hover:bg-white/[0.06]'
+                      isActive ? 'text-white' : 'text-slate-400 hover:text-cream hover:bg-white/[0.06]'
                     }`}
                     style={{
                       width: ITEM,
@@ -153,7 +153,7 @@ export const Sidebar: React.FC = () => {
                     {item.badge !== undefined && (
                       <span
                         className={`absolute top-1 right-1 min-w-[16px] h-4 px-1 flex items-center justify-center text-[9px] font-bold rounded-full tabular-nums ${
-                          isActive ? 'bg-[#0A0A0A] text-cream' : 'bg-accent text-[#0A0A0A]'
+                          isActive ? 'bg-white text-accent' : 'bg-accent text-white'
                         }`}
                       >
                         {item.badge}
@@ -227,7 +227,7 @@ export const Sidebar: React.FC = () => {
               aria-label="Settings"
               aria-current={settingsActive ? 'page' : undefined}
               className={`flex items-center justify-center rounded-[14px] cursor-default active:scale-[0.94] ${
-                settingsActive ? 'bg-accent text-[#0A0A0A]' : 'text-slate-400 hover:text-cream hover:bg-white/[0.06]'
+                settingsActive ? 'bg-accent text-white' : 'text-slate-400 hover:text-cream hover:bg-white/[0.06]'
               }`}
               style={{
                 width: ITEM,

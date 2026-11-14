@@ -271,7 +271,7 @@ export const SettingsScreen: React.FC = () => {
                 {isEditingDir ? (
                   <button
                     onClick={handleSaveDirectory}
-                    className="px-4 py-2 bg-accent hover:bg-accent-hover text-bg-app font-bold rounded-full text-xs flex items-center gap-1.5 transition-surface cursor-default"
+                    className="px-4 py-2 bg-accent hover:bg-accent-hover text-white font-bold rounded-full text-xs flex items-center gap-1.5 transition-surface cursor-default"
                   >
                     <Check className="w-3.5 h-3.5" />
                     <span>Save</span>
@@ -356,7 +356,7 @@ export const SettingsScreen: React.FC = () => {
                     <button
                       type="submit"
                       disabled={pwBusy || !newPw}
-                      className="px-4 py-1.5 rounded-full bg-accent hover:bg-accent-hover text-xs font-bold text-[#0A0A0A] disabled:opacity-50 transition-surface"
+                      className="px-4 py-1.5 rounded-full bg-accent hover:bg-accent-hover text-xs font-bold text-white disabled:opacity-50 transition-surface"
                     >
                       {pwBusy ? 'Saving…' : 'Add password'}
                     </button>
@@ -401,7 +401,7 @@ export const SettingsScreen: React.FC = () => {
                   <button
                     type="submit"
                     disabled={pwBusy || !currentPw || !newPw}
-                    className="px-4 py-1.5 rounded-full bg-accent hover:bg-accent-hover text-xs font-bold text-[#0A0A0A] disabled:opacity-50 transition-surface"
+                    className="px-4 py-1.5 rounded-full bg-accent hover:bg-accent-hover text-xs font-bold text-white disabled:opacity-50 transition-surface"
                   >
                     {pwBusy ? 'Changing…' : 'Change password'}
                   </button>

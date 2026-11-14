@@ -9,7 +9,7 @@ interface PillProps {
   role?: 'tab';
 }
 
-/** Rounded chip: cream when selected, quiet outline otherwise. */
+/** Rounded chip: brand red when selected, quiet tint otherwise. */
 export const Pill: React.FC<PillProps> = ({ active, icon, onClick, children, role }) => (
   <button
     type="button"
@@ -19,8 +19,8 @@ export const Pill: React.FC<PillProps> = ({ active, icon, onClick, children, rol
     onClick={onClick}
     className={`inline-flex items-center gap-2 h-9 px-4 rounded-full text-xs font-medium cursor-default transition-surface active:scale-[0.97] ${
       active
-        ? 'bg-cream text-[#0A0A0A] shadow-sm'
-        : 'bg-white/[0.05] text-slate-300 hover:bg-white/[0.1] hover:text-cream'
+        ? 'bg-accent text-white shadow-glow'
+        : 'bg-white/[0.06] text-slate-200 hover:bg-white/[0.12] hover:text-cream'
     }`}
   >
     {icon}

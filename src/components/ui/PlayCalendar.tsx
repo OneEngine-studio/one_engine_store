@@ -70,7 +70,7 @@ export const PlayCalendar: React.FC<PlayCalendarProps> = ({ playedDays }) => {
               key={i}
               className={`mx-auto w-7 h-7 rounded-full flex items-center justify-center tabular-nums ${
                 played
-                  ? 'bg-accent text-[#0A0A0A] font-bold'
+                  ? 'bg-accent text-white font-bold'
                   : isToday
                   ? 'ring-1 ring-cream/60 text-cream'
                   : 'text-slate-400'

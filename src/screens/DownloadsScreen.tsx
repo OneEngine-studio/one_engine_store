@@ -145,7 +145,7 @@ export const DownloadsScreen: React.FC = () => {
             <div className="flex items-center gap-3 pt-2">
               <button
                 onClick={applyThrottle}
-                className="flex-1 py-2.5 rounded-full bg-accent hover:bg-accent-hover text-bg-app font-bold text-xs transition-surface cursor-default"
+                className="flex-1 py-2.5 rounded-full bg-accent hover:bg-accent-hover text-white font-bold text-xs transition-surface cursor-default"
               >
                 Save limit
               </button>
@@ -452,7 +452,7 @@ export const DownloadsScreen: React.FC = () => {
 
                 <button
                   onClick={() => launchGame(item.gameId)}
-                  className="px-4 py-1.5 rounded-full bg-accent hover:bg-accent-hover text-bg-app font-bold text-xs flex items-center gap-1.5 transition-surface cursor-default"
+                  className="px-4 py-1.5 rounded-full bg-accent hover:bg-accent-hover text-white font-bold text-xs flex items-center gap-1.5 transition-surface cursor-default"
                 >
                   <Play className="w-3.5 h-3.5 fill-current" />
                   <span>Play</span>

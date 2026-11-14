@@ -1,11 +1,27 @@
 const { app, BrowserWindow, ipcMain, shell, session } = require('electron');
 const path = require('path');
+const fs = require('fs');
 const appConfig = require('./config.cjs');
 const { isAppUrl, isTrustedSender, DEV_ORIGIN } = require('./security.cjs');
 const { registerPlatformIpc } = require('./platform.cjs');
 const { registerInstallerIpc, stopEverything } = require('./installer.cjs');
 
 let mainWindow = null;
+
+// A problem in this process is written to launcher.log in the app's data folder instead of ending the app
+// (or showing Electron's raw error dialog), so a failed step can be looked at afterwards.
+function logProblem(kind, detail) {
+  try {
+    const file = path.join(app.getPath('userData'), 'launcher.log');
+    if (fs.existsSync(file) && fs.statSync(file).size > 512 * 1024) fs.rmSync(file, { force: true });
+    fs.appendFileSync(file, `${new Date().toISOString()} ${kind} ${detail}\n`);
+  } catch {
+    /* logging must never be the thing that fails */
+  }
+  console.error('[OneEngine]', kind, detail);
+}
+process.on('uncaughtException', (err) => logProblem('uncaughtException', (err && err.stack) || String(err)));
+process.on('unhandledRejection', (reason) => logProblem('unhandledRejection', (reason && reason.stack) || String(reason)));
 
 // The Windows installer and the taskbar group the app under this id.
 app.setAppUserModelId('dev.oneengine.store');
@@ -49,7 +65,7 @@ function createWindow() {
     frame: false,
     // vite copies public/ into dist/, which is what ships in the installer
     icon: path.join(__dirname, app.isPackaged ? '../dist/images/logo.png' : '../public/images/logo.png'),
-    backgroundColor: '#050505',
+    backgroundColor: '#0B0405',
     webPreferences: {
       preload: path.join(__dirname, 'preload.cjs'),
       nodeIntegration: false,
@@ -74,6 +90,13 @@ function createWindow() {
     openExternal(url);
   });
   contents.on('will-attach-webview', (event) => event.preventDefault());
+  contents.on('render-process-gone', (_event, details) => {
+    logProblem('render-process-gone', JSON.stringify(details));
+    if (details.reason !== 'clean-exit' && !contents.isDestroyed()) contents.reload();
+  });
+  contents.on('did-fail-load', (_event, code, description, url, isMainFrame) => {
+    if (isMainFrame && code !== -3) logProblem('did-fail-load', `${code} ${description} ${url}`);
+  });
 
   if (app.isPackaged || process.env.NODE_ENV === 'production') {
     mainWindow.loadFile(path.join(__dirname, '../dist/index.html'));

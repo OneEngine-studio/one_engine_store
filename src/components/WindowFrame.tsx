@@ -150,7 +150,7 @@ export const WindowFrame: React.FC = () => {
         ) : (
           <button
             onClick={openAuthModal}
-            className="px-3.5 py-1 bg-accent hover:bg-accent-hover text-bg-app rounded-full text-xs font-semibold shadow-sm transition-surface cursor-default"
+            className="px-3.5 py-1 bg-accent hover:bg-accent-hover text-white rounded-full text-xs font-semibold shadow-sm transition-surface cursor-default"
             title="Sign in to OneEngine Store"
           >
             Sign in

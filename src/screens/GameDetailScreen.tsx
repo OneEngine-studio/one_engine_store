@@ -142,7 +142,7 @@ export const GameDetailScreen: React.FC = () => {
         return (
           <button
             onClick={() => launchGame(game.id)}
-            className="w-full h-12 flex items-center justify-center gap-2 bg-accent hover:bg-accent-hover text-bg-app font-bold text-sm rounded-full transition-surface active:scale-[0.99] cursor-default shadow-sm"
+            className="w-full h-12 flex items-center justify-center gap-2 bg-accent hover:bg-accent-hover text-white font-bold text-sm rounded-full transition-surface active:scale-[0.99] cursor-default shadow-sm"
           >
             <Play className="w-4 h-4 fill-current" />
             <span>Play</span>
@@ -152,7 +152,7 @@ export const GameDetailScreen: React.FC = () => {
       return (
         <button
           onClick={() => startDownload(game.id)}
-          className="w-full h-12 flex items-center justify-center gap-2 bg-accent hover:bg-accent-hover text-bg-app font-bold text-sm rounded-full transition-surface active:scale-[0.99] cursor-default shadow-sm"
+          className="w-full h-12 flex items-center justify-center gap-2 bg-accent hover:bg-accent-hover text-white font-bold text-sm rounded-full transition-surface active:scale-[0.99] cursor-default shadow-sm"
         >
           <Download className="w-4 h-4" strokeWidth={2} />
           <span>{isInstalled ? 'Update' : currentDownload?.status === 'PAUSED' ? 'Resume install' : 'Install'}</span>
@@ -163,7 +163,7 @@ export const GameDetailScreen: React.FC = () => {
     return (
       <button
         onClick={() => purchaseGame(game.id)}
-        className="w-full h-12 flex items-center justify-center gap-2 bg-accent hover:bg-accent-hover text-bg-app font-bold text-sm rounded-full transition-surface active:scale-[0.99] cursor-default shadow-sm"
+        className="w-full h-12 flex items-center justify-center gap-2 bg-accent hover:bg-accent-hover text-white font-bold text-sm rounded-full transition-surface active:scale-[0.99] cursor-default shadow-sm"
       >
         <ShoppingCart className="w-4 h-4" strokeWidth={2} />
         <span>{typeof effectivePrice === 'number' ? `Buy for $${effectivePrice.toFixed(2)}` : 'Add to library'}</span>

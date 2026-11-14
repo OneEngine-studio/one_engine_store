@@ -9,32 +9,35 @@ export default {
   theme: {
     extend: {
       colors: {
-        // Neutral black layers: depth comes from tone, never from hue
-        'bg-app':      '#050505', // Root window background
-        'bg-panel':    '#0D0D0D', // Floating main content panel
-        'bg-sidebar':  '#080808', // Left navigation rail
-        'bg-card':     '#141414', // Cards, tiles, panels
+        // Maroon layers on black: depth comes from tone
+        'bg-app':      '#0B0405', // Root window background
+        'bg-panel':    '#24100F', // Floating main content panel
+        'bg-sidebar':  '#1A0A0B', // Left navigation rail
+        'bg-card':     '#361518', // Cards, tiles, panels (brand maroon)
         'bg-hover':    'rgba(255, 255, 255, 0.06)', // 6% white interaction hover
         'bg-pressed':  'rgba(255, 255, 255, 0.10)',
-        'bg-dock':     '#111111', // Floating bottom dock
+        'bg-dock':     '#2A1113', // Floating bottom dock
 
         // Backward-compat aliases
-        'void-black':    '#050505',
-        'gunmetal-slate':'#080808',
-        'tech-surface':  '#141414',
-        'tech-elevated': '#1C1C1C',
+        'void-black':    '#0B0405',
+        'gunmetal-slate':'#1A0A0B',
+        'tech-surface':  '#361518',
+        'tech-elevated': '#45201F',
         'border-stroke': 'rgba(255, 255, 255, 0.08)',
 
-        // Greys (text ramp) and the one light tone used for text and fills
-        slate: colors.neutral,
-        cream:  '#F5F5F5',
-        brass:  '#A3A3A3',
+        // Rose-tinted greys for text on maroon, white for headings and light fills
+        slate: {
+          50: '#FBF4F4', 100: '#F3E6E6', 200: '#E6D2D2', 300: '#D1B4B5', 400: '#B38F90',
+          500: '#8F6B6C', 600: '#6E5051', 700: '#523A3B', 800: '#3C2829', 900: '#271718', 950: '#180D0E',
+        },
+        cream:  '#FFFFFF',
+        brass:  '#D9A5A5',
 
-        // Accent is plain white: primary actions, active state and focus
-        'accent':       '#FFFFFF',
-        'accent-hover': '#E5E5E5',
-        'accent-muted': 'rgba(255, 255, 255, 0.10)',
-        'primary-accent': '#FFFFFF',
+        // Brand red: primary actions, active state, progress
+        'accent':       '#BB3B3B',
+        'accent-hover': '#A53232',
+        'accent-muted': 'rgba(187, 59, 59, 0.18)',
+        'primary-accent': '#BB3B3B',
 
         // Semantic status tokens (the only colour in the interface)
         'success': '#10B981',
@@ -44,8 +47,8 @@ export default {
         'tactical-danger': '#E5484D',
       },
       fontFamily: {
-        display: ['"Bricolage Grotesque Variable"', 'Inter', 'sans-serif'],
-        sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', '"Segoe UI"', 'Roboto', 'sans-serif'],
+        display: ['Poppins', '"Segoe UI"', 'sans-serif'],
+        sans: ['Poppins', '-apple-system', 'BlinkMacSystemFont', '"Segoe UI"', 'Roboto', 'sans-serif'],
         mono: ['"JetBrains Mono"', 'Menlo', 'Consolas', 'monospace'],
       },
       fontSize: {
@@ -54,10 +57,10 @@ export default {
       },
       borderRadius: {
         // Radius hierarchy: outer - padding = inner
-        'panel': '24px',
-        'modal': '24px',
-        'card':  '16px',
-        'tile':  '16px',
+        'panel': '32px',
+        'modal': '28px',
+        'card':  '22px',
+        'tile':  '20px',
         'thumb': '10px',
         'input': '10px',
         'pill':  '9999px',
@@ -75,7 +78,8 @@ export default {
         'dock':    '0 16px 36px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.08)',
         'modal':   '0 24px 60px rgba(0, 0, 0, 0.75), 0 0 0 1px rgba(255, 255, 255, 0.1)',
         'popover': '0 16px 36px rgba(0, 0, 0, 0.55), 0 0 0 1px rgba(255, 255, 255, 0.08)',
-        'card':    'none', // Cards sit flat separated by tone
+        'card':    '0 12px 28px rgba(0, 0, 0, 0.35)',
+        'glow':    '0 10px 26px rgba(187, 59, 59, 0.45)',
       },
       transitionProperty: {
         'surface': 'background-color, color, border-color, opacity',
