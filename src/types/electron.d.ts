@@ -9,13 +9,6 @@ export interface ElectronAPI {
     userId: string;
   }) => Promise<{ success: boolean; pid?: number; message?: string }>;
   killGame: (pid: number) => Promise<boolean>;
-  nakamaRequest: (payload: {
-    url: string;
-    method?: string;
-    headers?: Record<string, string>;
-    body?: unknown;
-    timeoutMs?: number;
-  }) => Promise<{ ok: boolean; status: number; statusText: string; data: string }>;
   onGameExited: (callback: (data: { pid: number; code: number }) => void) => () => void;
 }
 

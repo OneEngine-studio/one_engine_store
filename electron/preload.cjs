@@ -6,7 +6,6 @@ contextBridge.exposeInMainWorld('electronAPI', {
   closeWindow: () => ipcRenderer.send('window-close'),
   launchGame: (payload) => ipcRenderer.invoke('launch-game', payload),
   killGame: (pid) => ipcRenderer.invoke('kill-game', pid),
-  nakamaRequest: (payload) => ipcRenderer.invoke('nakama-request', payload),
   onGameExited: (callback) => {
     const handler = (_event, data) => callback(data);
     ipcRenderer.on('game-exited', handler);

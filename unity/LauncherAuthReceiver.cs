@@ -1,149 +1,136 @@
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
+using Nakama;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
 namespace OneEngine.Integration
 {
     /// <summary>
-    /// OneEngine Store Headless Authentication Receiver for Unity (Railbound).
-    /// Attach this script to a GameObject in your initial bootstrap scene (e.g., Bootstrapper / Splash).
+    /// Store sign-in for Railbound. Attach to a GameObject in the first scene (Bootstrapper / Splash).
+    ///
+    /// The OneEngine launcher starts the game with a one-time launch ticket:
+    ///   Railbound.exe --oe-ticket=&lt;ticket&gt; --oe-user=&lt;userId&gt; --oe-name=&lt;callsign&gt;
+    /// The ticket is valid for 60 seconds and works once. This script trades it for a Nakama session with
+    /// AuthenticateCustom; the Nakama server hook redeems it with the Platform API and checks ownership.
+    /// No password or long-lived token ever appears on the command line.
     /// </summary>
     [DisallowMultipleComponent]
     public class LauncherAuthReceiver : MonoBehaviour
     {
+        [Header("Nakama")]
+        [SerializeField] private string nakamaScheme = "https";
+        [SerializeField] private string nakamaHost = "127.0.0.1";
+        [SerializeField] private int nakamaPort = 7350;
+        [Tooltip("Change before any public build. Must match the server's socket.server_key.")]
+        [SerializeField] private string nakamaServerKey = "defaultkey";
+
         [Header("Scene Navigation")]
-        [Tooltip("Name of the scene to load when valid launcher credentials are provided.")]
         [SerializeField] private string targetLobbySceneName = "GameLobby";
 
-        [Tooltip("Fallback scene to load if launched standalone (e.g. LoginMenu or Warning Scene).")]
-        [SerializeField] private string fallbackLoginSceneName = "LoginMenu";
+        [Header("Development")]
+        [Tooltip("Lets the editor and development builds continue without a launcher ticket. Ignored in release builds.")]
+        [SerializeField] private bool allowStandaloneInDevelopment = true;
 
-        [Header("Runtime State (Read Only)")]
-        [SerializeField] private bool hasValidLauncherAuth = false;
-        [SerializeField] private string cachedPlayerName = string.Empty;
-        [SerializeField] private string cachedUserId = string.Empty;
-
-        // Static session properties accessible across any Unity gameplay scripts
-        public static string AuthToken { get; private set; } = string.Empty;
-        public static string NakamaRefreshToken { get; private set; } = string.Empty;
+        // Session state for the rest of the game. AuthToken is the Nakama session token.
+        public static IClient Client { get; private set; }
+        public static ISession Session { get; private set; }
+        public static string AuthToken => Session?.AuthToken ?? string.Empty;
+        public static string NakamaRefreshToken => Session?.RefreshToken ?? string.Empty;
         public static string PlayerName { get; private set; } = string.Empty;
-        public static string UserId { get; private set; } = string.Empty;
-        public static bool IsAuthenticated => !string.IsNullOrEmpty(AuthToken);
+        public static string UserId => Session?.UserId ?? string.Empty;
+        public static bool IsAuthenticated => Session != null && !Session.IsExpired;
 
-        private bool showStandaloneWarning = false;
+        private enum State { Starting, SigningIn, Failed }
+        private State state = State.Starting;
         private string statusMessage = string.Empty;
 
-        private void Awake()
+        private bool CanSkipSignIn => allowStandaloneInDevelopment && (Application.isEditor || Debug.isDebugBuild);
+
+        private async void Start()
         {
-            // Persist this object across scene loads so GameLobby can access session data
             DontDestroyOnLoad(gameObject);
 
-            ParseCommandLineArguments();
+            string ticket = ReadArgument("oe-ticket");
+            string name = ReadArgument("oe-name");
+            PlayerName = string.IsNullOrWhiteSpace(name) ? "Operative" : name;
+
+            if (string.IsNullOrWhiteSpace(ticket))
+            {
+                Debug.LogWarning("[OneEngine] No --oe-ticket argument: the game was not started by the store.");
+                Fail("Please start Railbound from the OneEngine Store.");
+                return;
+            }
+
+            state = State.SigningIn;
+            statusMessage = "Signing in…";
+            try
+            {
+                await SignInWithTicket(ticket);
+            }
+            catch (Exception e)
+            {
+                Debug.LogWarning($"[OneEngine] Ticket sign-in failed: {e.Message}");
+                Fail("Sign-in failed. Close the game and press Play in the store again.");
+                return;
+            }
+
+            Debug.Log($"[OneEngine] Signed in as '{PlayerName}' ({UserId}). Loading '{targetLobbySceneName}'.");
+            SceneManager.LoadScene(targetLobbySceneName);
         }
 
-        private void Start()
+        private async Task SignInWithTicket(string ticket)
         {
-            if (hasValidLauncherAuth)
-            {
-                Debug.Log($"<color=#FF7A00>[OneEngine]</color> Valid session received for operative: '{PlayerName}' (UID: {UserId}).");
-                Debug.Log($"<color=#10B981>[OneEngine]</color> Bypassing '{fallbackLoginSceneName}' -> Navigating directly to '{targetLobbySceneName}'...");
-                
-                // Immediately transition to GameLobby
-                SceneManager.LoadScene(targetLobbySceneName);
-            }
-            else
-            {
-                Debug.LogWarning("<color=#EF4444>[OneEngine]</color> Standalone launch detected without --auth-token parameter.");
-                statusMessage = "Access Denied: Please launch Railbound via the OneEngine Store desktop client.";
-                showStandaloneWarning = true;
+            Client = new Nakama.Client(nakamaScheme, nakamaHost, nakamaPort, nakamaServerKey, UnityWebRequestAdapter.Instance);
 
-                // If fallback scene is defined and different from current, navigate there
-                if (!string.IsNullOrEmpty(fallbackLoginSceneName) && 
-                    SceneManager.GetActiveScene().name != fallbackLoginSceneName)
-                {
-                    // If your build has a manual login fallback scene:
-                    // SceneManager.LoadScene(fallbackLoginSceneName);
-                }
-            }
+            // A ticket works once, so a silent retry after a timeout could present a spent ticket.
+            Client.GlobalRetryConfiguration = new RetryConfiguration(baseDelayMs: 500, maxRetries: 0);
+
+            // The server hook swaps the ticket for the stable "oe:<userId>" identity and sets the username.
+            Session = await Client.AuthenticateCustomAsync(ticket, username: null, create: true);
+            if (!string.IsNullOrEmpty(Session.Username)) PlayerName = Session.Username;
         }
 
-        /// <summary>
-        /// Parses Windows OS command line arguments looking for OneEngine injection flags.
-        /// Supports both formats: '--key value' and '--key=value'.
-        /// </summary>
-        private void ParseCommandLineArguments()
+        private void Fail(string message)
+        {
+            if (CanSkipSignIn)
+            {
+                Debug.Log("[OneEngine] Development mode: continuing without a store session.");
+                SceneManager.LoadScene(targetLobbySceneName);
+                return;
+            }
+            state = State.Failed;
+            statusMessage = message;
+        }
+
+        /// <summary>Reads "--key=value" or "--key value" from the command line; empty when absent.</summary>
+        private static string ReadArgument(string key)
         {
             string[] args = Environment.GetCommandLineArgs();
-            var parsedArgs = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-
+            string flag = "--" + key;
             for (int i = 0; i < args.Length; i++)
             {
                 string arg = args[i];
-
-                if (arg.StartsWith("--"))
-                {
-                    if (arg.Contains("="))
-                    {
-                        string[] parts = arg.Substring(2).Split(new[] { '=' }, 2);
-                        if (parts.Length == 2)
-                        {
-                            parsedArgs[parts[0]] = parts[1].Trim('\"');
-                        }
-                    }
-                    else if (i + 1 < args.Length && !args[i + 1].StartsWith("--"))
-                    {
-                        parsedArgs[arg.Substring(2)] = args[i + 1].Trim('\"');
-                        i++; // Skip next token as it's the value
-                    }
-                }
+                if (arg.StartsWith(flag + "=", StringComparison.OrdinalIgnoreCase))
+                    return arg.Substring(flag.Length + 1).Trim('"');
+                if (string.Equals(arg, flag, StringComparison.OrdinalIgnoreCase) &&
+                    i + 1 < args.Length && !args[i + 1].StartsWith("--"))
+                    return args[i + 1].Trim('"');
             }
-
-            // Extract session credentials injected by OneEngine launcher backend
-            string token = null;
-            if (parsedArgs.TryGetValue("nakama-token", out string nToken) && !string.IsNullOrWhiteSpace(nToken))
-            {
-                token = nToken;
-            }
-            else if (parsedArgs.TryGetValue("auth-token", out string aToken) && !string.IsNullOrWhiteSpace(aToken))
-            {
-                token = aToken;
-            }
-
-            if (!string.IsNullOrWhiteSpace(token))
-            {
-                AuthToken = token;
-                
-                if (parsedArgs.TryGetValue("nakama-refresh-token", out string rToken) && !string.IsNullOrWhiteSpace(rToken))
-                {
-                    NakamaRefreshToken = rToken;
-                }
-
-                parsedArgs.TryGetValue("player-name", out string pName);
-                PlayerName = !string.IsNullOrWhiteSpace(pName) ? pName : "Operative";
-                cachedPlayerName = PlayerName;
-
-                parsedArgs.TryGetValue("user-id", out string uId);
-                UserId = !string.IsNullOrWhiteSpace(uId) ? uId : "usr_anonymous";
-                cachedUserId = UserId;
-
-                hasValidLauncherAuth = true;
-            }
+            return string.Empty;
         }
 
-        /// <summary>
-        /// Tactical fallback UI displayed if the binary was launched standalone by double-clicking Railbound.exe
-        /// </summary>
         private void OnGUI()
         {
-            if (!showStandaloneWarning) return;
+            if (state == State.Starting) return;
 
-            int width = 500;
-            int height = 240;
+            const int width = 500;
+            const int height = 200;
             int x = (Screen.width - width) / 2;
             int y = (Screen.height - height) / 2;
 
-            GUI.Box(new Rect(x, y, width, height), "ONEENGINE SECURITY PROTOCOL");
+            GUI.Box(new Rect(x, y, width, height), "ONEENGINE");
 
             var labelStyle = new GUIStyle(GUI.skin.label)
             {
@@ -151,18 +138,11 @@ namespace OneEngine.Integration
                 wordWrap = true,
                 fontSize = 14
             };
-
             GUI.Label(new Rect(x + 20, y + 40, width - 40, 80), statusMessage, labelStyle);
 
-            if (GUI.Button(new Rect(x + 75, y + 140, 160, 45), "QUIT GAME"))
+            if (state == State.Failed && GUI.Button(new Rect(x + 170, y + 130, 160, 45), "QUIT GAME"))
             {
                 Application.Quit();
-            }
-
-            if (GUI.Button(new Rect(x + 265, y + 140, 160, 45), "CONTINUE AS GUEST"))
-            {
-                showStandaloneWarning = false;
-                SceneManager.LoadScene(targetLobbySceneName);
             }
         }
     }
