@@ -70,8 +70,16 @@ export function openDb(path: string): DatabaseSync {
       redeemed_at TEXT
     );
   `);
+  migrate(db);
   seed(db);
   return db;
+}
+
+/** Adds columns introduced after a database file was first created. */
+function migrate(db: DatabaseSync) {
+  const cols = (db.prepare('PRAGMA table_info(builds)').all() as { name: string }[]).map((c) => c.name);
+  if (!cols.includes('version')) db.exec("ALTER TABLE builds ADD COLUMN version TEXT NOT NULL DEFAULT ''");
+  if (!cols.includes('sha256')) db.exec("ALTER TABLE builds ADD COLUMN sha256 TEXT NOT NULL DEFAULT ''");
 }
 
 function seed(db: DatabaseSync) {

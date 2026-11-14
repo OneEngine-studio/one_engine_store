@@ -34,6 +34,8 @@ Later: sign-in page (OneEngine ID), file hosting for game builds (CDN), payments
 | `GET /v1/me`, `GET /v1/library` | Profile and owned games |
 | `POST /v1/library/:id/claim` | Add a free game (any game, in dev mode) |
 | `POST /v1/products/:id/download-token` | Short-lived download token, owners only |
+| `GET /v1/products/:id/builds/latest` | Newest allowed build with size, sha256 and a signed download link, owners only |
+| `GET /v1/depot/:id/:platform/:file` | Dev file server for builds (a CDN does this in production) |
 | `POST /v1/launch-tickets` | Ticket for starting the game, owners only |
 | `POST /internal/tickets/redeem` | Nakama only, needs the service key |
 
@@ -44,7 +46,7 @@ Run it: see `services/platform-api/README.md`.
 1. **Now:** run the API, then connect the launcher's library and launch button to it.
 2. **Game:** add ticket sign-in to Railbound (`--oe-ticket=...`), hide guest and email login in store builds.
 3. **Nakama:** load the hook, set the three environment values, block direct sign-in outside dev.
-4. **Downloads:** publish game builds to storage, launcher downloads and verifies them.
+4. **Downloads:** the API side is built (publish script, latest build, signed link). Next: the launcher downloads, checks the sha256 and unpacks; later move builds to a CDN.
 5. **Accounts:** replace dev login with a real sign-in service (email check, password reset).
 6. **Money:** hosted checkout and webhooks.
 7. **Before public:** change every default secret, sign the launcher, security review.

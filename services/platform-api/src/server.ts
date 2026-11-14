@@ -1,6 +1,8 @@
 import Fastify, { type FastifyReply, type FastifyRequest } from 'fastify';
 import cors from '@fastify/cors';
 import { createHash, createHmac, randomUUID, timingSafeEqual } from 'node:crypto';
+import { createReadStream, statSync } from 'node:fs';
+import { join } from 'node:path';
 import type { DatabaseSync } from 'node:sqlite';
 import { z } from 'zod';
 import type { Config } from './config.js';
@@ -192,13 +194,107 @@ export function buildServer({ cfg, db, tickets, verify, now = Date.now }: Deps) 
   });
 
   // Short-lived CDN access token: "<productId>.<expiresAtSeconds>.<hmac>"
-  app.post('/v1/products/:productId/download-token', { preHandler: requireUser }, async (req, reply) => {
-    const { productId } = req.params as { productId: string };
-    if (!hasEntitlement(req.user!.sub, productId)) return fail(reply, 403, 'not_entitled', 'You do not own this game.');
+  const signDownloadToken = (productId: string) => {
     const expires = Math.floor(now() / 1000) + 600;
     const payload = `${productId}.${expires}`;
     const sig = createHmac('sha256', cfg.downloadKey).update(payload).digest('base64url');
     return { token: `${payload}.${sig}`, expiresAt: expires * 1000 };
+  };
+
+  const downloadTokenValid = (token: string, productId: string) => {
+    const [id, expires, sig] = token.split('.');
+    if (!id || !expires || !sig || id !== productId || Number(expires) * 1000 < now()) return false;
+    const expected = createHmac('sha256', cfg.downloadKey).update(`${id}.${expires}`).digest('base64url');
+    return safeEqual(sig, expected);
+  };
+
+  app.post('/v1/products/:productId/download-token', { preHandler: requireUser }, async (req, reply) => {
+    const { productId } = req.params as { productId: string };
+    if (!hasEntitlement(req.user!.sub, productId)) return fail(reply, 403, 'not_entitled', 'You do not own this game.');
+    return signDownloadToken(productId);
+  });
+
+  type BuildRow = {
+    build_id: string;
+    version: string;
+    total_size: number;
+    sha256: string;
+    blocked: number;
+  };
+  const SAFE_NAME = /^[A-Za-z0-9._-]{1,128}$/;
+
+  // Newest allowed build plus a short-lived link to fetch it. Owners only.
+  app.get('/v1/products/:productId/builds/latest', { preHandler: requireUser }, async (req, reply) => {
+    const { productId } = req.params as { productId: string };
+    const platform = z.string().regex(SAFE_NAME).catch('win64').parse((req.query as Record<string, string>).platform);
+    if (!hasEntitlement(req.user!.sub, productId)) return fail(reply, 403, 'not_entitled', 'You do not own this game.');
+
+    const build = db
+      .prepare(
+        `SELECT build_id, version, total_size, sha256, blocked FROM builds
+         WHERE product_id = ? AND platform = ? AND blocked = 0 ORDER BY rowid DESC LIMIT 1`
+      )
+      .get(productId, platform) as BuildRow | undefined;
+    if (!build) return fail(reply, 404, 'no_build', 'No downloadable build has been published yet.');
+
+    const base = cfg.publicBaseUrl || `${req.protocol}://${req.headers.host}`;
+    const { token, expiresAt } = signDownloadToken(productId);
+    return {
+      buildId: build.build_id,
+      version: build.version,
+      platform,
+      sizeBytes: build.total_size,
+      sha256: build.sha256,
+      downloadUrl: `${base}/v1/depot/${encodeURIComponent(productId)}/${encodeURIComponent(platform)}/${encodeURIComponent(build.build_id)}.zip?token=${encodeURIComponent(token)}`,
+      expiresAt,
+    };
+  });
+
+  // Local depot for development. In production a CDN checks the same token and serves the same path.
+  app.get('/v1/depot/:productId/:platform/:file', async (req, reply) => {
+    const { productId, platform, file } = req.params as { productId: string; platform: string; file: string };
+    const token = (req.query as Record<string, string>).token ?? '';
+    if (!SAFE_NAME.test(productId) || !SAFE_NAME.test(platform) || !/^[A-Za-z0-9._-]{1,128}\.zip$/.test(file)) {
+      return fail(reply, 400, 'bad_request', 'Invalid path.');
+    }
+    if (!downloadTokenValid(token, productId)) return fail(reply, 403, 'token_invalid', 'Download link is invalid or expired.');
+
+    const buildId = file.slice(0, -4);
+    const build = db
+      .prepare('SELECT blocked FROM builds WHERE product_id = ? AND platform = ? AND build_id = ?')
+      .get(productId, platform, buildId) as { blocked: number } | undefined;
+    if (!build) return fail(reply, 404, 'not_found', 'Build not found.');
+    if (build.blocked) return fail(reply, 403, 'build_blocked', 'This version is no longer available.');
+
+    const path = join(cfg.depotDir, productId, platform, file);
+    let size: number;
+    try {
+      size = statSync(path).size;
+    } catch {
+      return fail(reply, 404, 'not_found', 'Build file is missing from the depot.');
+    }
+
+    // One byte range is enough for resumable downloads.
+    let start = 0;
+    let end = size - 1;
+    const range = /^bytes=(\d*)-(\d*)$/.exec(req.headers.range ?? '');
+    if (range && (range[1] || range[2])) {
+      if (range[1]) {
+        start = Number(range[1]);
+        if (range[2]) end = Math.min(Number(range[2]), size - 1);
+      } else {
+        start = Math.max(size - Number(range[2]), 0);
+      }
+      if (start > end || start >= size) {
+        return reply.code(416).header('content-range', `bytes */${size}`).send();
+      }
+      reply.code(206).header('content-range', `bytes ${start}-${end}/${size}`);
+    }
+    return reply
+      .header('content-type', 'application/zip')
+      .header('accept-ranges', 'bytes')
+      .header('content-length', end - start + 1)
+      .send(createReadStream(path, { start, end }));
   });
 
   const ticketBody = z.object({

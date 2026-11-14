@@ -9,6 +9,8 @@ export interface Config {
   idpAudience: string;
   serviceKey: string;
   downloadKey: string;
+  depotDir: string;
+  publicBaseUrl: string;
   corsOrigins: string[];
   logLevel: string;
 }
@@ -34,6 +36,8 @@ export function loadConfig(env: Record<string, string | undefined> = process.env
     idpAudience: env.IDP_AUDIENCE ?? 'oneengine-platform',
     serviceKey: env.PLATFORM_SERVICE_KEY ?? DEV_DEFAULTS.serviceKey,
     downloadKey: env.PLATFORM_DOWNLOAD_KEY ?? DEV_DEFAULTS.downloadKey,
+    depotDir: env.DEPOT_DIR ?? './data/depot',
+    publicBaseUrl: (env.PUBLIC_BASE_URL ?? '').replace(/\/+$/, ''),
     logLevel: env.LOG_LEVEL ?? 'info',
     corsOrigins: (env.CORS_ORIGINS ?? 'http://localhost:1420').split(',').map((s) => s.trim()).filter(Boolean),
   };

@@ -4,7 +4,7 @@ Node 22.5+ (uses the built-in `node:sqlite`), Fastify, TypeScript.
 
 ```bash
 npm install
-npm test            # 12 tests: catalog, auth, library, tickets, rate limit
+npm test            # 19 tests: catalog, auth, library, tickets, rate limit, builds, depot
 npm run dev         # http://127.0.0.1:8080
 ```
 
@@ -22,6 +22,17 @@ curl -s -X POST localhost:8080/v1/library/railbound/claim -H "authorization: Bea
 curl -s -X POST localhost:8080/v1/launch-tickets -H "authorization: Bearer $TOKEN" \
   -H 'content-type: application/json' -d '{"productId":"railbound","deviceId":"my-device-0001"}'
 ```
+
+## Publishing a build (development)
+
+```bash
+npm run publish-build -- railbound 2.4.0 /path/to/railbound.zip
+```
+
+Copies the zip into `DEPOT_DIR` (default `./data/depot`) and registers it with its size and sha256.
+Owners then get it from `GET /v1/products/:id/builds/latest`, which returns a 10-minute signed link to
+`/v1/depot/...` (supports byte ranges for resumable downloads). In production a CDN checks the same
+token and serves the same path. Set `PUBLIC_BASE_URL` if the API sits behind a proxy.
 
 ## Production switches
 
