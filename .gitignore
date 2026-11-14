@@ -157,3 +157,6 @@ screenshots/
 
 # Installer build output
 release/
+
+# Written by npm run dist from the build environment
+electron/app-config.json

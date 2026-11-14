@@ -1,8 +1,11 @@
 name: Release launcher
 
-# Push a tag like v1.0.1 (matching package.json) to build the Windows installer. The installer is attached
-# to a release on this repo (private, for the team) and published on the public OneEngine repo, which the
-# download page reads. To rebuild an existing tag, use "Run workflow" and enter the tag.
+# Push a tag like v1.0.1 (it must match "version" in package.json) to test, build and publish the Windows
+# installer. The installer is attached to a release on this repo and to the public OneEngine releases repo,
+# which the download page reads.
+#
+# An existing release is never overwritten. To rebuild a tag that already has a release, run this workflow by
+# hand and tick "replace_existing": that is the explicit authorisation.
 on:
   push:
     tags:
@@ -12,12 +15,17 @@ on:
       tag:
         description: 'Existing tag to build, e.g. v1.0.0'
         required: true
+      replace_existing:
+        description: 'Replace the installer of a release that already exists for this tag'
+        type: boolean
+        default: false
 
 permissions:
   contents: write
 
 env:
   TAG: ${{ inputs.tag || github.ref_name }}
+  REPLACE_EXISTING: ${{ inputs.replace_existing && 'true' || 'false' }}
   PUBLIC_RELEASES_REPO: oneenginedev/oneengine
 
 jobs:
@@ -43,45 +51,99 @@ jobs:
             exit 1
           fi
 
-      - run: npm ci
-
-      - name: Platform API address must be set
+      - name: Required secrets and variables exist
         shell: bash
         env:
           PLATFORM_API_URL: ${{ vars.PLATFORM_API_URL }}
+          RELEASES_TOKEN: ${{ secrets.RELEASES_TOKEN }}
         run: |
-          # The installer has this address built in. Without it the app would look for a server on the
-          # player's own PC and nobody could sign in.
+          if [ -z "$RELEASES_TOKEN" ]; then
+            echo "Add the RELEASES_TOKEN repository secret (Contents: read and write on $PUBLIC_RELEASES_REPO). See docs/releasing.md."
+            exit 1
+          fi
+          # The installer has this address built in. Without it, or with a local one, nobody could sign in.
+          # The same rule is enforced again by scripts/write-app-config.cjs during the build.
           case "$PLATFORM_API_URL" in
             https://*) ;;
-            *) echo "Set the repository variable PLATFORM_API_URL to your public https:// Platform API address (Settings > Secrets and variables > Actions > Variables)."; exit 1 ;;
+            *) echo "Set the repository variable PLATFORM_API_URL to the public https:// address of the Platform API."; exit 1 ;;
           esac
+          case "$PLATFORM_API_URL" in
+            *localhost*|*127.0.0.1*|*://[[]::1]*|*0.0.0.0*) echo "PLATFORM_API_URL must not be a local address."; exit 1 ;;
+          esac
+
+      - name: Do not overwrite an existing release
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.RELEASES_TOKEN }}
+        run: |
+          for repo in "$GITHUB_REPOSITORY" "$PUBLIC_RELEASES_REPO"; do
+            if gh release view "$TAG" --repo "$repo" >/dev/null 2>&1; then
+              if [ "$REPLACE_EXISTING" != "true" ]; then
+                echo "$repo already has a release for $TAG. Nothing was changed."
+                echo "To replace its installer on purpose, run this workflow by hand with replace_existing ticked."
+                exit 1
+              fi
+              echo "Replacing the existing release for $TAG on $repo (replace_existing was ticked)."
+            fi
+          done
+
+      - run: npm ci
+
+      - name: Typecheck the launcher
+        run: npm run typecheck
+
+      - name: Test the Platform API
+        working-directory: services/platform-api
+        run: |
+          npm ci
+          npm run typecheck
+          npm test
 
       - name: Build installer
         run: npm run dist
         env:
-          # Address of the Platform API baked into this build (repository variable, required)
-          VITE_PLATFORM_API_URL: ${{ vars.PLATFORM_API_URL }}
+          PLATFORM_API_URL: ${{ vars.PLATFORM_API_URL }}
+
+      - name: Test the launcher and the built page
+        run: npm test
+
+      - name: Installer file exists and carries no local address
+        shell: bash
+        run: |
+          version=$(node -p "require('./package.json').version")
+          file="release/OneEngine-Store-Setup-$version.exe"
+          test -f "$file" || { echo "Expected $file was not produced"; exit 1; }
+          cat electron/app-config.json
+          if grep -Eq 'localhost|127\.0\.0\.1' electron/app-config.json; then
+            echo "The installer points at a local address."
+            exit 1
+          fi
+          sha256sum "$file" | awk '{print $1 "  OneEngine-Store-Setup-'"$version"'.exe"}' > "$file.sha256"
+          cat "$file.sha256"
 
       - name: Write release notes
         shell: bash
         run: |
           previous=$(git describe --tags --abbrev=0 "$TAG^" 2>/dev/null || true)
           if [ -n "$previous" ]; then range="$previous..$TAG"; else range="$TAG"; fi
-          git log --no-merges --pretty='- %s' "$range" > notes.md
+          {
+            git log --no-merges --pretty='- %s' "$range"
+            echo
+            echo "**Windows 10 and 11, 64-bit.** The installer is not code-signed yet, so Windows SmartScreen may show a warning: choose More info, then Run anyway. The SHA-256 checksum is attached as a .sha256 file."
+          } > notes.md
           flags=""
           case "$TAG" in *-*) flags="--prerelease" ;; esac
           echo "FLAGS=$flags" >> "$GITHUB_ENV"
 
-      - name: Release on this repo
+      - name: Publish on this repo
         shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           if gh release view "$TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
-            gh release upload "$TAG" release/OneEngine-Store-Setup-*.exe --repo "$GITHUB_REPOSITORY" --clobber
+            gh release upload "$TAG" release/OneEngine-Store-Setup-*.exe release/OneEngine-Store-Setup-*.sha256 --repo "$GITHUB_REPOSITORY" --clobber
           else
-            gh release create "$TAG" release/OneEngine-Store-Setup-*.exe \
+            gh release create "$TAG" release/OneEngine-Store-Setup-*.exe release/OneEngine-Store-Setup-*.sha256 \
               --repo "$GITHUB_REPOSITORY" \
               --title "OneEngine Store $TAG" \
               --notes-file notes.md $FLAGS
@@ -93,14 +155,10 @@ jobs:
           # Fine-grained token with "Contents: read and write" on the public releases repo
           GH_TOKEN: ${{ secrets.RELEASES_TOKEN }}
         run: |
-          if [ -z "$GH_TOKEN" ]; then
-            echo "Add the RELEASES_TOKEN repository secret to publish on the download page."
-            exit 1
-          fi
           if gh release view "$TAG" --repo "$PUBLIC_RELEASES_REPO" >/dev/null 2>&1; then
-            gh release upload "$TAG" release/OneEngine-Store-Setup-*.exe --repo "$PUBLIC_RELEASES_REPO" --clobber
+            gh release upload "$TAG" release/OneEngine-Store-Setup-*.exe release/OneEngine-Store-Setup-*.sha256 --repo "$PUBLIC_RELEASES_REPO" --clobber
           else
-            gh release create "$TAG" release/OneEngine-Store-Setup-*.exe \
+            gh release create "$TAG" release/OneEngine-Store-Setup-*.exe release/OneEngine-Store-Setup-*.sha256 \
               --repo "$PUBLIC_RELEASES_REPO" \
               --title "OneEngine Store $TAG" \
               --notes-file notes.md $FLAGS

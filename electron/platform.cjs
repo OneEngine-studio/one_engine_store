@@ -4,9 +4,14 @@
 // user's details here, the refresh token is encrypted with the operating system's key store
 // (Windows DPAPI) before it touches the disk, and every signed-in call gets its bearer token added
 // in this process. A web page that was somehow compromised therefore cannot copy the session.
+//
+// The page does not choose where requests go either: the address comes from the build (config.cjs) and
+// only the routes listed in ROUTES can be called, so this is not a general HTTP proxy.
 const { app, ipcMain, safeStorage } = require('electron');
 const fs = require('fs');
 const path = require('path');
+const appConfig = require('./config.cjs');
+const { isTrustedSender } = require('./security.cjs');
 
 let session = null; // { baseUrl, access, accessExp, refresh }
 let stored = null; // { baseUrl, refresh } read from disk, used once by restore
@@ -99,10 +104,38 @@ function refresh(baseUrl) {
   return refreshing;
 }
 
-async function request({ baseUrl, path: route, method = 'GET', body, auth = false }) {
-  if (typeof baseUrl !== 'string' || !/^https?:\/\//.test(baseUrl) || typeof route !== 'string' || !route.startsWith('/')) {
-    return problem(0, 'bad_request', 'Invalid request.');
+const ID = '[A-Za-z0-9_-]{1,64}';
+// [method, path pattern, needs a signed-in session, only when games are enabled]
+const ROUTES = [
+  ['GET', /^\/healthz$/, false],
+  ['GET', /^\/v1\/catalog$/, false],
+  ['GET', new RegExp(`^/v1/catalog/${ID}$`), false],
+  ['POST', /^\/v1\/auth\/(register|login|forgot-password|reset-password)$/, false],
+  ['POST', /^\/v1\/auth\/(verify-email|resend-verification|change-password)$/, true],
+  ['GET', /^\/v1\/me$/, true],
+  ['PATCH', /^\/v1\/me$/, true],
+  ['GET', /^\/v1\/library$/, true],
+  ['POST', new RegExp(`^/v1/library/${ID}/claim$`), true, true],
+  ['GET', new RegExp(`^/v1/products/${ID}/builds/latest[?]platform=win64$`), true, true],
+  ['POST', /^\/v1\/launch-tickets$/, true, true],
+];
+const MAX_BODY_BYTES = 16 * 1024;
+
+function findRoute(method, route, gamesEnabled) {
+  return ROUTES.find(([m, pattern, , gamesOnly]) => m === method && pattern.test(route) && (!gamesOnly || gamesEnabled));
+}
+
+async function request({ path: route, method = 'GET', body } = {}) {
+  const cfg = appConfig.get();
+  if (!cfg.platformApiUrl) {
+    return problem(0, 'not_configured', 'This build of OneEngine Store has no service address. Install the latest version from the download page.');
   }
+  const baseUrl = cfg.platformApiUrl;
+  if (typeof route !== 'string' || typeof method !== 'string') return problem(0, 'bad_request', 'Invalid request.');
+  const match = findRoute(method.toUpperCase(), route, cfg.gamesEnabled);
+  if (!match) return problem(0, 'not_allowed', 'That request is not available from the app.');
+  if (body !== undefined && JSON.stringify(body).length > MAX_BODY_BYTES) return problem(0, 'bad_request', 'The request is too large.');
+  const auth = match[2];
 
   let res;
   if (auth) {
@@ -125,28 +158,34 @@ async function request({ baseUrl, path: route, method = 'GET', body, auth = fals
 }
 
 function registerPlatformIpc() {
-  ipcMain.handle('platform-request', (_event, payload) => request(payload || {}));
+  const guarded = (handler) => (event, payload) =>
+    isTrustedSender(event) ? handler(payload) : problem(0, 'forbidden', 'Request refused.');
+
+  ipcMain.handle('platform-request', guarded((payload) => request(payload || {})));
 
   // Signs back in from the encrypted refresh token saved by an earlier run.
-  ipcMain.handle('platform-restore', async (_event, { baseUrl } = {}) => {
+  ipcMain.handle('platform-restore', guarded(async () => {
+    const baseUrl = appConfig.get().platformApiUrl;
+    if (!baseUrl) return { ok: false };
     if (!session) {
       stored = stored || loadStored();
       if (stored && stored.baseUrl === baseUrl) session = { baseUrl, access: '', accessExp: 0, refresh: stored.refresh };
     }
     if (!session || session.baseUrl !== baseUrl) return { ok: false };
     return { ok: await refresh(baseUrl) };
-  });
+  }));
 
-  ipcMain.handle('platform-sign-out', async (_event, { baseUrl } = {}) => {
+  ipcMain.handle('platform-sign-out', guarded(async () => {
+    const baseUrl = appConfig.get().platformApiUrl;
     const refreshToken = session && session.refresh;
-    if (refreshToken && typeof baseUrl === 'string') {
+    if (refreshToken && baseUrl) {
       await rawFetch(baseUrl, '/v1/auth/logout', 'POST', { refreshToken }, undefined, 4000);
     }
     session = null;
     stored = null;
     persist();
     return { ok: true };
-  });
+  }));
 }
 
-module.exports = { registerPlatformIpc };
+module.exports = { registerPlatformIpc, findRoute };

@@ -1,0 +1,33 @@
+name: CI
+
+# Typecheck and test on every push and pull request. Publishing is a separate, tag-triggered workflow.
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm run build
+      - run: npm test
+
+      - name: Platform API
+        working-directory: services/platform-api
+        run: |
+          npm ci
+          npm run typecheck
+          npm test

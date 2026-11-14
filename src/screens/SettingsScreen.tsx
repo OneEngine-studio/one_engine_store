@@ -15,7 +15,6 @@ import {
   RefreshCw,
 } from 'lucide-react';
 import { platformApi } from '../lib/platformApi';
-import { ServerAddressField } from '../components/ui/ServerAddressField';
 import { Switch } from '../components/ui/Switch';
 
 export const SettingsScreen: React.FC = () => {
@@ -28,6 +27,11 @@ export const SettingsScreen: React.FC = () => {
     isAuthenticated,
     currentUser,
     changePassword,
+    updateDisplayName,
+    logout,
+    gamesEnabled,
+    appVersion,
+    serviceConfigured,
   } = useStore();
 
   const [isEditingDir, setIsEditingDir] = useState(false);
@@ -37,6 +41,27 @@ export const SettingsScreen: React.FC = () => {
   const [newPw, setNewPw] = useState('');
   const [pwBusy, setPwBusy] = useState(false);
   const [pwError, setPwError] = useState<string | null>(null);
+  const [nameDraft, setNameDraft] = useState<string | null>(null);
+  const [nameBusy, setNameBusy] = useState(false);
+  const [nameError, setNameError] = useState<string | null>(null);
+
+  const handleSaveName = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const next = (nameDraft ?? '').trim();
+    if (next.length < 2 || next.length > 32) {
+      setNameError('Use 2 to 32 characters.');
+      return;
+    }
+    setNameBusy(true);
+    setNameError(null);
+    try {
+      const res = await updateDisplayName(next);
+      if (res.success) setNameDraft(null);
+      else setNameError(res.error || 'Could not save the name.');
+    } finally {
+      setNameBusy(false);
+    }
+  };
 
   const handleChangePassword = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -59,6 +84,14 @@ export const SettingsScreen: React.FC = () => {
     }
   };
 
+  const serviceHost = (() => {
+    try {
+      return new URL(platformApi.getUrl()).host;
+    } catch {
+      return '';
+    }
+  })();
+
   const [testing, setTesting] = useState(false);
   const [testResult, setTestResult] = useState<{ ok: boolean; message: string } | null>(null);
 
@@ -80,7 +113,7 @@ export const SettingsScreen: React.FC = () => {
 
   // Runtime verification
   const getRuntimeInfo = () =>
-    typeof window !== 'undefined' && window.electronAPI ? 'Desktop app' : 'Web browser (installing games is off)';
+    typeof window !== 'undefined' && window.electronAPI ? 'Desktop app' : 'Web browser (development preview)';
 
   const handleSaveDirectory = () => {
     const dir = customDir.trim();
@@ -193,6 +226,7 @@ export const SettingsScreen: React.FC = () => {
           </section>
 
           {/* Group: Storage & installation directory */}
+          {gamesEnabled && (
           <section className="win11-card rounded-[28px] p-6 space-y-4">
             <h2 className="text-sm font-semibold text-white flex items-center gap-2">
               <HardDrive className="w-4 h-4 text-accent" /> Installation directory
@@ -240,6 +274,8 @@ export const SettingsScreen: React.FC = () => {
             </div>
           </section>
 
+          )}
+
           {/* Group: Account */}
           {isAuthenticated && currentUser.id && (
             <section className="win11-card rounded-[28px] p-6 space-y-4">
@@ -247,9 +283,38 @@ export const SettingsScreen: React.FC = () => {
                 <Shield className="w-4 h-4 text-accent" /> Account
               </h2>
               <p className="text-xs text-slate-400 leading-relaxed">
-                Signed in as <span className="text-slate-200">{currentUser.email}</span>. Changing your password signs
-                you out of every other device.
+                Signed in as <span className="text-slate-200">{currentUser.email}</span>
+                {currentUser.emailVerified ? ' (email confirmed)' : ' (email not confirmed yet)'}. Changing your password
+                signs you out of every other device.
               </p>
+              <form onSubmit={handleSaveName} className="flex flex-wrap items-end gap-3" noValidate>
+                <div className="flex-1 min-w-[200px]">
+                  <label htmlFor="display-name" className="text-[11px] font-medium text-slate-400 block mb-1">
+                    Display name
+                  </label>
+                  <input
+                    id="display-name"
+                    type="text"
+                    maxLength={32}
+                    autoComplete="nickname"
+                    value={nameDraft ?? currentUser.callsign}
+                    onChange={(e) => setNameDraft(e.target.value)}
+                    className="w-full bg-bg-app border border-white/[0.08] focus:border-accent rounded-thumb px-3 py-1.5 text-xs text-slate-200 outline-none select-text"
+                  />
+                </div>
+                <button
+                  type="submit"
+                  disabled={nameBusy || nameDraft === null || nameDraft.trim() === currentUser.callsign}
+                  className="px-4 py-1.5 rounded-full bg-white/[0.06] hover:bg-white/[0.12] border border-white/[0.09] text-xs font-medium text-slate-200 disabled:opacity-50 transition-surface"
+                >
+                  {nameBusy ? 'Saving…' : 'Save name'}
+                </button>
+                {nameError && (
+                  <span role="alert" className="text-[11px] text-danger w-full">
+                    {nameError}
+                  </span>
+                )}
+              </form>
               <form onSubmit={handleChangePassword} className="grid grid-cols-1 md:grid-cols-2 gap-3" noValidate>
                 <div>
                   <label htmlFor="pw-current" className="text-[11px] font-medium text-slate-400 block mb-1">
@@ -294,6 +359,14 @@ export const SettingsScreen: React.FC = () => {
                   )}
                 </div>
               </form>
+              <div className="pt-3 border-t border-white/[0.06]">
+                <button
+                  onClick={logout}
+                  className="px-4 py-1.5 rounded-full bg-white/[0.04] hover:bg-white/[0.1] border border-white/[0.08] text-xs font-medium text-slate-200 transition-surface"
+                >
+                  Sign out
+                </button>
+              </div>
             </section>
           )}
 
@@ -317,15 +390,15 @@ export const SettingsScreen: React.FC = () => {
               Where your account, library, prices and game downloads come from, and where launch passes are issued.
             </p>
 
-            <div>
-              <label htmlFor="platform-settings-address" className="text-[11px] font-medium text-slate-400 block mb-1">
-                Service address
-              </label>
-              <ServerAddressField
-                id="platform-settings-address"
-                inputClassName="w-full bg-bg-app border border-white/[0.08] focus:border-accent rounded-thumb px-3 py-1.5 text-xs text-slate-200 outline-none select-text font-mono"
-              />
+            <div className="flex justify-between text-xs">
+              <span className="text-slate-400">Service</span>
+              <span className="text-slate-200 font-mono select-text">{serviceHost || 'Not configured'}</span>
             </div>
+            {!serviceConfigured && (
+              <p role="alert" className="text-[11px] text-danger leading-snug">
+                This build has no service address, so sign-in cannot work. Install the latest version from the download page.
+              </p>
+            )}
 
             {testResult && (
               <div className={`p-3 rounded-thumb text-xs flex items-center gap-2 ${
@@ -348,6 +421,7 @@ export const SettingsScreen: React.FC = () => {
         {/* Right Column: Maintenance & About */}
         <div className="space-y-6">
           {/* Maintenance diagnostics */}
+          {gamesEnabled && (
           <section className="win11-card rounded-[28px] p-6 space-y-5">
             <h2 className="text-sm font-semibold text-white flex items-center gap-2">
               <Activity className="w-4 h-4 text-accent" /> Maintenance
@@ -364,6 +438,7 @@ export const SettingsScreen: React.FC = () => {
             </div>
 
           </section>
+          )}
 
           {/* About & Runtime information */}
           <section className="win11-card rounded-[28px] p-6 space-y-4">
@@ -374,7 +449,7 @@ export const SettingsScreen: React.FC = () => {
             <div className="space-y-2 text-xs text-slate-400">
               <div className="flex justify-between">
                 <span>Client version</span>
-                <span className="text-white font-semibold tabular-nums">v{__APP_VERSION__}</span>
+                <span className="text-white font-semibold tabular-nums">v{appVersion || __APP_VERSION__}</span>
               </div>
               <div className="flex justify-between">
                 <span>Desktop runtime</span>

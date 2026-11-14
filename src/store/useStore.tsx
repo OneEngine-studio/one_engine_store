@@ -8,7 +8,7 @@ import {
   ClientNotification,
   ToastNotification,
 } from '../types/store';
-import { platformApi, PlatformError, type PlatformProduct, type PlatformUser } from '../lib/platformApi';
+import { platformApi, PlatformError, type AppInfo, type PlatformProduct, type PlatformUser } from '../lib/platformApi';
 import { recordPlayDay } from '../lib/playLog';
 import { LauncherBridge } from '../lib/launcherBridge';
 import type { InstallProgress, InstallRecord } from '../types/launcher';
@@ -88,12 +88,19 @@ export const DEFAULT_GUEST_USER: UserProfile = {
   id: '',
   callsign: 'Guest',
   email: '',
-  avatarUrl: 'https://api.dicebear.com/7.x/bottts/svg?seed=OneEngineGuest',
+  avatarUrl: initialsAvatar('Guest'),
   status: 'ONLINE',
   currentGame: undefined,
   ownedGameIds: [],
   emailVerified: false,
 };
+
+// A local avatar made from the display name: no third-party image service ever sees it.
+function initialsAvatar(name: string): string {
+  const initials = (name.trim().split(/s+/).map((w) => Array.from(w)[0] ?? '').join('').slice(0, 2) || '?').toUpperCase();
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" fill="#2a1a10"/><text x="32" y="41" font-family="Inter,Arial,sans-serif" font-size="26" font-weight="700" text-anchor="middle" fill="#ff9a3c">${initials.replace(/[<>&"']/g, '')}</text></svg>`;
+  return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
+}
 
 const profileFrom = (me: PlatformUser, library: PlatformProduct[]): UserProfile => ({
   ...DEFAULT_GUEST_USER,
@@ -101,7 +108,7 @@ const profileFrom = (me: PlatformUser, library: PlatformProduct[]): UserProfile 
   callsign: me.displayName,
   email: me.email,
   emailVerified: me.emailVerified,
-  avatarUrl: `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(me.displayName)}`,
+  avatarUrl: initialsAvatar(me.displayName),
   ownedGameIds: library.map((p) => p.productId),
 });
 
@@ -217,8 +224,13 @@ interface StoreContextType {
   catalogStatus: CatalogStatus;
   catalogError: string;
   refreshCatalog: () => void;
-  /** True inside the desktop app, where games can be installed and started. */
+  /** True inside the desktop app when this build includes game installs. */
   desktopAvailable: boolean;
+  /** Game download, install and play are a later release; this build ships with them switched off. */
+  gamesEnabled: boolean;
+  appVersion: string;
+  serviceConfigured: boolean;
+  updateDisplayName: (displayName: string) => Promise<AuthResult>;
   downloads: DownloadItem[];
   currentUser: UserProfile;
   searchQuery: string;
@@ -307,9 +319,22 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       downloadDirectory: typeof saved.downloadDirectory === 'string' ? saved.downloadDirectory : '',
       enableTactileAudio: saved.enableTactileAudio !== false,
       bandwidthLimitMBps: typeof saved.bandwidthLimitMBps === 'number' ? saved.bandwidthLimitMBps : 0,
-      platformApiUrl: platformApi.getUrl(),
     };
   });
+
+  // What this installation says about itself (version, service address, which features are switched on).
+  const [appInfo, setAppInfo] = useState<AppInfo | null>(null);
+  useEffect(() => {
+    let active = true;
+    void platformApi.init().then((info) => {
+      LauncherBridge.setEnabled(info.gamesEnabled);
+      if (active) setAppInfo(info);
+    });
+    return () => {
+      active = false;
+    };
+  }, []);
+  const gamesEnabled = !!appInfo?.gamesEnabled;
 
   const games = useMemo<Game[]>(
     () =>
@@ -377,7 +402,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     );
   };
 
-  // The catalog (titles, prices, discounts) is the server's; it is reloaded whenever the service address changes.
+  // The catalog (titles, prices, discounts) is the server's.
   useEffect(() => {
     let active = true;
     setCatalogStatus('loading');
@@ -397,7 +422,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     return () => {
       active = false;
     };
-  }, [settings.platformApiUrl, catalogTick]);
+  }, [catalogTick]);
 
   // Open the first game when the page has none selected yet.
   useEffect(() => {
@@ -410,7 +435,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     void LauncherBridge.defaultLibraryDir().then((dir) => {
       if (dir) setSettings((prev) => (prev.downloadDirectory ? prev : { ...prev, downloadDirectory: dir }));
     });
-  }, [settings.downloadDirectory]);
+  }, [settings.downloadDirectory, gamesEnabled]);
 
   // What is installed is read from the disk, never remembered.
   const rescanInstalls = async (dir: string) => {
@@ -423,7 +448,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   };
   useEffect(() => {
     void rescanInstalls(settings.downloadDirectory);
-  }, [settings.downloadDirectory]);
+  }, [settings.downloadDirectory, gamesEnabled]);
 
   // Sign back in on startup from the session the desktop app saved (encrypted) last time.
   useEffect(() => {
@@ -591,8 +616,14 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   };
 
   // ---------------------------------------------------------------- install / update
+  const GAMES_LATER = 'Game downloads and play arrive in a later update.';
+
   const startDownload = async (gameId: string) => {
     triggerSound('click');
+    if (!gamesEnabled) {
+      addToast(GAMES_LATER, 'info');
+      return;
+    }
     const game = gamesRef.current.find((g) => g.id === gameId);
     if (!game) return;
     if (!LauncherBridge.isAvailable()) {
@@ -715,6 +746,10 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   // ---------------------------------------------------------------- play
   const launchGame = async (gameId: string) => {
     triggerSound('click');
+    if (!gamesEnabled) {
+      addToast(GAMES_LATER, 'info');
+      return;
+    }
     if (!isAuthenticated || !currentUser.id) {
       triggerSound('alert');
       addToast('Sign in with your OneEngine account to play.', 'warning');
@@ -791,6 +826,10 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const purchaseGame = async (gameId: string): Promise<boolean> => {
     const target = gamesRef.current.find((g) => g.id === gameId);
     if (!target) return false;
+    if (!gamesEnabled) {
+      addToast(GAMES_LATER, 'info');
+      return false;
+    }
     if (!isAuthenticated) {
       triggerSound('alert');
       addToast('Sign in to add games to your library.', 'warning');
@@ -843,6 +882,18 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         profile.emailVerified ? `Account created. Welcome, ${profile.callsign}!` : 'Account created. Check your email for a code.',
         'success'
       );
+      return { success: true };
+    } catch (err) {
+      return failure(err);
+    }
+  };
+
+  const updateDisplayName = async (displayName: string): Promise<AuthResult> => {
+    triggerSound('click');
+    try {
+      const me = await platformApi.updateProfile(displayName);
+      setCurrentUser((prev) => ({ ...prev, callsign: me.displayName, avatarUrl: initialsAvatar(me.displayName) }));
+      addToast('Display name updated.', 'success');
       return { success: true };
     } catch (err) {
       return failure(err);
@@ -943,7 +994,6 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     triggerSound('click');
     setSettings((prev) => {
       const next = { ...prev, ...partial };
-      if (partial.platformApiUrl !== undefined) platformApi.setUrl(next.platformApiUrl);
       return next;
     });
     addToast('Preferences updated', 'info');
@@ -981,6 +1031,10 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         catalogError,
         refreshCatalog: () => setCatalogTick((n) => n + 1),
         desktopAvailable: LauncherBridge.isAvailable(),
+        gamesEnabled,
+        appVersion: appInfo?.version ?? '',
+        serviceConfigured: appInfo ? appInfo.serviceConfigured : true,
+        updateDisplayName,
         downloads,
         currentUser,
         isAuthenticated,

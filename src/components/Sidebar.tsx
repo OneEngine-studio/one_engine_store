@@ -5,6 +5,7 @@ import {
   Gamepad2,
   Download,
   BarChart3,
+  Users,
   Settings,
   Image as ImageIcon,
 } from 'lucide-react';
@@ -85,6 +86,7 @@ export const Sidebar: React.FC = () => {
       badge: activeDownloadCount > 0 ? activeDownloadCount : undefined,
     },
     { id: 'activity' as NavigationTab, label: 'Activity', icon: BarChart3 },
+    { id: 'community' as NavigationTab, label: 'Community (coming soon)', icon: Users },
   ];
 
   const current = activeTab === 'game-detail' ? 'store' : activeTab;

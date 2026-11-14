@@ -6,14 +6,20 @@ const subscribe = (channel, callback) => {
   return () => ipcRenderer.removeListener(channel, handler);
 };
 
+// Everything the page can do is listed here. Requests to the service go through a fixed set of routes in
+// the main process; the page never receives a token and cannot pick the address.
 contextBridge.exposeInMainWorld('electronAPI', {
   minimizeWindow: () => ipcRenderer.send('window-minimize'),
   maximizeWindow: () => ipcRenderer.send('window-maximize'),
   closeWindow: () => ipcRenderer.send('window-close'),
+  app: {
+    info: () => ipcRenderer.invoke('app-info'),
+    openExternal: (url) => ipcRenderer.invoke('open-external', url),
+  },
   platform: {
     request: (payload) => ipcRenderer.invoke('platform-request', payload),
-    restore: (payload) => ipcRenderer.invoke('platform-restore', payload),
-    signOut: (payload) => ipcRenderer.invoke('platform-sign-out', payload),
+    restore: () => ipcRenderer.invoke('platform-restore'),
+    signOut: () => ipcRenderer.invoke('platform-sign-out'),
   },
   library: {
     defaultDir: () => ipcRenderer.invoke('library-default-dir'),

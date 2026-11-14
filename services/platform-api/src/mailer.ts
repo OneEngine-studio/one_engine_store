@@ -20,9 +20,12 @@ export function makeMailer(cfg: Config, log: Logger): Mailer {
       },
     };
   }
+  // No mail server. The message body (which carries the code) is only ever written to the log outside
+  // production; in production nothing but the recipient and subject is recorded.
   return {
     async send(to, subject, text) {
-      log.info({ to, subject }, `[dev mail] ${text}`);
+      if (cfg.production) log.info({ to, subject }, '[mail not sent] SMTP_URL is not configured');
+      else log.info({ to, subject }, `[dev mail] ${text}`);
     },
   };
 }

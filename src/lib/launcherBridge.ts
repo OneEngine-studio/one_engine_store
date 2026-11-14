@@ -8,10 +8,17 @@ const api = () => (typeof window !== 'undefined' ? window.electronAPI : undefine
 
 const NEEDS_DESKTOP = 'Installing and playing games needs the OneEngine Store desktop app.';
 
+// Game download, install and launch are a later release: the desktop app reports whether this build has them.
+let enabled = false;
+
 export const LauncherBridge = {
-  /** True inside the desktop app, where games can be installed and started. */
+  setEnabled(value: boolean) {
+    enabled = value;
+  },
+
+  /** True inside the desktop app when this build includes game installs. */
   isAvailable(): boolean {
-    return !!api()?.library;
+    return enabled && !!api()?.library;
   },
 
   async defaultLibraryDir(): Promise<string> {

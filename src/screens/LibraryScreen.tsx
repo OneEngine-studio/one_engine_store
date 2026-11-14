@@ -3,6 +3,7 @@ import { useStore } from '../store/useStore';
 import { Game } from '../types/store';
 import { Search, Heart, LayoutGrid, Grid3X3, Columns, ArrowUpDown, List } from 'lucide-react';
 import { Cartridge } from '../components/ui/Cartridge';
+import { ComingSoon } from '../components/ui/ComingSoon';
 import { Pill } from '../components/ui/Pill';
 import { Shelf } from '../components/ui/Shelf';
 import { GameTable } from '../components/ui/GameTable';
@@ -20,6 +21,7 @@ export const LibraryScreen: React.FC = () => {
     runningGameId,
     launchingGameId,
     startDownload,
+    gamesEnabled,
     toggleFavorite,
     navigate,
     downloads,
@@ -51,6 +53,11 @@ export const LibraryScreen: React.FC = () => {
 
   return (
     <div className="p-8 space-y-8 max-w-7xl mx-auto w-full">
+      {!gamesEnabled && (
+        <ComingSoon title="Game library arrives in a later update">
+          Your account is ready. Adding games to your library, installing and playing them are not part of this version yet.
+        </ComingSoon>
+      )}
       {/* Page Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
@@ -191,6 +198,7 @@ export const LibraryScreen: React.FC = () => {
               <div className="relative">
                 <Cartridge
                   game={game}
+                  actionsDisabled={!gamesEnabled}
                   size={cardSize}
                   running={runningGameId === game.id}
                   progress={activeDownload?.progress}

@@ -231,6 +231,9 @@ async function download({ url, file, total, throttleBps, signal, onProgress }) {
   if (received !== total) throw new Error('The download ended early. Try again to continue it.');
 }
 
+// Builds are only fetched from the Platform API that signed the download link, never from an address the page names.
+let allowedDownloadOrigin = '';
+
 async function install({ gameId, libraryDir, build, throttleMBps }) {
   const root = libraryRoot(libraryDir);
   const dir = gameDir(root, gameId);
@@ -238,6 +241,9 @@ async function install({ gameId, libraryDir, build, throttleMBps }) {
   if (running.has(gameId)) throw new Error('Close the game before updating it.');
   if (!build || typeof build.downloadUrl !== 'string' || !/^https?:\/\//.test(build.downloadUrl)) {
     throw new Error('The service sent no download link.');
+  }
+  if (allowedDownloadOrigin && new URL(build.downloadUrl).origin !== new URL(allowedDownloadOrigin).origin) {
+    throw new Error('The download link does not belong to the OneEngine service and was refused.');
   }
   if (!SHA256.test(build.sha256 || '')) throw new Error('The service sent no checksum for this build.');
   if (!Number.isFinite(build.sizeBytes) || build.sizeBytes <= 0) throw new Error('The service sent no size for this build.');
@@ -366,10 +372,12 @@ function launch({ libraryDir, gameId, ticket, playerName, userId }) {
   });
 }
 
-function registerInstallerIpc(windowGetter) {
+function registerInstallerIpc(windowGetter, { isTrustedSender = () => true, downloadOrigin = '' } = {}) {
   getWindow = windowGetter;
+  allowedDownloadOrigin = downloadOrigin;
 
-  const guard = (fn) => async (_event, payload) => {
+  const guard = (fn) => async (event, payload) => {
+    if (!isTrustedSender(event)) return { ok: false, status: 'error', success: false, message: 'Request refused.' };
     try {
       return await fn(payload || {});
     } catch (err) {
@@ -377,7 +385,7 @@ function registerInstallerIpc(windowGetter) {
     }
   };
 
-  ipcMain.handle('library-default-dir', () => defaultLibraryDir());
+  ipcMain.handle('library-default-dir', (event) => (isTrustedSender(event) ? defaultLibraryDir() : ''));
 
   ipcMain.handle(
     'library-scan',
@@ -394,7 +402,7 @@ function registerInstallerIpc(windowGetter) {
   );
 
   ipcMain.handle('install-game', guard((payload) => install(payload)));
-  ipcMain.handle('install-pause', (_e, { gameId } = {}) => stopJob(gameId, 'pause'));
+  ipcMain.handle('install-pause', (event, { gameId } = {}) => isTrustedSender(event) && stopJob(gameId, 'pause'));
   // A running download is stopped; a paused one has no job, so its partial file is deleted here.
   ipcMain.handle(
     'install-cancel',
@@ -438,7 +446,8 @@ function registerInstallerIpc(windowGetter) {
 
   ipcMain.handle('launch-game', guard((payload) => launch(payload)));
 
-  ipcMain.handle('kill-game', (_e, { gameId } = {}) => {
+  ipcMain.handle('kill-game', (event, { gameId } = {}) => {
+    if (!isTrustedSender(event)) return false;
     const child = running.get(gameId);
     if (!child) return false;
     return child.kill();

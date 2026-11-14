@@ -1,16 +1,27 @@
 // Client for the OneEngine Platform API (services/platform-api).
 // Ownership, prices and launch tickets are decided by the server; this file only asks.
 //
-// Inside the desktop app every call goes through the main process, which holds the tokens (see
-// electron/platform.cjs). The in-memory fallback below exists only so the UI can be opened in a plain
-// browser during development; it keeps tokens in memory and never writes them to storage.
+// Inside the desktop app every call goes through the main process, which holds the tokens, decides the
+// service address and only forwards a fixed set of routes (see electron/platform.cjs). The in-memory
+// fallback below exists only so the UI can be opened in a plain browser during development; it keeps
+// tokens in memory and never writes them to storage.
 
-const URL_KEY = 'oneengine_platform_url';
 const EMAIL_KEY = 'oneengine_last_email';
 const DEVICE_KEY = 'oneengine_device_id';
 
-export const DEFAULT_PLATFORM_URL: string =
-  (import.meta.env.VITE_PLATFORM_API_URL as string | undefined) || 'http://127.0.0.1:8080';
+/** Facts the desktop app's main process reports about this installation. */
+export interface AppInfo {
+  version: string;
+  /** False when the build carries no usable service address. */
+  serviceConfigured: boolean;
+  serviceUrl: string;
+  /** Game download, install and launch are part of a later release and ship switched off. */
+  gamesEnabled: boolean;
+}
+
+// Only a development server may fall back to a local address. A production page with no address says so.
+const BROWSER_DEV_URL: string =
+  (import.meta.env.VITE_PLATFORM_API_URL as string | undefined) || (import.meta.env.DEV ? 'http://127.0.0.1:8080' : '');
 
 export interface PlatformPrice {
   currency: string;
@@ -78,19 +89,6 @@ const writeStorage = (key: string, value: string) => {
   }
 };
 
-/** Accepts "host:8080" or a full URL; returns an origin with an optional path, or null. */
-export function normalizePlatformUrl(input: string): string | null {
-  const text = input.trim();
-  if (!text) return null;
-  try {
-    const url = new URL(/^[a-z][a-z0-9+.-]*:\/\//i.test(text) ? text : `http://${text}`);
-    if (url.protocol !== 'http:' && url.protocol !== 'https:') return null;
-    return `${url.origin}${url.pathname.replace(/\/+$/, '')}`;
-  } catch {
-    return null;
-  }
-}
-
 type Reply = { status: number; data: Record<string, unknown> };
 interface CallOptions {
   method?: string;
@@ -100,24 +98,43 @@ interface CallOptions {
 }
 
 class PlatformApi {
-  private baseUrl = normalizePlatformUrl(readStorage(URL_KEY)) || DEFAULT_PLATFORM_URL;
+  private info: AppInfo | null = null;
+  private infoPromise: Promise<AppInfo> | null = null;
 
   // Browser-only fallback state (never used inside the desktop app)
   private mem: { access: string; accessExp: number; refresh: string } | null = null;
 
-  getUrl() {
-    return this.baseUrl;
+  /** Loads (once) what the installation says about itself: version, service address, feature switches. */
+  init(): Promise<AppInfo> {
+    this.infoPromise ??= (async () => {
+      const bridge = typeof window !== 'undefined' ? window.electronAPI?.app : undefined;
+      let info: AppInfo | null = null;
+      try {
+        info = bridge ? await bridge.info() : null;
+      } catch {
+        info = null;
+      }
+      this.info = info ?? {
+        version: __APP_VERSION__,
+        serviceConfigured: !!BROWSER_DEV_URL,
+        serviceUrl: BROWSER_DEV_URL,
+        gamesEnabled: !bridge && import.meta.env.VITE_ENABLE_GAMES === 'true',
+      };
+      return this.info;
+    })();
+    return this.infoPromise;
   }
 
-  setUrl(input: string): boolean {
-    const url = normalizePlatformUrl(input);
-    if (!url) return false;
-    if (url !== this.baseUrl) {
-      this.baseUrl = url;
-      writeStorage(URL_KEY, url);
-      this.mem = null;
-    }
-    return true;
+  /** The service address in use, or '' before init() has finished or when the build has none. */
+  getUrl(): string {
+    return this.info?.serviceUrl ?? '';
+  }
+
+  /** Opens an https link in the system browser (desktop app) or a new tab (plain browser). */
+  async openExternal(url: string): Promise<void> {
+    const bridge = typeof window !== 'undefined' ? window.electronAPI?.app : undefined;
+    if (bridge) await bridge.openExternal(url);
+    else window.open(url, '_blank', 'noopener,noreferrer');
   }
 
   /** The email used last time, to prefill the sign-in form. */
@@ -139,7 +156,7 @@ class PlatformApi {
     const ctrl = new AbortController();
     const timer = setTimeout(() => ctrl.abort(), timeoutMs);
     try {
-      const res = await fetch(`${this.baseUrl}${path}`, {
+      const res = await fetch(`${this.getUrl()}${path}`, {
         method,
         headers: {
           ...(body !== undefined ? { 'content-type': 'application/json' } : {}),
@@ -163,8 +180,8 @@ class PlatformApi {
           error: {
             code: timedOut ? 'timeout' : 'unreachable',
             message: timedOut
-              ? `The OneEngine service at ${this.baseUrl} did not answer in time.`
-              : `Can't reach the OneEngine service at ${this.baseUrl}. Check the address and your connection.`,
+              ? 'The OneEngine service did not answer in time.'
+              : "Can't reach the OneEngine service. Check your internet connection and try again.",
           },
         },
       };
@@ -191,8 +208,12 @@ class PlatformApi {
   }
 
   private async send(path: string, { method = 'GET', body, auth = false, timeoutMs = 10000 }: CallOptions): Promise<Reply> {
+    await this.init();
     const bridge = typeof window !== 'undefined' ? window.electronAPI?.platform : undefined;
-    if (bridge) return bridge.request({ baseUrl: this.baseUrl, path, method, body, auth });
+    if (bridge) return bridge.request({ path, method, body });
+    if (!this.getUrl()) {
+      return { status: 0, data: { error: { code: 'not_configured', message: 'This build of OneEngine Store has no service address.' } } };
+    }
 
     if (!auth) {
       const res = await this.browserFetch(path, method, body, '', timeoutMs);
@@ -241,13 +262,13 @@ class PlatformApi {
   async restore(): Promise<boolean> {
     const bridge = typeof window !== 'undefined' ? window.electronAPI?.platform : undefined;
     if (!bridge) return false;
-    return (await bridge.restore({ baseUrl: this.baseUrl })).ok;
+    return (await bridge.restore()).ok;
   }
 
   async logout(): Promise<void> {
     const bridge = typeof window !== 'undefined' ? window.electronAPI?.platform : undefined;
     if (bridge) {
-      await bridge.signOut({ baseUrl: this.baseUrl });
+      await bridge.signOut();
       return;
     }
     const refreshToken = this.mem?.refresh;
@@ -295,6 +316,10 @@ class PlatformApi {
 
   async me(): Promise<PlatformUser> {
     return this.call<PlatformUser>('/v1/me', { auth: true });
+  }
+
+  async updateProfile(displayName: string): Promise<PlatformUser> {
+    return this.call<PlatformUser>('/v1/me', { method: 'PATCH', body: { displayName }, auth: true });
   }
 
   async library(): Promise<PlatformProduct[]> {

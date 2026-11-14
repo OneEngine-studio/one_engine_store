@@ -11,16 +11,18 @@ export interface ElectronAPI {
   minimizeWindow: () => void;
   maximizeWindow: () => void;
   closeWindow: () => void;
+  app: {
+    info: () => Promise<{ version: string; serviceConfigured: boolean; serviceUrl: string; gamesEnabled: boolean }>;
+    openExternal: (url: string) => Promise<boolean>;
+  };
   platform: {
     request: (payload: {
-      baseUrl: string;
       path: string;
       method?: string;
       body?: unknown;
-      auth?: boolean;
     }) => Promise<{ status: number; data: Record<string, unknown> }>;
-    restore: (payload: { baseUrl: string }) => Promise<{ ok: boolean }>;
-    signOut: (payload: { baseUrl: string }) => Promise<{ ok: boolean }>;
+    restore: () => Promise<{ ok: boolean }>;
+    signOut: () => Promise<{ ok: boolean }>;
   };
   library: {
     defaultDir: () => Promise<string>;

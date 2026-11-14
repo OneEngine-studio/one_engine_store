@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { useStore } from '../store/useStore';
 import { X, LogOut, AlertCircle, Eye, EyeOff, MailCheck } from 'lucide-react';
 import { platformApi } from '../lib/platformApi';
-import { ServerAddressField } from './ui/ServerAddressField';
 
 type View = 'signin' | 'register' | 'forgot' | 'reset';
 type ServerStatus = 'CHECKING' | 'ONLINE' | 'OFFLINE';
@@ -69,12 +68,12 @@ export const AuthModal: React.FC = () => {
     forgotPassword,
     resetPassword,
     logout,
-    settings,
   } = useStore();
 
   const [view, setView] = useState<View>('signin');
   const [email, setEmail] = useState(() => platformApi.lastEmail());
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [displayName, setDisplayName] = useState('');
   const [code, setCode] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -120,7 +119,7 @@ export const AuthModal: React.FC = () => {
     return () => {
       isMounted = false;
     };
-  }, [isAuthModalOpen, settings.platformApiUrl]);
+  }, [isAuthModalOpen]);
 
   useEffect(() => {
     if (resendWait <= 0) return;
@@ -143,6 +142,7 @@ export const AuthModal: React.FC = () => {
     setErrorMessage(null);
     setNotice(null);
     setPassword('');
+    setConfirmPassword('');
     setCode('');
   };
 
@@ -176,11 +176,16 @@ export const AuthModal: React.FC = () => {
       });
     }
     if (view === 'register') {
-      if (displayName.trim().length < 2) return setErrorMessage('Pick a callsign of at least 2 characters.');
-      if (!email.trim()) return setErrorMessage('Enter your email address.');
+      const name = displayName.trim();
+      if (name.length < 2 || name.length > 32 || !/^[\p{L}\p{N} _.-]+$/u.test(name)) {
+        return setErrorMessage('Pick a callsign of 2 to 32 letters, numbers, spaces, dots, dashes or underscores.');
+      }
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) return setErrorMessage('Enter a valid email address.');
       if (password.length < 8) return setErrorMessage('Use a password of at least 8 characters.');
-      return run(() => register(email.trim(), password, displayName.trim()), () => {
+      if (password !== confirmPassword) return setErrorMessage('The two passwords do not match.');
+      return run(() => register(email.trim(), password, name), () => {
         setPassword('');
+        setConfirmPassword('');
         setCloseWhenReady(true);
       });
     }
@@ -193,6 +198,7 @@ export const AuthModal: React.FC = () => {
     }
     if (!/^\d{6}$/.test(code.trim())) return setErrorMessage('Enter the 6 digit code from the email.');
     if (password.length < 8) return setErrorMessage('Use a new password of at least 8 characters.');
+    if (password !== confirmPassword) return setErrorMessage('The two passwords do not match.');
     return run(() => resetPassword(email.trim(), code.trim(), password), () => {
       go('signin');
       setNotice('Password changed. Sign in with the new one.');
@@ -225,14 +231,21 @@ export const AuthModal: React.FC = () => {
     </button>
   );
 
-  const passwordField = (id: string, label: string, autoComplete: string, hint?: string) => (
+  const passwordField = (
+    id: string,
+    label: string,
+    autoComplete: string,
+    hint?: string,
+    value = password,
+    setValue: (v: string) => void = setPassword
+  ) => (
     <Field id={id} label={label} hint={hint}>
       <div className="relative">
         <input
           id={id}
           type={showPassword ? 'text' : 'password'}
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
+          value={value}
+          onChange={(e) => setValue(e.target.value)}
           autoComplete={autoComplete}
           maxLength={128}
           className={`${inputClass} pr-11`}
@@ -463,6 +476,7 @@ export const AuthModal: React.FC = () => {
                   </Field>
                   {emailField()}
                   {passwordField('auth-password', 'Password', 'new-password', 'At least 8 characters.')}
+                  {passwordField('auth-confirm', 'Confirm password', 'new-password', undefined, confirmPassword, setConfirmPassword)}
                 </>
               ) : view === 'forgot' ? (
                 emailField()
@@ -471,6 +485,7 @@ export const AuthModal: React.FC = () => {
                   {emailField(true)}
                   {codeField}
                   {passwordField('auth-password', 'New password', 'new-password', 'At least 8 characters.')}
+                  {passwordField('auth-confirm', 'Confirm new password', 'new-password', undefined, confirmPassword, setConfirmPassword)}
                 </>
               )}
             </div>
@@ -528,14 +543,16 @@ export const AuthModal: React.FC = () => {
 
             {showServerDetails && (
               <div className="rounded-input border border-white/[0.08] p-3.5 text-xs space-y-2.5 animate-soft-enter">
-                <label htmlFor="nk-address" className="text-[11px] text-slate-400 block">
-                  Service address
-                </label>
-                <ServerAddressField
-                  id="nk-address"
-                  inputClassName={`${inputClass} font-mono text-xs py-1.5`}
-                  onApplied={recheck}
-                />
+                <div className="flex items-center justify-between gap-3">
+                  <span className="text-[11px] text-slate-400">OneEngine service</span>
+                  <button
+                    type="button"
+                    onClick={recheck}
+                    className="text-[11px] text-accent hover:text-accent-hover cursor-default"
+                  >
+                    Check again
+                  </button>
+                </div>
                 {serverStatus === 'OFFLINE' && serverMessage && (
                   <p role="status" className="text-[11px] text-slate-400 leading-snug">
                     {serverMessage}

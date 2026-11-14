@@ -2,7 +2,8 @@ import { describe, expect, it } from 'vitest';
 import { loadConfig } from '../src/config.js';
 import { openDb } from '../src/db.js';
 import { buildServer } from '../src/server.js';
-import type { Mailer } from '../src/mailer.js';
+import { makeMailer, type Mailer } from '../src/mailer.js';
+import { legacyScryptHash, needsRehash } from '../src/passwords.js';
 
 const env = { PASSWORD_COST: '1024', REQUIRE_EMAIL_VERIFICATION: 'true', LOG_LEVEL: 'silent' };
 const GOOD = 'correct horse battery';
@@ -51,7 +52,7 @@ describe('registration', () => {
     const ctx = setup();
     await register(ctx);
     const row = ctx.db.prepare('SELECT password_hash FROM credentials').get() as { password_hash: string };
-    expect(row.password_hash.startsWith('scrypt$')).toBe(true);
+    expect(row.password_hash.startsWith('$argon2id$')).toBe(true);
     expect(row.password_hash).not.toContain(GOOD);
   });
 
@@ -108,6 +109,38 @@ describe('login', () => {
     ctx.db.exec('DELETE FROM email_codes; DELETE FROM refresh_tokens; DELETE FROM credentials; DELETE FROM accounts;');
     const me = await ctx.app.inject({ method: 'GET', url: '/v1/me', headers: { authorization: `Bearer ${body.accessToken}` } });
     expect(me.statusCode).toBe(401);
+  });
+});
+
+describe('password hashing', () => {
+  it('still accepts an older scrypt hash and upgrades it to Argon2id on sign-in', async () => {
+    const ctx = setup();
+    const { body } = await register(ctx, 'legacy@example.com');
+    ctx.db.prepare('UPDATE credentials SET password_hash = ? WHERE user_id = ?').run(await legacyScryptHash(GOOD), body.user.userId);
+    expect(needsRehash((ctx.db.prepare('SELECT password_hash h FROM credentials').get() as { h: string }).h, 1024)).toBe(true);
+
+    expect((await post(ctx, '/v1/auth/login', { email: 'legacy@example.com', password: 'wrong password here' })).statusCode).toBe(401);
+    expect((await post(ctx, '/v1/auth/login', { email: 'legacy@example.com', password: GOOD })).statusCode).toBe(200);
+
+    const after = (ctx.db.prepare('SELECT password_hash h FROM credentials').get() as { h: string }).h;
+    expect(after.startsWith('$argon2id$')).toBe(true);
+    expect((await post(ctx, '/v1/auth/login', { email: 'legacy@example.com', password: GOOD })).statusCode).toBe(200);
+  });
+});
+
+describe('profile', () => {
+  const patch = (ctx: Ctx, payload: unknown, token?: string) =>
+    ctx.app.inject({ method: 'PATCH', url: '/v1/me', payload: payload as object, headers: token ? { authorization: `Bearer ${token}` } : {} });
+
+  it('lets a signed-in player change their display name and nothing else', async () => {
+    const ctx = setup();
+    const { body } = await register(ctx);
+    expect((await patch(ctx, { displayName: 'Nova' })).statusCode).toBe(401);
+    const ok = await patch(ctx, { displayName: '  Nova Prime ', email: 'evil@example.com', emailVerified: true }, body.accessToken);
+    expect(ok.statusCode).toBe(200);
+    expect(ok.json()).toMatchObject({ displayName: 'Nova Prime', email: 'new@example.com', emailVerified: false });
+    expect((await patch(ctx, { displayName: 'x' }, body.accessToken)).statusCode).toBe(400);
+    expect((await patch(ctx, { displayName: '<script>' }, body.accessToken)).statusCode).toBe(400);
   });
 });
 
@@ -227,6 +260,27 @@ describe('password reset and change', () => {
     expect(ok.json().refreshToken).toBeTruthy();
     expect((await post(ctx, '/v1/auth/refresh', { refreshToken: body.refreshToken })).statusCode).toBe(401);
     expect((await post(ctx, '/v1/auth/refresh', { refreshToken: ok.json().refreshToken })).statusCode).toBe(200);
+  });
+});
+
+describe('mail without a server', () => {
+  const logged: string[] = [];
+  const log = { info: (obj: unknown, msg?: string) => logged.push(JSON.stringify(obj) + (msg ?? '')), error: () => {} };
+
+  it('writes the code to the log in development only', async () => {
+    logged.length = 0;
+    await makeMailer(loadConfig({ ...env }), log).send('a@example.com', 'Subject', 'Your code is 123456');
+    expect(logged.join(' ')).toContain('123456');
+  });
+
+  it('never writes it in production', async () => {
+    logged.length = 0;
+    const prod = loadConfig({
+      NODE_ENV: 'production', JWT_SECRET: 'j'.repeat(40), PLATFORM_SERVICE_KEY: 's'.repeat(40),
+      PLATFORM_DOWNLOAD_KEY: 'd'.repeat(40), REQUIRE_EMAIL_VERIFICATION: 'false', LOG_LEVEL: 'silent',
+    });
+    await makeMailer(prod, log).send('a@example.com', 'Subject', 'Your code is 123456');
+    expect(logged.join(' ')).not.toContain('123456');
   });
 });
 

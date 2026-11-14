@@ -4,7 +4,7 @@ import type { DatabaseSync } from 'node:sqlite';
 import { z } from 'zod';
 import type { Config } from './config.js';
 import { signAccessToken } from './auth.js';
-import { hashPassword, passwordProblem, verifyPassword } from './passwords.js';
+import { hashPassword, needsRehash, passwordProblem, verifyPassword } from './passwords.js';
 import { resetMail, verificationMail, type Mailer } from './mailer.js';
 import { RateLimiter } from './tickets.js';
 
@@ -36,12 +36,13 @@ const sha256 = (value: string) => createHash('sha256').update(value).digest('hex
 
 const email = z.string().trim().toLowerCase().email().max(254);
 const password = z.string().min(1).max(128);
-const displayName = z
+export const displayNameSchema = z
   .string()
   .trim()
   .min(2)
   .max(32)
   .regex(/^[\p{L}\p{N} _.-]+$/u, 'Use letters, numbers, spaces, dots, dashes and underscores.');
+const displayName = displayNameSchema;
 const code = z.string().trim().regex(/^\d{6}$/);
 
 export function registerAccountRoutes(app: FastifyInstance, { cfg, db, mailer, now, requireUser }: Deps) {
@@ -194,6 +195,11 @@ export function registerAccountRoutes(app: FastifyInstance, { cfg, db, mailer, n
     const ok = await verifyPassword(pw, row?.password_hash ?? (await dummy()));
     if (!row || !row.password_hash || !ok) return fail(reply, 401, 'invalid_credentials', 'Wrong email or password.');
     if (row.status !== 'active') return fail(reply, 403, 'account_suspended', 'This account is suspended.');
+    if (needsRehash(row.password_hash, cfg.passwordCost)) {
+      // Older accounts and lower-cost hashes are upgraded to the current Argon2id settings now that the password is known.
+      const upgraded = await hashPassword(pw, cfg.passwordCost);
+      db.prepare("UPDATE credentials SET password_hash = ?, updated_at = datetime('now') WHERE user_id = ?").run(upgraded, row.user_id);
+    }
     return issueSession(row);
   });
 

@@ -7,7 +7,7 @@ import type { DatabaseSync } from 'node:sqlite';
 import { z } from 'zod';
 import type { Config } from './config.js';
 import { makeVerifier, signAccessToken, type AuthUser, type TokenVerifier } from './auth.js';
-import { registerAccountRoutes } from './accounts.js';
+import { displayNameSchema, registerAccountRoutes } from './accounts.js';
 import { makeMailer, type Mailer } from './mailer.js';
 import { RateLimiter, TicketStore } from './tickets.js';
 
@@ -193,6 +193,18 @@ export function buildServer({ cfg, db, tickets, verify, mailer, now = Date.now }
       emailVerified: !!row.email_verified,
       displayName: row.display_name,
     };
+  });
+
+  app.patch('/v1/me', { preHandler: requireUser }, async (req, reply) => {
+    const parsed = z.object({ displayName: displayNameSchema }).safeParse(req.body);
+    if (!parsed.success) {
+      return fail(reply, 400, 'bad_request', parsed.error.issues[0]?.message || 'Enter a display name of 2 to 32 characters.');
+    }
+    db.prepare('UPDATE accounts SET display_name = ? WHERE user_id = ?').run(parsed.data.displayName, req.user!.sub);
+    const row = db.prepare('SELECT user_id, email, email_verified, display_name FROM accounts WHERE user_id = ?').get(
+      req.user!.sub
+    ) as { user_id: string; email: string; email_verified: number; display_name: string };
+    return { userId: row.user_id, email: row.email, emailVerified: !!row.email_verified, displayName: row.display_name };
   });
 
   app.get('/v1/library', { preHandler: requireUser }, async (req) => {

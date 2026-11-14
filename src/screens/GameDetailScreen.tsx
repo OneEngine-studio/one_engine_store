@@ -29,6 +29,7 @@ export const GameDetailScreen: React.FC = () => {
     toggleFavorite,
     uninstallGame,
     purchaseGame,
+    gamesEnabled,
     currentUser,
     downloads,
     addToast,
@@ -73,6 +74,21 @@ export const GameDetailScreen: React.FC = () => {
 
   // Single primary CTA driven by state
   const renderPrimaryAction = () => {
+    if (!gamesEnabled) {
+      return (
+        <div className="space-y-2">
+          <button
+            disabled
+            className="w-full h-12 flex items-center justify-center gap-2 bg-white/[0.06] border border-white/[0.09] text-slate-300 font-semibold text-sm rounded-full cursor-default"
+          >
+            <span>Coming soon</span>
+          </button>
+          <p className="text-[11px] text-slate-400 text-center leading-snug">
+            Downloads and play arrive in a later update.
+          </p>
+        </div>
+      );
+    }
     if (isRunning) {
       return (
         <div className="flex items-center gap-2 w-full">

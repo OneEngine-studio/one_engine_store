@@ -28,6 +28,7 @@ export const StoreScreen: React.FC = () => {
     launchGame,
     stopGame,
     startDownload,
+    gamesEnabled,
     runningGameId,
   } = useStore();
 
@@ -65,6 +66,7 @@ export const StoreScreen: React.FC = () => {
     onPlay: () => launchGame(g.id),
     onStop: () => stopGame(g.id),
     onInstall: () => startDownload(g.id),
+    actionsDisabled: !gamesEnabled,
   });
 
   return (

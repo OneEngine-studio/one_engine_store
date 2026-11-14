@@ -24,6 +24,8 @@ interface CartridgeProps {
   onPlay?: () => void;
   onStop?: () => void;
   onInstall?: () => void;
+  /** Hides the install / play control (this build has no game installs). */
+  actionsDisabled?: boolean;
 }
 
 export const Cartridge: React.FC<CartridgeProps> = ({
@@ -36,6 +38,7 @@ export const Cartridge: React.FC<CartridgeProps> = ({
   onPlay,
   onStop,
   onInstall,
+  actionsDisabled,
 }) => {
   const ref = useRef<HTMLDivElement>(null);
   const w = WIDTHS[size];
@@ -188,6 +191,7 @@ export const Cartridge: React.FC<CartridgeProps> = ({
           </div>
 
           {/* action lever pops out on hover */}
+          {!actionsDisabled && (
           <button
             onClick={(e) => {
               e.stopPropagation();
@@ -207,6 +211,7 @@ export const Cartridge: React.FC<CartridgeProps> = ({
             {action === 'install' && <Download className="w-3.5 h-3.5" />}
             {action === 'play' ? 'Insert & play' : action === 'stop' ? 'Eject' : game.installed ? 'Update' : 'Install'}
           </button>
+          )}
         </div>
       </div>
 

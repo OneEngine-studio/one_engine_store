@@ -16,7 +16,7 @@ export interface Config {
   mailFrom: string;
   /** Players must confirm their email before they can get a game, download it or start it. */
   requireVerifiedEmail: boolean;
-  /** scrypt cost (N). Lower only in tests. */
+  /** Argon2id memory cost in KiB. Lower only in tests. */
   passwordCost: number;
   corsOrigins: string[];
   logLevel: string;
@@ -28,7 +28,8 @@ export const DEV_DEFAULTS = {
   downloadKey: 'dev-download-key-change-me',
 };
 
-export const MIN_PASSWORD_COST = 2 ** 15;
+// 19 MiB is the OWASP minimum for Argon2id with a time cost of 2 or more.
+export const MIN_PASSWORD_COST = 19 * 1024;
 
 export function loadConfig(env: Record<string, string | undefined> = process.env): Config {
   const production = env.NODE_ENV === 'production';
@@ -51,7 +52,7 @@ export function loadConfig(env: Record<string, string | undefined> = process.env
     mailFrom: env.MAIL_FROM ?? 'OneEngine <no-reply@localhost>',
     requireVerifiedEmail:
       env.REQUIRE_EMAIL_VERIFICATION === undefined ? production : env.REQUIRE_EMAIL_VERIFICATION === 'true',
-    passwordCost: Number(env.PASSWORD_COST ?? 2 ** 16),
+    passwordCost: Number(env.PASSWORD_COST ?? 64 * 1024),
     logLevel: env.LOG_LEVEL ?? 'info',
     corsOrigins: (env.CORS_ORIGINS ?? 'http://localhost:1420').split(',').map((s) => s.trim()).filter(Boolean),
   };

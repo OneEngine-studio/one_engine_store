@@ -55,14 +55,13 @@ export interface UserProfile {
   emailVerified: boolean;
 }
 
-export type NavigationTab = 'store' | 'game-detail' | 'library' | 'downloads' | 'activity' | 'settings';
+export type NavigationTab = 'store' | 'game-detail' | 'library' | 'downloads' | 'activity' | 'community' | 'settings';
 
 export interface AppSettings {
   downloadDirectory: string;
   enableTactileAudio: boolean;
   /** Download speed cap in MB/s; 0 means no cap. */
   bandwidthLimitMBps: number;
-  platformApiUrl: string;
 }
 
 export interface ClientNotification {

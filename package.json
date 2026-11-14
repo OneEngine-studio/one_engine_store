@@ -10,6 +10,9 @@
     "preview": "vite preview",
     "tauri": "tauri",
     "electron:dev": "concurrently -k \"vite\" \"wait-on tcp:1420 && electron .\"",
+    "typecheck": "tsc --noEmit",
+    "test": "node --test \"test/*.test.cjs\"",
+    "predist": "node scripts/write-app-config.cjs",
     "dist": "npm run build && electron-builder --win --publish never"
   },
   "dependencies": {
@@ -71,7 +74,11 @@
       "oneClick": false,
       "perMachine": false,
       "allowToChangeInstallationDirectory": true,
-      "shortcutName": "OneEngine Store"
+      "createStartMenuShortcut": true,
+      "createDesktopShortcut": true,
+      "shortcutName": "OneEngine Store",
+      "uninstallDisplayName": "OneEngine Store",
+      "deleteAppDataOnUninstall": false
     }
   }
 }

@@ -3,6 +3,7 @@ import { useStore } from '../store/useStore';
 import { Pause, Play, X, HardDrive, Activity, CheckCircle, Clock, Sliders, AlertTriangle, RotateCcw } from 'lucide-react';
 import { NumberTicker } from '../components/ui/NumberTicker';
 import type { DownloadItem } from '../types/store';
+import { ComingSoon } from '../components/ui/ComingSoon';
 
 const MB = 1024 * 1024;
 const GB = 1024 * MB;
@@ -53,6 +54,7 @@ export const DownloadsScreen: React.FC = () => {
     settings,
     updateSettings,
     launchGame,
+    gamesEnabled,
     navigate,
   } = useStore();
 
@@ -91,6 +93,11 @@ export const DownloadsScreen: React.FC = () => {
 
   return (
     <div className="p-8 space-y-8 max-w-7xl mx-auto w-full">
+      {!gamesEnabled && (
+        <ComingSoon title="Downloads arrive in a later update">
+          Game downloads and installs are not part of this version yet. Nothing is being downloaded.
+        </ComingSoon>
+      )}
       {/* Throttle bandwidth modal */}
       {showThrottleModal && (
         <div

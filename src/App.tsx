@@ -11,6 +11,7 @@ import { LibraryScreen } from './screens/LibraryScreen';
 import { DownloadsScreen } from './screens/DownloadsScreen';
 import { SettingsScreen } from './screens/SettingsScreen';
 import { ActivityScreen } from './screens/ActivityScreen';
+import { CommunityScreen } from './screens/CommunityScreen';
 import { BottomDock } from './components/BottomDock';
 import { GAME_AMBIENT_COLORS, DEFAULT_AMBIENT } from './lib/ambientColor';
 
@@ -83,6 +84,8 @@ const MainViewport: React.FC = () => {
         return <LibraryScreen />;
       case 'downloads':
         return <DownloadsScreen />;
+      case 'community':
+        return <CommunityScreen />;
       case 'activity':
         return <ActivityScreen />;
       case 'settings':
