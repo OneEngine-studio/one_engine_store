@@ -85,6 +85,8 @@ export const WindowFrame: React.FC = () => {
       >
         <button
           onClick={() => setCommandPaletteOpen(true)}
+          aria-label="Search games (Ctrl+K or /)"
+          title="Search games (Ctrl+K or /)"
           className="w-full bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.09] hover:border-white/[0.18] rounded-full px-4 py-1.5 flex items-center justify-between text-xs text-slate-300 hover:text-white transition-surface cursor-default shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06)]"
         >
           <div className="flex items-center gap-2.5">
