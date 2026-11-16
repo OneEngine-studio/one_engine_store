@@ -1,6 +1,6 @@
 import React from 'react';
 import { useStore } from '../store/useStore';
-import { Bell, Check, Sparkles, HardDrive } from 'lucide-react';
+import { Bell, BellOff, Check, Sparkles, HardDrive } from 'lucide-react';
 
 interface NotificationPopoverProps {
   isOpen: boolean;
@@ -10,7 +10,21 @@ interface NotificationPopoverProps {
 export const NotificationPopover: React.FC<NotificationPopoverProps> = ({ isOpen, onClose }) => {
   const { notifications, markAllNotificationsRead } = useStore();
 
+  // Esc closes the popover, like every other overlay. It is caught first (capture) so the app's own
+  // Esc handler does not also navigate back a screen.
+  React.useEffect(() => {
+    if (!isOpen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== 'Escape') return;
+      e.stopPropagation();
+      onClose();
+    };
+    window.addEventListener('keydown', onKey, true);
+    return () => window.removeEventListener('keydown', onKey, true);
+  }, [isOpen, onClose]);
+
   if (!isOpen) return null;
+  const unread = notifications.some((n) => !n.read);
 
   return (
     <div
@@ -25,19 +39,27 @@ export const NotificationPopover: React.FC<NotificationPopoverProps> = ({ isOpen
             Notifications
           </span>
         </div>
-        <button
-          onClick={markAllNotificationsRead}
-          className="text-xs text-slate-400 hover:text-white flex items-center gap-1 transition-colors cursor-default"
-        >
-          <Check className="w-3 h-3" /> Mark all read
-        </button>
+        {unread && (
+          <button
+            onClick={markAllNotificationsRead}
+            className="text-xs text-slate-400 hover:text-white flex items-center gap-1 transition-colors cursor-default"
+          >
+            <Check className="w-3 h-3" /> Mark all read
+          </button>
+        )}
       </div>
 
       {/* List */}
       <div className="max-h-80 overflow-y-auto p-1.5 space-y-1 custom-scroll">
         {notifications.length === 0 ? (
-          <div className="p-6 text-center text-xs text-slate-400">
-            No unread notifications.
+          <div className="px-6 py-8 flex flex-col items-center text-center gap-3">
+            <span className="w-11 h-11 rounded-full bg-white/[0.05] flex items-center justify-center">
+              <BellOff className="w-5 h-5 text-slate-400" strokeWidth={1.75} />
+            </span>
+            <div>
+              <p className="text-sm font-semibold text-cream">You're all caught up</p>
+              <p className="text-xs text-slate-400 mt-1">Updates, finished installs and news show up here.</p>
+            </div>
           </div>
         ) : (
           notifications.map((item) => (
@@ -67,15 +89,6 @@ export const NotificationPopover: React.FC<NotificationPopoverProps> = ({ isOpen
         )}
       </div>
 
-      {/* Footer */}
-      <div className="p-2.5 bg-white/[0.03] border-t border-white/[0.08] text-center">
-        <button
-          onClick={onClose}
-          className="text-xs text-slate-400 hover:text-white transition-colors cursor-default"
-        >
-          Close
-        </button>
-      </div>
     </div>
   );
 };
