@@ -5,6 +5,7 @@ import { StatsCard } from '../components/ui/StatsCard';
 import { Timeline } from '../components/ui/Timeline';
 import { Shelf } from '../components/ui/Shelf';
 import { FocusCarousel } from '../components/ui/FocusCarousel';
+import { Skeleton } from '../components/ui/Skeleton';
 import { CategoryCarousel, CategoryItem } from '../components/ui/CategoryCarousel';
 import { Icon3D, type Icon3DKind } from '../components/ui/Icon3D';
 import { ChevronRight, Search, Clock, WifiOff, Flame, Gamepad2, Download, Heart } from 'lucide-react';
@@ -177,6 +178,26 @@ export const StoreScreen: React.FC = () => {
           ]}
         />
       </section>
+
+      {/* While the catalog loads: the shape of what is coming, not an empty page */}
+      {catalogStatus === 'loading' && games.length === 0 && (
+        <section className="space-y-5" role="status" aria-label="Loading games">
+          <Skeleton className="h-7 w-40 rounded-full" />
+          <div className="flex gap-3.5 overflow-hidden">
+            <Skeleton className="h-[190px] w-[340px] shrink-0 rounded-[26px]" />
+            {[0, 1, 2, 3].map((i) => (
+              <Skeleton key={i} className="h-[190px] w-[136px] shrink-0 rounded-[26px]" />
+            ))}
+          </div>
+          <Skeleton className="h-7 w-48 rounded-full" />
+          <div className="flex gap-3.5 overflow-hidden">
+            <Skeleton className="h-[270px] w-[400px] shrink-0 rounded-[26px]" />
+            {[0, 1, 2].map((i) => (
+              <Skeleton key={i} className="h-[270px] w-[132px] shrink-0 rounded-[26px]" />
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* Categories */}
       {games.length > 0 && (
