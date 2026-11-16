@@ -67,7 +67,7 @@ export const NumberTicker: React.FC<NumberTickerProps> = ({
   });
 
   return (
-    <span className={`tabular-nums font-mono ${className}`}>
+    <span className={`tabular-nums ${className}`}>
       {prefix}
       {formatted}
       {suffix}
