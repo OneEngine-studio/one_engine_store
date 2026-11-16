@@ -199,14 +199,16 @@ export const GameDetailScreen: React.FC = () => {
       {/* Hero: the game's art across the full width, title and tags over it */}
       <section className="relative h-[380px] overflow-hidden">
         {hasBanner ? (
-          <img src={bannerSrc} alt="" onError={() => setBannerFailed(true)} className="absolute inset-0 w-full h-full object-cover" />
+          <img src={bannerSrc} alt="" onError={() => setBannerFailed(true)} className="absolute inset-0 w-full h-full object-cover object-[70%_center]" />
         ) : (
           <div className="absolute inset-0 bg-[radial-gradient(70%_90%_at_75%_30%,rgba(226,90,90,0.35),#4A1B1F_55%,#24100F)]">
             <Icon3D kind={art} className="absolute right-[36%] top-[42%] -translate-y-1/2 w-48 h-auto opacity-95" />
           </div>
         )}
         <div className="absolute inset-0 bg-gradient-to-t from-[#24100F] via-[#24100F]/55 to-transparent" />
-        <div className="absolute inset-0 bg-gradient-to-r from-[#24100F]/80 via-transparent to-transparent" />
+        {/* Key art often carries its own logo or text on the left; keep that side dark so the title reads cleanly. */}
+        <div className="absolute inset-0 bg-gradient-to-r from-[#24100F] via-[#24100F]/75 to-transparent" />
+        <div className="absolute inset-x-0 top-0 h-28 bg-gradient-to-b from-black/45 to-transparent" />
 
         <div className="relative max-w-7xl mx-auto h-full px-8 pt-6 flex flex-col">
           <div className="flex items-center justify-between">
