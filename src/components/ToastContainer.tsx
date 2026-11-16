@@ -12,16 +12,16 @@ export const ToastContainer: React.FC = () => {
       {toasts.map((t) => (
         <div
           key={t.id}
-          className={`pointer-events-auto p-3 rounded-lg border shadow-2xl flex items-start space-x-3 transition-[opacity,transform] duration-200 animate-in slide-in-from-bottom-2 ${
+          className={`pointer-events-auto p-3.5 rounded-2xl border shadow-modal bg-[#1A0A0B] flex items-start space-x-3 transition-[opacity,transform] duration-200 animate-in slide-in-from-bottom-2 ${
             t.type === 'success'
-              ? 'bg-gunmetal-slate border-tactical-green/60 text-slate-100'
+              ? 'border-success/40 text-slate-100'
               : t.type === 'warning'
-              ? 'bg-gunmetal-slate border-white/25 text-slate-100'
-              : 'bg-gunmetal-slate border-primary-accent/60 text-slate-100'
+              ? 'border-warning/40 text-slate-100'
+              : 'border-accent/50 text-slate-100'
           }`}
         >
-          {t.type === 'success' && <CheckCircle className="w-4 h-4 text-tactical-green shrink-0 mt-0.5" />}
-          {t.type === 'warning' && <AlertCircle className="w-4 h-4 text-slate-300 shrink-0 mt-0.5" />}
+          {t.type === 'success' && <CheckCircle className="w-4 h-4 text-success shrink-0 mt-0.5" />}
+          {t.type === 'warning' && <AlertCircle className="w-4 h-4 text-warning shrink-0 mt-0.5" />}
           {t.type === 'info' && <Info className="w-4 h-4 text-primary-accent shrink-0 mt-0.5" />}
 
           <div className="flex-1 text-xs font-sans text-slate-200 leading-snug">
