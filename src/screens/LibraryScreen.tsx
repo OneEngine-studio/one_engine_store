@@ -234,7 +234,7 @@ export const LibraryScreen: React.FC = () => {
                   progress={activeDownload?.progress}
                   caption={
                     launchingGameId === game.id
-                      ? 'Inserting…'
+                      ? 'Starting…'
                       : game.playHours
                       ? `${game.playHours}h played`
                       : game.installed
