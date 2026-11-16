@@ -19,19 +19,24 @@ export const ProgressTile: React.FC<ProgressTileProps> = ({ label, value, sub, p
         {sub && <span className="text-xs text-slate-500">{sub}</span>}
       </div>
       <div
-        className="mt-5 h-14 rounded-2xl bg-white/[0.05] overflow-hidden"
+        className="relative mt-5 h-14 rounded-2xl bg-white/[0.05] overflow-hidden"
         role="progressbar"
         aria-label={label}
         aria-valuemin={0}
         aria-valuemax={100}
         aria-valuenow={Math.round(pct)}
       >
-        <div
-          className="h-full rounded-2xl bg-accent text-white flex items-center px-5 font-display text-lg font-bold tabular-nums origin-left"
-          style={{ width: `${Math.max(pct, 12)}%`, transition: 'width 500ms cubic-bezier(0.23,1,0.32,1)' }}
-        >
-          {Math.round(pct)}%
-        </div>
+        {pct > 0 ? (
+          <div
+            className="h-full rounded-2xl bg-accent text-white flex items-center px-5 font-display text-lg tabular-nums origin-left"
+            style={{ width: `${Math.max(pct, 12)}%`, transition: 'width 500ms cubic-bezier(0.23,1,0.32,1)' }}
+          >
+            {Math.round(pct)}%
+          </div>
+        ) : (
+          // nothing done yet: an empty track, not a red sliver that looks like progress
+          <span className="absolute inset-y-0 left-5 flex items-center font-display text-lg text-slate-500 tabular-nums">0%</span>
+        )}
       </div>
     </div>
   );
