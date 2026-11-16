@@ -14,6 +14,7 @@ import {
   Trash2,
 } from 'lucide-react';
 import { NumberTicker } from '../components/ui/NumberTicker';
+import { ComingSoon } from '../components/ui/ComingSoon';
 import { Icon3D, type Icon3DKind } from '../components/ui/Icon3D';
 
 /** Which 3D icon stands in for a game that has no artwork yet. */
@@ -61,7 +62,11 @@ export const GameDetailScreen: React.FC = () => {
           <ArrowLeft className="w-4 h-4" />
           <span>Back</span>
         </button>
-        <p className="text-sm text-slate-400 mt-8">This game is not available on the service right now.</p>
+        <div className="mt-8">
+          <ComingSoon title="This game isn't available" icon="controller" badge={null}>
+            It may have been removed from the store, or the service could not be reached. Go back and try again in a moment.
+          </ComingSoon>
+        </div>
       </div>
     );
   }
