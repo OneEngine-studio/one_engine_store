@@ -5,6 +5,7 @@ import { GameTable } from '../components/ui/GameTable';
 import { PlayCalendar } from '../components/ui/PlayCalendar';
 import { PromoBanner } from '../components/ui/PromoBanner';
 import { getPlayDays } from '../lib/playLog';
+import { ComingSoon } from '../components/ui/ComingSoon';
 
 export const ActivityScreen: React.FC = () => {
   const { games, currentUser, navigate, launchGame } = useStore();
@@ -19,11 +20,35 @@ export const ActivityScreen: React.FC = () => {
   return (
     <div className="p-8 space-y-8 max-w-7xl mx-auto w-full">
       <div>
-        <h1 className="font-display text-4xl font-extrabold tracking-tight text-cream">Activity</h1>
+        <h1 className="font-display text-4xl text-cream">Activity</h1>
         <p className="text-xs text-slate-400 mt-1">
-          {totalHours.toLocaleString()} h played across {owned.length} {owned.length === 1 ? 'game' : 'games'}
+          {owned.length === 0
+            ? 'Your play time, streaks and history'
+            : `${totalHours.toLocaleString()} h played across ${owned.length} ${owned.length === 1 ? 'game' : 'games'}`}
         </p>
       </div>
+
+      {owned.length === 0 ? (
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr_300px] gap-6 items-start">
+          <ComingSoon
+            title="Your activity starts here"
+            icon="trophy"
+            badge={null}
+            action={
+              <button
+                onClick={() => navigate('store')}
+                className="h-10 px-5 rounded-full bg-accent hover:bg-accent-hover text-white text-sm font-semibold shadow-glow cursor-default active:scale-[0.97] transition-[background-color,transform]"
+              >
+                Browse the store
+              </button>
+            }
+          >
+            Play time, the days you played and your most played games show up here once you have games in your library.
+          </ComingSoon>
+          <PlayCalendar playedDays={playedDays} />
+        </div>
+      ) : (
+      <>
 
       <ProgressTile
         label="Library installed"
@@ -43,6 +68,8 @@ export const ActivityScreen: React.FC = () => {
           action={top.installed ? 'Play' : 'Open page'}
           onAction={() => (top.installed ? launchGame(top.id) : navigate('game-detail', top.id))}
         />
+      )}
+      </>
       )}
     </div>
   );
