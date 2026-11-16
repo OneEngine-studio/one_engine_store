@@ -89,7 +89,7 @@ export const WindowFrame: React.FC = () => {
         >
           <div className="flex items-center gap-2.5">
             <Search className="w-3.5 h-3.5 text-slate-400 shrink-0" strokeWidth={1.75} />
-            <span className="truncate text-slate-400">Search games, library, updates…</span>
+            <span className="truncate text-slate-400">Search games…</span>
           </div>
           <Kbd className="bg-white/[0.06] border-white/10 text-slate-300 rounded-full px-2 py-0.5 text-xs">
             Ctrl K
