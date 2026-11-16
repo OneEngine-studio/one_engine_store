@@ -158,9 +158,14 @@ export const FocusCarousel: React.FC<FocusCarouselProps> = ({ games, running, ca
                   }}
                 >
                   <div className="flex items-start justify-between gap-3">
-                    <span className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-white text-accent shadow-glow">
-                      <Play className="h-5 w-5 fill-current ml-0.5" />
-                    </span>
+                    {/* a play badge only where play actually exists; otherwise it would promise something the button cannot do */}
+                    {!actionsDisabled ? (
+                      <span className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-white text-accent shadow-glow">
+                        <Play className="h-5 w-5 fill-current ml-0.5" />
+                      </span>
+                    ) : (
+                      <span />
+                    )}
                     {(isRunning || g.installed) && (
                       <span className="inline-flex items-center gap-1.5 rounded-full bg-black/55 backdrop-blur px-2.5 py-1 text-xs font-medium text-white/90">
                         <span className={`h-1.5 w-1.5 rounded-full ${isRunning ? 'bg-success led-pulse' : 'bg-white'}`} />
