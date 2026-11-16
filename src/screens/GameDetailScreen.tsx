@@ -251,7 +251,10 @@ export const GameDetailScreen: React.FC = () => {
               </span>
             ) : null}
             <h1 className="mt-3 font-display text-[56px] leading-[1.02] text-white drop-shadow-[0_4px_18px_rgba(0,0,0,0.45)] line-clamp-2">{game.title}</h1>
-            {game.tagline && <p className="mt-2 text-sm text-slate-200 leading-relaxed line-clamp-2">{game.tagline}</p>}
+            {/* the subtitle is skipped when it would only repeat the About text */}
+            {game.tagline && game.tagline.trim() !== (game.description || '').trim() && (
+              <p className="mt-2 text-sm text-slate-200 leading-relaxed line-clamp-2">{game.tagline}</p>
+            )}
             {game.tags.length > 0 && (
               <div className="mt-4 flex flex-wrap gap-2">
                 {game.tags.slice(0, 5).map((tag) => (
