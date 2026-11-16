@@ -1,11 +1,13 @@
 // Development publisher: copies a game build (.zip) into the local depot and registers it.
 //   npm run publish-build -- railbound 2.4.0 C:\builds\railbound.zip Railbound.exe [win64]
-// <game-exe-inside-zip> is the file the launcher starts, at the top level of the zip.
+// <game-exe-inside-zip> is the file the launcher starts, at the top level of the zip or inside one wrapping folder.
+// The zip is checked first: it must contain that executable and no Unity "DoNotShip" debug folders.
 import { createHash } from 'node:crypto';
 import { copyFileSync, createReadStream, mkdirSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 import { loadConfig } from '../src/config.js';
 import { openDb } from '../src/db.js';
+import { zipEntryNames, zipHasExecutable } from '../src/zip.js';
 
 const [productId, version, zipPath, executable, platform = 'win64'] = process.argv.slice(2);
 if (!productId || !version || !zipPath || !executable) {
@@ -25,6 +27,24 @@ const cfg = loadConfig();
 const db = openDb(cfg.dbPath);
 if (!db.prepare('SELECT 1 FROM products WHERE product_id = ?').get(productId)) {
   console.error(`Unknown product "${productId}".`);
+  process.exit(1);
+}
+
+// Refuse a build the launcher could never start, before anything is copied or registered.
+let entries: string[];
+try {
+  entries = zipEntryNames(zipPath);
+} catch (err) {
+  console.error(`${zipPath} is not a readable zip: ${(err as Error).message}`);
+  process.exit(1);
+}
+if (!zipHasExecutable(entries, executable)) {
+  console.error(`${executable} is not in the zip (at the top level or inside one wrapping folder).`);
+  process.exit(1);
+}
+const junk = entries.filter((n) => /DoNotShip|BurstDebugInformation/i.test(n));
+if (junk.length) {
+  console.error(`The zip contains debug files that must not ship (${junk[0].split('/').slice(0, 2).join('/')}...). Remove them and try again.`);
   process.exit(1);
 }
 
