@@ -22,6 +22,8 @@ from the public repo, so a new version shows up there by itself, with its file, 
    - Variable `PLATFORM_API_URL` (**required**): the public address of your Platform API, for example
      `https://api.example.com`. The release stops if it is missing, not `https://`, or a local address. The address
      is written into the installer at build time (`electron/app-config.json`); the page cannot change it.
+   - Variable `PAYMENTS_API_URL` (optional): the public https address of the payments service. Leave it unset and
+     the installer ships without the Coins screen. See `docs/payments.md`.
 3. Host the Platform API first (`docs/go-live.md`): the app is only as real as the server behind it.
 
 ## Each release

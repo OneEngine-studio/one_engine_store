@@ -103,6 +103,8 @@ jobs:
         run: npm run dist
         env:
           PLATFORM_API_URL: ${{ vars.PLATFORM_API_URL }}
+          # Optional: without it the installer ships without the Coins screen.
+          PAYMENTS_API_URL: ${{ vars.PAYMENTS_API_URL }}
 
       - name: Test the launcher and the built page
         run: npm test
