@@ -105,6 +105,8 @@ jobs:
           PLATFORM_API_URL: ${{ vars.PLATFORM_API_URL }}
           # Optional: without it the installer ships without the Coins screen.
           PAYMENTS_API_URL: ${{ vars.PAYMENTS_API_URL }}
+          # "true" ships game download, install and play (needs a build published on the Platform API).
+          ENABLE_GAMES: ${{ vars.ENABLE_GAMES }}
 
       - name: Test the launcher and the built page
         run: npm test
