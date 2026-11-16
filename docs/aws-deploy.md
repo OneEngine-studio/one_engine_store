@@ -80,6 +80,8 @@ missing, not https, or local.
 
 ## Known limits of this setup
 
+- Game builds live in the depot on the same disk (`DEPOT_DIR`). Each version of Railbound adds about 1.1 GB, so
+  prune old builds or grow the volume (`docs/publishing-builds.md`).
 - One instance on SQLite. Rate limits and launch tickets are in memory and reset on restart. Do not run two copies.
 - Updates: copy the new files and run `docker compose --env-file .env.production up -d --build`; the data volume is
   kept.
