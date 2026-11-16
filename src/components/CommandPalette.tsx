@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useStore } from '../store/useStore';
 import { Search, X } from 'lucide-react';
+import { Icon3D } from './ui/Icon3D';
 
 export const CommandPalette: React.FC = () => {
   const {
@@ -51,11 +52,19 @@ export const CommandPalette: React.FC = () => {
             autoFocus
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Type a game title, genre tag, or update…"
-            className="w-full bg-transparent text-sm text-slate-100 placeholder-slate-500 focus:outline-none select-text"
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && filteredGames[0]) {
+                setCommandPaletteOpen(false);
+                navigate('game-detail', filteredGames[0].id);
+              }
+            }}
+            aria-label="Search games"
+            placeholder="Search games by title or tag…"
+            className="no-focus-ring w-full bg-transparent text-sm text-slate-100 placeholder-slate-500 focus:outline-none select-text"
           />
           <button
             onClick={() => setCommandPaletteOpen(false)}
+            aria-label="Close"
             className="w-7 h-7 rounded-full flex items-center justify-center text-slate-400 hover:text-white hover:bg-white/[0.08] transition-surface cursor-default"
           >
             <X className="w-4 h-4" />
@@ -72,17 +81,22 @@ export const CommandPalette: React.FC = () => {
               {filteredGames.map((game) => {
                 const isOwned = currentUser.ownedGameIds.includes(game.id);
                 return (
-                  <div
+                  <button
+                    type="button"
                     key={game.id}
                     onClick={() => {
                       setCommandPaletteOpen(false);
                       navigate('game-detail', game.id);
                     }}
-                    className="px-3.5 py-2.5 rounded-2xl hover:bg-white/[0.08] flex items-center justify-between cursor-default border border-transparent hover:border-white/[0.12] transition-surface duration-150 group"
+                    className="w-full text-left px-3.5 py-2.5 rounded-2xl hover:bg-white/[0.08] focus-visible:bg-white/[0.08] flex items-center justify-between cursor-default border border-transparent hover:border-white/[0.12] transition-surface duration-150 group"
                   >
                     <div className="flex items-center gap-3.5">
-                      <span className="w-12 h-8 rounded-xl overflow-hidden bg-black/60 border border-white/10 shadow-sm shrink-0">
-                        {game.coverImage && <img src={game.coverImage} alt="" className="w-full h-full object-cover" />}
+                      <span className="w-12 h-8 rounded-xl overflow-hidden bg-[#4A1B1F] border border-white/10 shrink-0 flex items-center justify-center">
+                        {game.coverImage ? (
+                          <img src={game.coverImage} alt="" className="w-full h-full object-cover" />
+                        ) : (
+                          <Icon3D kind="controller" className="w-6 h-auto" />
+                        )}
                       </span>
                       <div>
                         <div className="flex items-center gap-2">
@@ -102,14 +116,24 @@ export const CommandPalette: React.FC = () => {
                     </div>
 
                     <span className="text-xs font-semibold text-slate-300 tabular-nums">
-                      {isOwned ? 'Installed' : typeof game.price === 'number' ? `$${game.price.toFixed(2)}` : game.price}
+                      {isOwned
+                        ? game.installed
+                          ? 'Installed'
+                          : 'Owned'
+                        : typeof game.price === 'number'
+                          ? `$${(game.discountPercent ? game.price * (1 - game.discountPercent / 100) : game.price).toFixed(2)}`
+                          : game.price}
                     </span>
-                  </div>
+                  </button>
                 );
               })}
             </div>
           )}
-
+          {filteredGames.length === 0 && (
+            <p className="px-3 py-6 text-center text-sm text-slate-400">
+              {query ? `No games match "${query}".` : 'No games in the catalog yet.'}
+            </p>
+          )}
         </div>
       </div>
     </div>
