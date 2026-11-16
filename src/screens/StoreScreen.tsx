@@ -182,7 +182,7 @@ export const StoreScreen: React.FC = () => {
       {games.length > 0 && (
         <section className="space-y-5">
           <div className="flex items-center justify-between">
-            <h2 className="font-display text-2xl text-cream">Game</h2>
+            <h2 className="font-display text-2xl text-cream">Categories</h2>
             {categoryId !== 'all' && (
               <button onClick={() => setCategoryId('all')} className="text-xs text-accent hover:underline cursor-default font-medium">
                 Clear category
