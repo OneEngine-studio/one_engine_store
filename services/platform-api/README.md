@@ -39,6 +39,7 @@ npm run dev         # http://127.0.0.1:8080
 
 ```bash
 npm run publish-build -- railbound 1.0.0 /path/to/railbound.zip Railbound.exe
+# Refused if Railbound.exe is not in the zip or Unity DoNotShip debug folders are. Full guide: docs/publishing-builds.md
 ```
 
 `Railbound.exe` is the file inside the zip (at the top level) that the launcher starts. The command copies the
