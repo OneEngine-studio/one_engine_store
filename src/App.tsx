@@ -60,7 +60,13 @@ const MainViewport: React.FC = () => {
   // Global keyboard shortcuts (Ctrl+K, Esc)
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement | null;
+      const typing = !!target && (target.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(target.tagName));
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        setCommandPaletteOpen(true);
+      } else if (e.key === '/' && !typing && !isAuthModalOpen && !isCommandPaletteOpen) {
+        // "/" opens search, as in most stores and launchers, unless the player is typing somewhere.
         e.preventDefault();
         setCommandPaletteOpen(true);
       } else if (e.key === 'Escape') {
