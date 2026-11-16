@@ -25,6 +25,7 @@ const MainViewport: React.FC = () => {
     canGoBack,
     isAuthModalOpen,
     closeAuthModal,
+    isCommandPaletteOpen,
   } = useStore();
 
   const scrollContainerRef = useRef<HTMLDivElement>(null);
@@ -63,6 +64,8 @@ const MainViewport: React.FC = () => {
         e.preventDefault();
         setCommandPaletteOpen(true);
       } else if (e.key === 'Escape') {
+        // The command palette closes itself on Esc; that must not also navigate back.
+        if (isCommandPaletteOpen) return;
         if (isAuthModalOpen) {
           closeAuthModal();
         } else if (canGoBack) {
@@ -76,6 +79,7 @@ const MainViewport: React.FC = () => {
   }, [
     setCommandPaletteOpen,
     isAuthModalOpen,
+    isCommandPaletteOpen,
     closeAuthModal,
     canGoBack,
     goBack,
