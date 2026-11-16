@@ -158,3 +158,13 @@ test('payments: only Stripe\'s hosted checkout page is ever opened', () => {
     assert.equal(payments.stripeCheckoutUrl(bad), '', bad);
   }
 });
+
+test('a release build records an https payments address and refuses a local or plain-http one', () => {
+  const ok = runWriter({ PLATFORM_API_URL: 'https://api.example.com', PAYMENTS_API_URL: 'https://pay.example.com/' });
+  assert.equal(ok.status, 0, ok.stderr);
+  assert.equal(ok.written.paymentsApiUrl, 'https://pay.example.com');
+  assert.notEqual(runWriter({ PLATFORM_API_URL: 'https://api.example.com', PAYMENTS_API_URL: 'http://pay.example.com' }).status, 0);
+  assert.notEqual(runWriter({ PLATFORM_API_URL: 'https://api.example.com', PAYMENTS_API_URL: 'https://localhost:9000' }).status, 0);
+  const none = runWriter({ PLATFORM_API_URL: 'https://api.example.com' });
+  assert.equal(none.written.paymentsApiUrl, undefined);
+});
