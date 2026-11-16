@@ -210,7 +210,7 @@ export const FocusCarousel: React.FC<FocusCarouselProps> = ({ games, running, ca
               aria-selected={i === f}
               aria-label={g.title}
               onClick={() => pick(i)}
-              className="h-3 flex items-center cursor-default"
+              className="h-6 px-1 flex items-center cursor-default"
             >
               <span
                 className={`block h-1.5 rounded-full ${i === f ? 'bg-accent' : 'bg-white/20 hover:bg-white/40'}`}
