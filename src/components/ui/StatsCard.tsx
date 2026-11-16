@@ -34,18 +34,20 @@ export const StatsCard: React.FC<StatsCardProps> = ({ title, total, totalLabel, 
             </linearGradient>
           </defs>
           <circle cx="90" cy="90" r={r} fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth="14" />
-          <circle
-            cx="90"
-            cy="90"
-            r={r}
-            fill="none"
-            stroke="url(#stat-ring)"
-            strokeWidth="14"
-            strokeLinecap={shown > 0 ? 'round' : 'butt'}
-            strokeDasharray={c}
-            strokeDashoffset={c * (1 - shown)}
-            style={{ transition: 'stroke-dashoffset 900ms cubic-bezier(0.23, 1, 0.32, 1)' }}
-          />
+          {shown > 0 && (
+            <circle
+              cx="90"
+              cy="90"
+              r={r}
+              fill="none"
+              stroke="url(#stat-ring)"
+              strokeWidth="14"
+              strokeLinecap="round"
+              strokeDasharray={c}
+              strokeDashoffset={c * (1 - shown)}
+              style={{ transition: 'stroke-dashoffset 900ms cubic-bezier(0.23, 1, 0.32, 1)' }}
+            />
+          )}
         </svg>
         <div className="absolute inset-[26px] rounded-full bg-[#2A1113] flex flex-col items-center justify-center text-center">
           <span className="text-xs text-slate-400">{totalLabel}</span>
