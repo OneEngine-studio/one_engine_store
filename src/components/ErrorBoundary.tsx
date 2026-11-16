@@ -1,4 +1,5 @@
 import React from 'react';
+import { Icon3D } from './ui/Icon3D';
 
 interface State {
   error: Error | null;
@@ -20,15 +21,23 @@ export class ErrorBoundary extends React.Component<{ children: React.ReactNode }
     if (!this.state.error) return this.props.children;
     return (
       <div className="h-screen w-screen bg-bg-app text-slate-100 flex items-center justify-center p-8 select-text">
-        <div className="max-w-md text-center">
-          <h1 className="font-display text-2xl font-bold text-cream">Something went wrong</h1>
-          <p className="mt-2 text-sm text-slate-400">The launcher hit an unexpected problem. Your account and data are safe.</p>
-          <p className="mt-3 text-xs text-slate-500 break-words font-mono">{this.state.error.message}</p>
+        <div
+          className="relative overflow-hidden max-w-md w-full rounded-[28px] border border-white/[0.08] p-8 text-center shadow-modal"
+          style={{ background: 'linear-gradient(150deg, #4A1B1F, #1A0A0B 75%)' }}
+        >
+          <div className="absolute inset-0 bg-[radial-gradient(70%_60%_at_50%_0%,rgba(226,90,90,0.25),transparent_65%)] pointer-events-none" />
+          <Icon3D kind="bolt" className="relative w-20 h-auto mx-auto" />
+          <h1 className="relative mt-4 font-display text-2xl text-cream">Something went wrong</h1>
+          <p className="relative mt-2 text-sm text-slate-300">The launcher hit an unexpected problem. Your account and data are safe.</p>
+          <details className="relative mt-4 text-left">
+            <summary className="text-xs text-slate-400 cursor-default">Technical details</summary>
+            <p className="mt-2 text-xs text-slate-400 break-words font-mono">{this.state.error.message}</p>
+          </details>
           <button
             onClick={() => window.location.reload()}
-            className="mt-6 h-10 px-6 rounded-full bg-accent hover:bg-accent-hover text-sm font-semibold text-white cursor-default active:scale-[0.97] transition-[background-color,transform]"
+            className="relative mt-6 h-11 px-7 rounded-full bg-accent hover:bg-accent-hover text-sm font-semibold text-white shadow-glow cursor-default active:scale-[0.97] transition-[background-color,transform]"
           >
-            Reload
+            Reload the launcher
           </button>
         </div>
       </div>
