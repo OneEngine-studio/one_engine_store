@@ -238,11 +238,13 @@ export const GameDetailScreen: React.FC = () => {
               </button>
               <button
                 onClick={() => {
-                  navigator.clipboard.writeText(`oneengine://game/${game.id}`).catch(() => {});
-                  addToast(`Link for ${game.title} copied to clipboard.`, 'success');
+                  // The launcher registers no oneengine:// link handler yet, so share plain text that works anywhere.
+                  navigator.clipboard.writeText(`${game.title} on OneEngine Store`).catch(() => {});
+                  addToast(`Copied "${game.title} on OneEngine Store".`, 'success');
                 }}
                 className="w-10 h-10 rounded-full flex items-center justify-center bg-black/35 backdrop-blur text-white hover:bg-black/50 transition-surface cursor-default"
-                title="Copy link"
+                title="Copy game name to share"
+                aria-label="Copy game name to share"
               >
                 <Share2 className="w-4 h-4" strokeWidth={1.75} />
               </button>
