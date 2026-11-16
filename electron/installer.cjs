@@ -234,6 +234,9 @@ async function download({ url, file, total, throttleBps, signal, onProgress }) {
 // Builds are only fetched from the Platform API that signed the download link, never from an address the page names.
 let allowedDownloadOrigin = '';
 
+// How much bigger an unpacked build may be than its zip, for the free-space check.
+const UNPACK_FACTOR = 3;
+
 async function install({ gameId, libraryDir, build, throttleMBps }) {
   const root = libraryRoot(libraryDir);
   const dir = gameDir(root, gameId);
@@ -253,7 +256,9 @@ async function install({ gameId, libraryDir, build, throttleMBps }) {
   const zip = path.join(root, '.downloads', `${gameId}__${build.buildId}.zip`);
   const staging = path.join(dir, `.staging-${build.buildId}`);
   const partial = fs.existsSync(zip) ? fs.statSync(zip).size : 0;
-  const needed = (build.sizeBytes - partial) + build.sizeBytes * 1.5;
+  // Room for the rest of the download plus the unpacked game. Game data compresses well (Railbound 1.0 unpacks to
+  // 2.25x its zip), so plan for 3x rather than failing halfway through unpacking on a nearly full disk.
+  const needed = (build.sizeBytes - partial) + build.sizeBytes * UNPACK_FACTOR;
   if (freeBytes(root) < needed) {
     throw new Error(`Not enough free space in ${root}. About ${(needed / 1024 ** 3).toFixed(1)} GB is needed.`);
   }
