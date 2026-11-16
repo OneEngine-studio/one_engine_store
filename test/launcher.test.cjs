@@ -168,3 +168,8 @@ test('a release build records an https payments address and refuses a local or p
   const none = runWriter({ PLATFORM_API_URL: 'https://api.example.com' });
   assert.equal(none.written.paymentsApiUrl, undefined);
 });
+
+test('the page loads no fonts from the internet (they are bundled)', () => {
+  const html = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
+  assert.doesNotMatch(html, /fonts\.googleapis\.com|fonts\.gstatic\.com/);
+});
