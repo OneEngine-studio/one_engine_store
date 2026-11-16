@@ -71,7 +71,7 @@ export const LibraryScreen: React.FC = () => {
       {/* Page Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="font-display text-4xl font-extrabold tracking-tight text-cream">
+          <h1 className="font-display text-4xl text-cream">
             Library
           </h1>
           <p className="text-xs text-slate-400 mt-1">
@@ -205,7 +205,7 @@ export const LibraryScreen: React.FC = () => {
       {/* Shelf of cartridges */}
       {sortedGames.length === 0 ? (
         <div className="p-12 text-center rounded-card bg-white/[0.02] border border-dashed border-white/[0.12] space-y-3">
-          <p className="font-display text-lg font-bold text-cream">Nothing here yet</p>
+          <p className="font-display text-lg text-cream">Nothing here yet</p>
           <p className="text-xs text-slate-500">Adjust your filters, or browse the store to find your next game.</p>
           <button
             onClick={() => navigate('store')}

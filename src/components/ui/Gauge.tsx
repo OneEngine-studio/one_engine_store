@@ -49,7 +49,7 @@ export const Gauge: React.FC<GaugeProps> = ({ value, label, readout, sub, icon, 
           {label}
           {live && <span className="w-1.5 h-1.5 rounded-full bg-success led-pulse" />}
         </div>
-        <div className="font-display text-2xl font-extrabold text-cream leading-tight mt-1 tabular-nums">{readout}</div>
+        <div className="font-display text-2xl text-cream leading-tight mt-1 tabular-nums">{readout}</div>
         <div className="text-xs text-slate-400 truncate">{sub}</div>
       </div>
     </button>

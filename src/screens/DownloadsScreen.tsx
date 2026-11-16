@@ -180,7 +180,7 @@ export const DownloadsScreen: React.FC = () => {
       {/* Top Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="font-display text-4xl font-extrabold tracking-tight text-cream">Downloads</h1>
+          <h1 className="font-display text-4xl text-cream">Downloads</h1>
           <p className="text-xs text-slate-400 mt-1">
             {isTransferring
               ? `Downloading at ${currentSpeed.toFixed(1)} MB/s`
@@ -272,13 +272,13 @@ export const DownloadsScreen: React.FC = () => {
           <div className="grid grid-cols-2 gap-3 pt-3 border-t border-white/[0.06] text-center text-xs tabular-nums">
             <div className="p-4 rounded-2xl bg-white/[0.03] text-left space-y-1">
               <span className="text-xs text-slate-400 block">Download speed</span>
-              <span className="font-display text-xl font-light whitespace-nowrap text-cream">
+              <span className="font-display text-xl whitespace-nowrap text-cream">
                 <NumberTicker value={currentSpeed} decimalPlaces={1} suffix=" MB/s" />
               </span>
             </div>
             <div className="p-4 rounded-2xl bg-white/[0.03] text-left space-y-1">
               <span className="text-xs text-slate-400 block">Fastest this session</span>
-              <span className="font-display text-xl font-light whitespace-nowrap text-cream">
+              <span className="font-display text-xl whitespace-nowrap text-cream">
                 <NumberTicker value={peakSpeed} decimalPlaces={1} suffix=" MB/s" />
               </span>
             </div>
@@ -299,7 +299,7 @@ export const DownloadsScreen: React.FC = () => {
                   {settings.downloadDirectory || 'Not chosen yet'}
                 </span>
                 <span className="mt-1 flex items-baseline gap-1.5">
-                  <span className="font-display text-4xl font-light tracking-tight text-cream tabular-nums">
+                  <span className="font-display text-4xl text-cream tabular-nums">
                     {Math.round(installedGb * 10) / 10}
                   </span>
                   <span className="text-sm text-slate-400">GB installed</span>
