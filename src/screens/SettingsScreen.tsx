@@ -161,7 +161,7 @@ export const SettingsScreen: React.FC = () => {
           Settings
         </h1>
         <p className="text-xs text-slate-400 mt-1">
-          Manage your application preferences, storage locations, and client diagnostics
+          Sound, storage, your account and the connection to OneEngine
         </p>
       </div>
 
@@ -221,7 +221,7 @@ export const SettingsScreen: React.FC = () => {
             <div className="flex items-center justify-between py-2">
               <div className="space-y-0.5 max-w-md">
                 <span className="text-xs font-semibold text-slate-200 block">
-                  Tactile interface audio
+                  Interface sounds
                 </span>
                 <span className="text-xs text-slate-400 leading-relaxed block">
                   Soft interface sounds for clicks, confirmations and game launch.
@@ -237,7 +237,7 @@ export const SettingsScreen: React.FC = () => {
                 <Switch
                   checked={settings.enableTactileAudio}
                   onChange={(v) => updateSettings({ enableTactileAudio: v })}
-                  label="Tactile interface audio"
+                  label="Interface sounds"
                 />
               </div>
             </div>
