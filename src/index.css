@@ -114,6 +114,10 @@
   outline: 2px solid rgba(255, 255, 255, 0.9) !important;
   outline-offset: 2px !important;
 }
+/* A field that is the whole point of its panel (the command palette search) shows focus through the panel itself. */
+.no-focus-ring:focus-visible {
+  outline: none !important;
+}
 
 /* ── Floating main panel ambient tint ──────────────────── */
 /* Registered so the light can fade between colours when the focused game card changes. */
