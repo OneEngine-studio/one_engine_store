@@ -178,3 +178,6 @@ Shadows are applied strictly to floating layers, never to flat in-panel cards:
 - **Game card** (`components/ui/Cartridge.tsx`): 4:5 cover on a maroon card fading to maroon at the bottom, red border glow on hover, red Play / Install pill rising in on hover or focus, red progress bar.
 - **Motion:** one easing, `cubic-bezier(0.23, 1, 0.32, 1)`. The first screen of a session rises in block by block; later tab switches only fade (140ms) because they happen constantly. The command palette opens with no animation (keyboard). Cards ease in 30ms apart, the nav indicator slides over 320ms, the stat ring fills over 900ms, press feedback `scale(0.97)`. Off under `prefers-reduced-motion`.
 - **Type floor:** nothing smaller than 12px except keyboard-shortcut caps and the calendar grid.
+- **Toasts:** bottom-right maroon cards (`#1A0A0B`, 16px radius) with a status-coloured edge and icon; announced politely to screen readers.
+- **Crash screen:** lit maroon card with a 3D bolt, one sentence, "Technical details" collapsed, and a single Reload button.
+- **Loading:** `Skeleton` blocks with a soft light sweep, shaped like the content that is coming.
