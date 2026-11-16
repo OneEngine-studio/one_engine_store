@@ -18,3 +18,7 @@
 - Esc closing the command palette no longer navigates back.
 - Empty stats ring and progress bar no longer look partly filled.
 - Free-space check before installing plans for the unpacked size of large games.
+- Share on a game page copies plain text instead of a link nothing could open.
+
+### Removed
+- Google Fonts requests (fonts are bundled) and four unused components.
