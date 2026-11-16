@@ -15,7 +15,7 @@ export const GameTable: React.FC<GameTableProps> = ({ games, onOpen }) => {
     <div className="rounded-[28px] bg-bg-card border border-white/[0.06] p-3">
       <table className="w-full text-left text-xs">
         <thead>
-          <tr className="text-[11px] text-slate-500">
+          <tr className="text-xs text-slate-500">
             <th scope="col" className="font-medium px-4 py-3">Game</th>
             <th scope="col" className="font-medium px-4 py-3 text-right">Hours</th>
             <th scope="col" className="font-medium px-4 py-3 hidden sm:table-cell w-1/4">Played</th>
@@ -39,7 +39,7 @@ export const GameTable: React.FC<GameTableProps> = ({ games, onOpen }) => {
                     </span>
                     <span className="min-w-0">
                       <span className="block text-sm font-medium text-cream truncate">{g.title}</span>
-                      <span className="block text-[11px] text-slate-500">
+                      <span className="block text-xs text-slate-500">
                         {g.installed ? g.updateAvailable ? `Update available · ${g.installSizeGb} GB` : `Installed · ${g.installSizeGb} GB` : 'Not installed'}
                       </span>
                     </span>

@@ -25,10 +25,15 @@ function load() {
     ? cleanUrl(shipped.platformApiUrl, { allowLocal: shipped.allowLocal === true })
     : cleanUrl(env.ONEENGINE_API_URL || shipped.platformApiUrl || 'http://127.0.0.1:8080', { allowLocal: true });
 
+  // Optional: where coin purchases (Stripe checkout) are served. Without it the page offers no payments.
+  const paymentsApiUrl = packaged
+    ? cleanUrl(shipped.paymentsApiUrl, { allowLocal: shipped.allowLocal === true })
+    : cleanUrl(env.ONEENGINE_PAYMENTS_URL || shipped.paymentsApiUrl || '', { allowLocal: true });
+
   // Game download, install and launch ship switched off until that phase is released.
   const gamesEnabled = packaged ? shipped.gamesEnabled === true : env.ONEENGINE_ENABLE_GAMES === 'true' || shipped.gamesEnabled === true;
 
-  return { packaged, platformApiUrl, gamesEnabled, version: app.getVersion() };
+  return { packaged, platformApiUrl, paymentsApiUrl, gamesEnabled, version: app.getVersion() };
 }
 
 let cached = null;

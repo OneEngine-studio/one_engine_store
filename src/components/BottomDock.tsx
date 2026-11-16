@@ -62,11 +62,11 @@ export const BottomDock: React.FC = () => {
                 <span className="text-xs font-semibold text-white truncate max-w-[140px] sm:max-w-xs">
                   {runningGame.title}
                 </span>
-                <span className="text-[10px] text-success font-medium bg-success/15 px-2 py-0.5 rounded-full border border-success/30">
+                <span className="text-xs text-success font-medium bg-success/15 px-2 py-0.5 rounded-full border border-success/30">
                   Running
                 </span>
               </div>
-              <span className="text-[11px] text-slate-400 tabular-nums">
+              <span className="text-xs text-slate-400 tabular-nums">
                 Session time: {formatTimer(sessionElapsedSeconds)}
               </span>
             </div>
@@ -98,7 +98,7 @@ export const BottomDock: React.FC = () => {
                 <span className="font-semibold text-white truncate max-w-[160px]">
                   {activeDownload.title}
                 </span>
-                <span className="text-slate-300 tabular-nums text-[11px]">
+                <span className="text-slate-300 tabular-nums text-xs">
                   {activeDownload.status === 'VERIFYING' ? (
                     'Verifying…'
                   ) : activeDownload.status === 'EXTRACTING' ? (

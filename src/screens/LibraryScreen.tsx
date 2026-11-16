@@ -52,13 +52,22 @@ export const LibraryScreen: React.FC = () => {
     return 0; // default recent
   });
 
-  return (
-    <div className="p-8 space-y-8 max-w-7xl mx-auto w-full">
-      {!gamesEnabled && (
-        <ComingSoon title="Game library arrives in a later update">
+  if (!gamesEnabled) {
+    return (
+      <div className="p-8 space-y-8 max-w-7xl mx-auto w-full">
+        <div>
+          <h1 className="font-display text-4xl text-cream">Library</h1>
+          <p className="text-xs text-slate-400 mt-1">Your games, installs and favourites</p>
+        </div>
+        <ComingSoon title="Game library arrives in a later update" icon="controller">
           Your account is ready. Adding games to your library, installing and playing them are not part of this version yet.
         </ComingSoon>
-      )}
+      </div>
+    );
+  }
+
+  return (
+    <div className="p-8 space-y-8 max-w-7xl mx-auto w-full">
       {/* Page Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>

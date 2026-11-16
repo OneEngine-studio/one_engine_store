@@ -37,8 +37,6 @@ interface FocusCarouselProps {
 export const FocusCarousel: React.FC<FocusCarouselProps> = ({ games, running, captionFor, actionLabel, onOpen, onAction, actionsDisabled, glow = true }) => {
   const [focus, setFocus] = useState(0);
   const [width, setWidth] = useState(0);
-  const [auto, setAuto] = useState(true);
-  const [hovered, setHovered] = useState(false);
   const wrapRef = useRef<HTMLDivElement>(null);
 
   const n = games.length;
@@ -52,13 +50,6 @@ export const FocusCarousel: React.FC<FocusCarouselProps> = ({ games, running, ca
     setWidth(el.clientWidth);
     return () => ro.disconnect();
   }, []);
-
-  useEffect(() => {
-    if (!auto || hovered || n < 2) return;
-    if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return;
-    const t = setInterval(() => setFocus((x) => (x + 1) % n), 5500);
-    return () => clearInterval(t);
-  }, [auto, hovered, n]);
 
   useEffect(() => {
     if (!glow) return;
@@ -80,29 +71,29 @@ export const FocusCarousel: React.FC<FocusCarouselProps> = ({ games, running, ca
   const total = FOCUS_W + (n - 1) * (TILE_W + GAP);
   const offset = Math.min(f * (TILE_W + GAP), Math.max(0, total - width));
 
-  const pick = (i: number) => {
-    setAuto(false);
-    setFocus((i + n) % n);
+  // The strip only moves when the player asks it to: no autoplay competing with reading.
+  const pick = (i: number, moveFocus = false) => {
+    const next = Math.max(0, Math.min(n - 1, i));
+    setFocus(next);
+    if (moveFocus) requestAnimationFrame(() => wrapRef.current?.querySelectorAll<HTMLButtonElement>('[data-card]')[next]?.focus());
   };
 
   return (
     <div>
       <div
         ref={wrapRef}
-        tabIndex={0}
+        role="group"
         aria-label="Games"
-        onMouseEnter={() => setHovered(true)}
-        onMouseLeave={() => setHovered(false)}
         onKeyDown={(e) => {
           if (e.key === 'ArrowRight') {
             e.preventDefault();
-            pick(f + 1);
+            pick(f + 1, true);
           } else if (e.key === 'ArrowLeft') {
             e.preventDefault();
-            pick(f - 1);
+            pick(f - 1, true);
           }
         }}
-        className="overflow-hidden rounded-[28px] -mx-1 px-1 py-3 -my-3 outline-none"
+        className="overflow-hidden rounded-[28px] -mx-1 px-1 py-3 -my-3"
       >
         <div
           className="flex"
@@ -127,9 +118,11 @@ export const FocusCarousel: React.FC<FocusCarouselProps> = ({ games, running, ca
                 }}
               >
                 <button
+                  data-card
+                  tabIndex={active ? 0 : -1}
                   onClick={() => (active ? onOpen(g) : pick(i))}
                   aria-label={active ? `Open ${g.title}` : `Show ${g.title}`}
-                  className="absolute inset-0 z-10 cursor-default"
+                  className="absolute inset-0 z-10 cursor-default rounded-[26px] focus-visible:outline-offset-[-3px]"
                 />
                 {g.coverImage ? (
                   <img
@@ -169,7 +162,7 @@ export const FocusCarousel: React.FC<FocusCarouselProps> = ({ games, running, ca
                       <Play className="h-5 w-5 fill-current ml-0.5" />
                     </span>
                     {(isRunning || g.installed) && (
-                      <span className="inline-flex items-center gap-1.5 rounded-full bg-black/55 backdrop-blur px-2.5 py-1 text-[11px] font-medium text-white/90">
+                      <span className="inline-flex items-center gap-1.5 rounded-full bg-black/55 backdrop-blur px-2.5 py-1 text-xs font-medium text-white/90">
                         <span className={`h-1.5 w-1.5 rounded-full ${isRunning ? 'bg-success led-pulse' : 'bg-white'}`} />
                         {isRunning ? 'Playing' : 'Installed'}
                       </span>

@@ -307,7 +307,7 @@ export const SettingsScreen: React.FC = () => {
               </p>
               <form onSubmit={handleSaveName} className="flex flex-wrap items-end gap-3" noValidate>
                 <div className="flex-1 min-w-[200px]">
-                  <label htmlFor="display-name" className="text-[11px] font-medium text-slate-400 block mb-1">
+                  <label htmlFor="display-name" className="text-xs font-medium text-slate-400 block mb-1">
                     Display name
                   </label>
                   <input
@@ -328,18 +328,18 @@ export const SettingsScreen: React.FC = () => {
                   {nameBusy ? 'Saving…' : 'Save name'}
                 </button>
                 {nameError && (
-                  <span role="alert" className="text-[11px] text-danger w-full">
+                  <span role="alert" className="text-xs text-danger w-full">
                     {nameError}
                   </span>
                 )}
               </form>
               {currentUser.hasPassword === false ? (
                 <form onSubmit={handleSetPassword} className="grid grid-cols-1 md:grid-cols-2 gap-3" noValidate>
-                  <p className="md:col-span-2 text-[11px] text-slate-400 leading-snug">
+                  <p className="md:col-span-2 text-xs text-slate-400 leading-snug">
                     You signed in with Google, so this account has no password yet. Add one to also sign in with your email.
                   </p>
                   <div>
-                    <label htmlFor="pw-add" className="text-[11px] font-medium text-slate-400 block mb-1">
+                    <label htmlFor="pw-add" className="text-xs font-medium text-slate-400 block mb-1">
                       New password
                     </label>
                     <input
@@ -361,7 +361,7 @@ export const SettingsScreen: React.FC = () => {
                       {pwBusy ? 'Saving…' : 'Add password'}
                     </button>
                     {pwError && (
-                      <span role="alert" className="text-[11px] text-danger">
+                      <span role="alert" className="text-xs text-danger">
                         {pwError}
                       </span>
                     )}
@@ -370,7 +370,7 @@ export const SettingsScreen: React.FC = () => {
               ) : (
               <form onSubmit={handleChangePassword} className="grid grid-cols-1 md:grid-cols-2 gap-3" noValidate>
                 <div>
-                  <label htmlFor="pw-current" className="text-[11px] font-medium text-slate-400 block mb-1">
+                  <label htmlFor="pw-current" className="text-xs font-medium text-slate-400 block mb-1">
                     Current password
                   </label>
                   <input
@@ -384,7 +384,7 @@ export const SettingsScreen: React.FC = () => {
                   />
                 </div>
                 <div>
-                  <label htmlFor="pw-new" className="text-[11px] font-medium text-slate-400 block mb-1">
+                  <label htmlFor="pw-new" className="text-xs font-medium text-slate-400 block mb-1">
                     New password
                   </label>
                   <input
@@ -406,7 +406,7 @@ export const SettingsScreen: React.FC = () => {
                     {pwBusy ? 'Changing…' : 'Change password'}
                   </button>
                   {pwError && (
-                    <span role="alert" className="text-[11px] text-danger">
+                    <span role="alert" className="text-xs text-danger">
                       {pwError}
                     </span>
                   )}
@@ -449,7 +449,7 @@ export const SettingsScreen: React.FC = () => {
               <span className="text-slate-200 font-mono select-text">{serviceHost || 'Not configured'}</span>
             </div>
             {!serviceConfigured && (
-              <p role="alert" className="text-[11px] text-danger leading-snug">
+              <p role="alert" className="text-xs text-danger leading-snug">
                 This build has no service address, so sign-in cannot work. Install the latest version from the download page.
               </p>
             )}

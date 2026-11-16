@@ -83,6 +83,18 @@ function adopt(baseUrl, data) {
   return safe;
 }
 
+// Other modules (payments) can ask for a fresh access token without ever handing it to the page,
+// and are told when the player signs out.
+const signOutListeners = [];
+const onSignOut = (fn) => signOutListeners.push(fn);
+
+async function accessToken() {
+  const baseUrl = appConfig.get().platformApiUrl;
+  if (!baseUrl || !session || session.baseUrl !== baseUrl) return '';
+  if (session.accessExp - Date.now() < 30_000) await refresh(baseUrl);
+  return session && session.baseUrl === baseUrl ? session.access : '';
+}
+
 let refreshing = null;
 function refresh(baseUrl) {
   if (!session || session.baseUrl !== baseUrl || !session.refresh) return Promise.resolve(false);
@@ -219,8 +231,9 @@ function registerPlatformIpc() {
     session = null;
     stored = null;
     persist();
+    signOutListeners.forEach((fn) => fn());
     return { ok: true };
   }));
 }
 
-module.exports = { registerPlatformIpc, findRoute };
+module.exports = { registerPlatformIpc, findRoute, onSignOut, accessToken };

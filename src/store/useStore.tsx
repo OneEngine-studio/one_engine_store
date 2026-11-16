@@ -168,6 +168,8 @@ interface StoreContextType {
   desktopAvailable: boolean;
   /** Game download, install and play are a later release; this build ships with them switched off. */
   gamesEnabled: boolean;
+  /** Coin purchases (Stripe) are configured in this build. */
+  paymentsEnabled: boolean;
   appVersion: string;
   serviceConfigured: boolean;
   updateDisplayName: (displayName: string) => Promise<AuthResult>;
@@ -1001,6 +1003,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         refreshCatalog: () => setCatalogTick((n) => n + 1),
         desktopAvailable: LauncherBridge.isAvailable(),
         gamesEnabled,
+        paymentsEnabled: !!appInfo?.paymentsEnabled,
         appVersion: appInfo?.version ?? '',
         serviceConfigured: appInfo ? appInfo.serviceConfigured : true,
         updateDisplayName,

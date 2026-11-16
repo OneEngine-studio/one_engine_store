@@ -20,7 +20,8 @@ interface StatsCardProps {
 export const StatsCard: React.FC<StatsCardProps> = ({ title, total, totalLabel, fill, items }) => {
   const r = 70;
   const c = 2 * Math.PI * r;
-  const shown = Math.max(0.04, Math.min(1, fill));
+  // Empty means empty: no sliver of progress that does not exist.
+  const shown = Math.max(0, Math.min(1, fill));
   return (
     <section className="rounded-card bg-bg-card border border-white/[0.06] shadow-card p-6 flex flex-col">
       <h2 className="font-display text-lg text-cream">{title}</h2>
@@ -40,14 +41,14 @@ export const StatsCard: React.FC<StatsCardProps> = ({ title, total, totalLabel, 
             fill="none"
             stroke="url(#stat-ring)"
             strokeWidth="14"
-            strokeLinecap="round"
+            strokeLinecap={shown > 0 ? 'round' : 'butt'}
             strokeDasharray={c}
             strokeDashoffset={c * (1 - shown)}
             style={{ transition: 'stroke-dashoffset 900ms cubic-bezier(0.23, 1, 0.32, 1)' }}
           />
         </svg>
         <div className="absolute inset-[26px] rounded-full bg-[#2A1113] flex flex-col items-center justify-center text-center">
-          <span className="text-[10px] text-slate-400">{totalLabel}</span>
+          <span className="text-xs text-slate-400">{totalLabel}</span>
           <span className="font-display text-3xl text-cream tabular-nums">{total}</span>
         </div>
       </div>
@@ -61,7 +62,7 @@ export const StatsCard: React.FC<StatsCardProps> = ({ title, total, totalLabel, 
           >
             <span className="w-9 h-9 rounded-full bg-accent text-white flex items-center justify-center shadow-glow">{it.icon}</span>
             <span className="text-sm font-semibold text-cream tabular-nums">{it.value}</span>
-            <span className="text-[10px] text-slate-400">{it.label}</span>
+            <span className="text-xs text-slate-400">{it.label}</span>
           </button>
         ))}
       </div>

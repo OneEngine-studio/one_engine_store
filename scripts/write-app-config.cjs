@@ -1,6 +1,7 @@
 // Writes electron/app-config.json for the installer from the build environment.
 //
 //   PLATFORM_API_URL   public https:// address of the Platform API (required for a release build)
+//   PAYMENTS_API_URL   optional https:// address of the payments service (coin purchases stay hidden without it)
 //   ENABLE_GAMES       "true" to ship game download, install and launch (off by default)
 //   ALLOW_LOCAL_BUILD  "1" to build a test installer that points at localhost (never publish it)
 //
@@ -23,6 +24,12 @@ if (!url) {
   process.exit(1);
 }
 
-const config = { platformApiUrl: url, gamesEnabled: process.env.ENABLE_GAMES === 'true', allowLocal };
+const paymentsUrl = cleanUrl(process.env.PAYMENTS_API_URL || '', { allowLocal });
+if (process.env.PAYMENTS_API_URL && !paymentsUrl) {
+  console.error('PAYMENTS_API_URL must be a public https:// address (not localhost).');
+  process.exit(1);
+}
+
+const config = { platformApiUrl: url, ...(paymentsUrl ? { paymentsApiUrl: paymentsUrl } : {}), gamesEnabled: process.env.ENABLE_GAMES === 'true', allowLocal };
 fs.writeFileSync(path.join(__dirname, '..', 'electron', 'app-config.json'), JSON.stringify(config, null, 2) + '\n');
 console.log(`app-config.json written: ${url}${config.gamesEnabled ? ' (games enabled)' : ''}${allowLocal ? ' (LOCAL TEST BUILD, do not publish)' : ''}`);

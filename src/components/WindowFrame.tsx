@@ -91,7 +91,7 @@ export const WindowFrame: React.FC = () => {
             <Search className="w-3.5 h-3.5 text-slate-400 shrink-0" strokeWidth={1.75} />
             <span className="truncate text-slate-400">Search games, library, updates…</span>
           </div>
-          <Kbd className="bg-white/[0.06] border-white/10 text-slate-300 rounded-full px-2 py-0.5 text-[10px]">
+          <Kbd className="bg-white/[0.06] border-white/10 text-slate-300 rounded-full px-2 py-0.5 text-xs">
             Ctrl K
           </Kbd>
         </button>
@@ -107,7 +107,7 @@ export const WindowFrame: React.FC = () => {
           <div className="hidden xl:flex items-center gap-2 px-3 py-1 rounded-full bg-success/10 border border-success/25 text-success text-xs tabular-nums">
             <span className="w-1.5 h-1.5 rounded-full bg-success animate-pulse" />
             <span className="truncate max-w-[120px] font-medium">{runningGame.title}</span>
-            <span className="text-slate-400 text-[11px]">({formatTimer(sessionElapsedSeconds)})</span>
+            <span className="text-slate-400 text-xs">({formatTimer(sessionElapsedSeconds)})</span>
           </div>
         )}
 

@@ -15,6 +15,8 @@ export interface AppInfo {
   /** False when the build carries no usable service address. */
   serviceConfigured: boolean;
   serviceUrl: string;
+  /** True when this build knows where coin purchases are served. */
+  paymentsEnabled?: boolean;
   /** Game download, install and launch are part of a later release and ship switched off. */
   gamesEnabled: boolean;
 }

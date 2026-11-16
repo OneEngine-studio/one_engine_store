@@ -62,9 +62,11 @@
 }
 
 /* ── Surfaces: maroon panels, depth from tone and a soft drop shadow ── */
+/* Dialogs: the same lit maroon surface as the sign-in window. */
 .win11-acrylic {
-  background-color: #2A1113;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background-color: #1A0A0B;
+  background-image: radial-gradient(90% 60% at 85% 0%, rgba(226, 90, 90, 0.16), transparent 60%);
+  border: 1px solid rgba(255, 255, 255, 0.08);
   box-shadow: 0 24px 60px rgba(0, 0, 0, 0.6);
 }
 
@@ -75,8 +77,13 @@
   border-radius: 18px;
 }
 
-.win11-tile,
 .win11-card {
+  background-color: #361518;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 22px;
+}
+
+.win11-tile {
   background-color: #361518;
   border: 1px solid rgba(255, 255, 255, 0.06);
   border-radius: 22px;
@@ -84,8 +91,7 @@
 }
 
 @media (hover: hover) and (pointer: fine) {
-  .win11-tile:hover,
-  .win11-card:hover {
+  .win11-tile:hover {
     background-color: #45201F;
     border-color: rgba(255, 255, 255, 0.14);
   }
@@ -155,22 +161,23 @@
 }
 
 .animate-screen-in {
-  animation: screenFade 200ms ease-out both;
+  animation: screenFade 140ms ease-out both;
 }
-/* Every top-level block of a screen rises in just after the one above it. */
+/* On the first screen of a session, each top-level block rises in just after the one above it.
+   Later tab switches only fade: they happen constantly and must feel instant. */
 @keyframes screenFade { from { opacity: 0; } to { opacity: 1; } }
 @keyframes blockRise {
   from { opacity: 0; transform: translateY(16px) scale(0.985); }
   to { opacity: 1; transform: none; }
 }
-.animate-screen-in > * > * { animation: blockRise 560ms var(--ease-out) backwards; }
-.animate-screen-in > * > *:nth-child(1) { animation-delay: 0ms; }
-.animate-screen-in > * > *:nth-child(2) { animation-delay: 60ms; }
-.animate-screen-in > * > *:nth-child(3) { animation-delay: 120ms; }
-.animate-screen-in > * > *:nth-child(4) { animation-delay: 180ms; }
-.animate-screen-in > * > *:nth-child(5) { animation-delay: 240ms; }
-.animate-screen-in > * > *:nth-child(6) { animation-delay: 300ms; }
-.animate-screen-in > * > *:nth-child(n+7) { animation-delay: 360ms; }
+.stagger-blocks > * > * { animation: blockRise 560ms var(--ease-out) backwards; }
+.stagger-blocks > * > *:nth-child(1) { animation-delay: 0ms; }
+.stagger-blocks > * > *:nth-child(2) { animation-delay: 60ms; }
+.stagger-blocks > * > *:nth-child(3) { animation-delay: 120ms; }
+.stagger-blocks > * > *:nth-child(4) { animation-delay: 180ms; }
+.stagger-blocks > * > *:nth-child(5) { animation-delay: 240ms; }
+.stagger-blocks > * > *:nth-child(6) { animation-delay: 300ms; }
+.stagger-blocks > * > *:nth-child(n+7) { animation-delay: 360ms; }
 
 /* App start: the panel settles in, the rail slides in and its icons follow one by one. */
 @keyframes panelIn { from { opacity: 0; transform: translateY(14px) scale(0.985); } to { opacity: 1; transform: none; } }

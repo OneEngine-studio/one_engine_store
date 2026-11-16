@@ -62,7 +62,7 @@ export const Cartridge: React.FC<CartridgeProps> = ({
 
         {/* state */}
         {(running || game.installed) && (
-          <span className="absolute top-2.5 right-2.5 z-10 flex items-center gap-1.5 rounded-full bg-black/60 backdrop-blur px-2 py-0.5 text-[10px] font-medium text-white/90 pointer-events-none">
+          <span className="absolute top-2.5 right-2.5 z-10 flex items-center gap-1.5 rounded-full bg-black/60 backdrop-blur px-2 py-0.5 text-xs font-medium text-white/90 pointer-events-none">
             <span className={`w-1.5 h-1.5 rounded-full ${running ? 'bg-success led-pulse' : 'bg-white'}`} />
             {running ? 'Playing' : game.updateAvailable ? 'Update' : 'Installed'}
           </span>
@@ -103,7 +103,7 @@ export const Cartridge: React.FC<CartridgeProps> = ({
             {game.title}
           </span>
           {game.installSizeGb > 0 && (
-            <span className="font-mono text-[10px] text-slate-500 shrink-0 tabular-nums">
+            <span className="font-mono text-xs text-slate-500 shrink-0 tabular-nums">
               {game.installSizeGb < 10 ? game.installSizeGb.toFixed(1) : Math.round(game.installSizeGb)} GB
             </span>
           )}

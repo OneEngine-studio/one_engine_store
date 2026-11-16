@@ -21,7 +21,7 @@ export const StatStrip: React.FC<{ stats: Stat[] }> = ({ stats }) => (
           i > 0 ? 'border-t sm:border-t-0 sm:border-l border-white/[0.06]' : ''
         }`}
       >
-        <span className="flex items-center gap-2 text-[11px] text-slate-400">
+        <span className="flex items-center gap-2 text-xs text-slate-400">
           {s.live && <span className="w-1.5 h-1.5 rounded-full bg-accent led-pulse" />}
           {s.label}
         </span>

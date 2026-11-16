@@ -40,7 +40,7 @@ export const CommandPalette: React.FC = () => {
       onClick={() => setCommandPaletteOpen(false)}
     >
       <div
-        className="w-full max-w-2xl win11-acrylic rounded-3xl overflow-hidden flex flex-col animate-modal-in"
+        className="w-full max-w-2xl win11-acrylic rounded-3xl overflow-hidden flex flex-col"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Search Input Bar */}
@@ -90,12 +90,12 @@ export const CommandPalette: React.FC = () => {
                             {game.title}
                           </span>
                           {isOwned && (
-                            <span className="text-[10px] text-success border border-success/30 bg-success/15 px-2 py-0.5 rounded-full leading-none font-medium">
+                            <span className="text-xs text-success border border-success/30 bg-success/15 px-2 py-0.5 rounded-full leading-none font-medium">
                               In library
                             </span>
                           )}
                         </div>
-                        <span className="text-[11px] text-slate-400 mt-0.5 block">
+                        <span className="text-xs text-slate-400 mt-0.5 block">
                           {game.developer}
                         </span>
                       </div>

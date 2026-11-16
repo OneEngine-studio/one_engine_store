@@ -83,7 +83,7 @@ export const GameDetailScreen: React.FC = () => {
           >
             <span>Coming soon</span>
           </button>
-          <p className="text-[11px] text-slate-400 text-center leading-snug">
+          <p className="text-xs text-slate-400 text-center leading-snug">
             Downloads and play arrive in a later update.
           </p>
         </div>
@@ -284,14 +284,14 @@ export const GameDetailScreen: React.FC = () => {
           {/* Tags as sentence-case pills */}
           {game.tags.length > 0 && (
           <div className="pt-2 border-t border-white/[0.06] space-y-2">
-            <span className="text-[11px] font-semibold text-slate-400 block">
+            <span className="text-xs font-semibold text-slate-400 block">
               Tags
             </span>
             <div className="flex flex-wrap gap-1.5">
               {game.tags.map((tag) => (
                 <span
                   key={tag}
-                  className="px-2.5 py-1 text-[11px] font-medium bg-white/[0.04] border border-white/[0.08] rounded-full text-slate-300"
+                  className="px-2.5 py-1 text-xs font-medium bg-white/[0.04] border border-white/[0.08] rounded-full text-slate-300"
                 >
                   {tag}
                 </span>

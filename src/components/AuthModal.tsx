@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useStore } from '../store/useStore';
 import { X, LogOut, AlertCircle, Eye, EyeOff, MailCheck } from 'lucide-react';
 import { platformApi } from '../lib/platformApi';
+import { Icon3D } from './ui/Icon3D';
 
 type View = 'signin' | 'register' | 'forgot' | 'reset';
 type ServerStatus = 'CHECKING' | 'ONLINE' | 'OFFLINE';
@@ -158,7 +159,7 @@ const Field: React.FC<{ id: string; label: string; children: React.ReactNode; hi
       {label}
     </label>
     {children}
-    {hint && <p className="text-[11px] text-slate-500 mt-1">{hint}</p>}
+    {hint && <p className="text-xs text-slate-500 mt-1">{hint}</p>}
   </div>
 );
 
@@ -271,6 +272,17 @@ export const AuthModal: React.FC = () => {
     const t = setTimeout(() => setResendWait((s) => s - 1), 1000);
     return () => clearTimeout(t);
   }, [resendWait]);
+
+  // Fields rise in once when the window opens; switching between sign-in and sign-up is instant after that.
+  const [intro, setIntro] = useState(true);
+  useEffect(() => {
+    if (!isAuthModalOpen) {
+      setIntro(true);
+      return;
+    }
+    const t = setTimeout(() => setIntro(false), 700);
+    return () => clearTimeout(t);
+  }, [isAuthModalOpen]);
 
   if (!isAuthModalOpen) return null;
 
@@ -493,46 +505,45 @@ export const AuthModal: React.FC = () => {
           aria-modal="true"
           aria-labelledby="auth-title"
           onClick={(e) => e.stopPropagation()}
-          className="relative w-full max-w-sm animate-modal-in"
+          className="relative w-full max-w-sm auth-pop"
         >
           {closeButton}
-          <div className="rounded-panel bg-cream text-[#0A0A0A] overflow-hidden shadow-modal">
-            <div className="h-10 flex items-end justify-center bg-[#0A0A0A]">
-              <span className="mb-2 w-16 h-2.5 rounded-full bg-bg-app ring-1 ring-white/10" />
+          <div className="rounded-[28px] bg-[#1A0A0B] border border-white/[0.08] overflow-hidden shadow-modal">
+            {/* header: lit maroon band with the player's avatar overlapping it */}
+            <div className="relative h-24 bg-[radial-gradient(90%_120%_at_80%_0%,rgba(226,90,90,0.45),#4A1B1F_60%,#2A1113)]">
+              <Icon3D kind="controller" className="absolute right-5 top-4 w-20 h-auto opacity-80" />
             </div>
-            <div className="p-6 pt-5 space-y-5">
-              <div className="flex items-center gap-4">
+            <div className="px-6 pb-6 -mt-9 space-y-5">
+              <div className="flex items-end gap-4">
                 <img
                   src={currentUser.avatarUrl}
                   alt=""
-                  className="w-16 h-16 rounded-2xl object-cover bg-[#0A0A0A]/10 ring-2 ring-[#0A0A0A]/20"
+                  className="relative w-[72px] h-[72px] rounded-2xl object-cover bg-bg-card ring-4 ring-[#1A0A0B]"
                 />
-                <div className="min-w-0">
-                  <h2 id="auth-title" className="font-display text-2xl font-extrabold leading-tight truncate">
+                <div className="min-w-0 pb-1">
+                  <h2 id="auth-title" className="font-display text-2xl text-cream leading-tight truncate">
                     {currentUser.callsign}
                   </h2>
-                  <p className="text-xs text-[#0A0A0A]/60 truncate">{currentUser.email}</p>
+                  <p className="text-xs text-slate-400 truncate">{currentUser.email}</p>
                 </div>
               </div>
 
-              <dl className="grid grid-cols-2 gap-x-4 gap-y-3 text-xs">
-                <div>
-                  <dt className="text-[#0A0A0A]/50">Email</dt>
-                  <dd className="font-semibold">Confirmed</dd>
+              <dl className="grid grid-cols-2 gap-3 text-xs">
+                <div className="rounded-xl bg-white/[0.04] border border-white/[0.06] p-3">
+                  <dt className="text-slate-400">Email</dt>
+                  <dd className="mt-0.5 font-semibold text-cream flex items-center gap-1.5">
+                    <span className="w-1.5 h-1.5 rounded-full bg-success" /> Confirmed
+                  </dd>
                 </div>
-                <div>
-                  <dt className="text-[#0A0A0A]/50">Games owned</dt>
-                  <dd className="font-semibold tabular-nums">{currentUser.ownedGameIds.length}</dd>
-                </div>
-                <div className="col-span-2">
-                  <dt className="text-[#0A0A0A]/50">Account ID</dt>
-                  <dd className="font-mono text-[11px] truncate">{currentUser.id}</dd>
+                <div className="rounded-xl bg-white/[0.04] border border-white/[0.06] p-3">
+                  <dt className="text-slate-400">Games owned</dt>
+                  <dd className="mt-0.5 font-display text-lg text-cream tabular-nums leading-none">{currentUser.ownedGameIds.length}</dd>
                 </div>
               </dl>
 
-              <div className="rounded-xl bg-[#0A0A0A]/[0.07] p-3.5">
-                <div className="text-xs font-semibold">One-time launch pass</div>
-                <p className="text-[11px] text-[#0A0A0A]/60 leading-snug mt-0.5">
+              <div className="rounded-xl bg-white/[0.04] border border-white/[0.06] p-3.5">
+                <div className="text-xs font-semibold text-cream">One-time launch pass</div>
+                <p className="text-xs text-slate-400 leading-snug mt-1">
                   Each launch hands the game a pass that works once for 60 seconds. Your password never reaches the game.
                 </p>
               </div>
@@ -540,14 +551,14 @@ export const AuthModal: React.FC = () => {
               <div className="flex items-center justify-between gap-3 pt-1">
                 <button
                   onClick={logout}
-                  className="px-3 h-10 rounded-full text-sm font-semibold text-[#E5484D] hover:bg-[#E5484D]/10 flex items-center gap-2 cursor-default transition-surface"
+                  className="px-3 h-10 rounded-full text-sm font-semibold text-slate-300 hover:text-white hover:bg-white/[0.06] flex items-center gap-2 cursor-default transition-surface"
                 >
                   <LogOut className="w-4 h-4" />
                   Sign out
                 </button>
                 <button
                   onClick={closeAuthModal}
-                  className="px-7 h-10 rounded-full bg-accent hover:bg-accent-hover text-sm font-bold text-white cursor-default active:scale-[0.97] transition-[background-color,transform]"
+                  className="px-7 h-10 rounded-full bg-accent hover:bg-accent-hover text-sm font-bold text-white shadow-glow cursor-default active:scale-[0.97] transition-[background-color,transform]"
                 >
                   Done
                 </button>
@@ -575,7 +586,7 @@ export const AuthModal: React.FC = () => {
             </div>
           </aside>
 
-          <form key={needsVerification ? 'verify' : view} onSubmit={handleSubmit} className="auth-form p-8 space-y-5 self-center" noValidate>
+          <form key={needsVerification ? 'verify' : view} onSubmit={handleSubmit} className={`${intro ? 'auth-form ' : ''}p-8 space-y-5 self-center`} noValidate>
             {!needsVerification && (view === 'signin' || view === 'register') ? (
               <div role="tablist" className="flex gap-6 border-b border-white/[0.08]">
                 {(
@@ -683,7 +694,7 @@ export const AuthModal: React.FC = () => {
 
             {googleReady && !needsVerification && (view === 'signin' || view === 'register') && (
               <div className="space-y-3">
-                <div className="flex items-center gap-3 text-[11px] text-slate-500">
+                <div className="flex items-center gap-3 text-xs text-slate-500">
                   <span className="h-px flex-1 bg-white/[0.08]" />
                   <span>or</span>
                   <span className="h-px flex-1 bg-white/[0.08]" />
@@ -752,17 +763,17 @@ export const AuthModal: React.FC = () => {
             {showServerDetails && (
               <div className="rounded-input border border-white/[0.08] p-3.5 text-xs space-y-2.5 animate-soft-enter">
                 <div className="flex items-center justify-between gap-3">
-                  <span className="text-[11px] text-slate-400">OneEngine service</span>
+                  <span className="text-xs text-slate-400">OneEngine service</span>
                   <button
                     type="button"
                     onClick={recheck}
-                    className="text-[11px] text-accent hover:text-accent-hover cursor-default"
+                    className="text-xs text-accent hover:text-accent-hover cursor-default"
                   >
                     Check again
                   </button>
                 </div>
                 {serverStatus === 'OFFLINE' && serverMessage && (
-                  <p role="status" className="text-[11px] text-slate-400 leading-snug">
+                  <p role="status" className="text-xs text-slate-400 leading-snug">
                     {serverMessage}
                   </p>
                 )}

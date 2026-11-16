@@ -1,21 +1,13 @@
 import React, { useState } from 'react';
 import { useStore } from '../store/useStore';
 import { Cartridge } from '../components/ui/Cartridge';
-import { Pill } from '../components/ui/Pill';
 import { StatsCard } from '../components/ui/StatsCard';
 import { Timeline } from '../components/ui/Timeline';
 import { Shelf } from '../components/ui/Shelf';
 import { FocusCarousel } from '../components/ui/FocusCarousel';
 import { CategoryCarousel, CategoryItem } from '../components/ui/CategoryCarousel';
-import type { Icon3DKind } from '../components/ui/Icon3D';
+import { Icon3D, type Icon3DKind } from '../components/ui/Icon3D';
 import { ChevronRight, Search, Clock, WifiOff, Flame, Gamepad2, Download, Heart } from 'lucide-react';
-
-const MOODS = [
-  { id: 'all', label: 'Anything', hint: 'Everything in the catalog' },
-  { id: 'cozy', label: 'Cozy', hint: 'Slow, calm, no pressure', words: ['relax', 'cozy', 'simulation', 'puzzle', 'builder'] },
-  { id: 'focus', label: 'Focused', hint: 'Strategy and planning', words: ['strategy', 'tactical', 'management', 'logistics'] },
-  { id: 'intense', label: 'Intense', hint: 'Fast and high stakes', words: ['action', 'shooter', 'survival', 'fps'] },
-];
 
 const CATEGORIES: Array<{ id: string; label: string; kind: Icon3DKind; words: string[] }> = [
   { id: 'action', label: 'Action', kind: 'rocket', words: ['action', 'shooter', 'fps', 'survival', 'adventure'] },
@@ -43,7 +35,6 @@ export const StoreScreen: React.FC = () => {
     runningGameId,
   } = useStore();
 
-  const [moodIndex, setMoodIndex] = useState(0);
   const [categoryId, setCategoryId] = useState('all');
 
   const hour = new Date().getHours();
@@ -61,13 +52,7 @@ export const StoreScreen: React.FC = () => {
   const searched = (category ? games.filter((g) => inCategory(g, category.words)) : games)
     .filter((g) => !searchQuery || g.title.toLowerCase().includes(q) || g.tags.some((t) => t.toLowerCase().includes(q)));
 
-  const mood = MOODS[moodIndex];
-  const moodMatches = (g: (typeof games)[number]) =>
-    !mood.words || g.tags.concat(g.genre ?? '').some((t) => mood.words!.some((w) => t.toLowerCase().includes(w)));
-  const matched = searched.filter(moodMatches);
-  // Never leave the shelf empty: fall back to everything and say so.
-  const shelfGames = matched.length > 0 ? matched : searched;
-  const moodFallback = matched.length === 0 && moodIndex !== 0;
+  const shelfGames = searched;
 
   const owned = games.filter((g) => currentUser.ownedGameIds.includes(g.id));
   const wishlisted = games.filter((g) => g.isFavorite);
@@ -127,6 +112,12 @@ export const StoreScreen: React.FC = () => {
             <img src={spotlight.coverImage} alt="" draggable={false} className="absolute inset-0 w-full h-full object-cover" />
           )}
           <div className="absolute inset-0 bg-gradient-to-r from-[#361518] via-[#361518]/85 to-[#361518]/10" />
+          {!spotlight?.coverImage && (
+            <>
+              <div className="absolute inset-0 bg-[radial-gradient(60%_90%_at_85%_40%,rgba(226,90,90,0.28),transparent_70%)] pointer-events-none" />
+              <Icon3D kind={spotlight ? 'controller' : 'rocket'} className="hidden md:block absolute right-12 top-1/2 -translate-y-1/2 w-44 h-auto pointer-events-none" />
+            </>
+          )}
           <div className="relative p-8 flex flex-col justify-between gap-6 max-w-lg">
             <div>
               <p className="text-sm text-slate-300">
@@ -141,7 +132,14 @@ export const StoreScreen: React.FC = () => {
                   <p className="mt-2 text-sm text-slate-300 leading-relaxed line-clamp-3">{spotlight.description || spotlight.tagline}</p>
                 </>
               ) : (
-                <h1 className="mt-4 font-display text-[40px] text-cream">Welcome to OneEngine</h1>
+                <>
+                  <h1 className="mt-4 font-display text-[40px] text-cream leading-[1.05]">Welcome to OneEngine</h1>
+                  <p className="mt-2 text-sm text-slate-300 leading-relaxed max-w-sm">
+                    {catalogStatus === 'error'
+                      ? "We can't reach the store right now. Your account and settings still work."
+                      : 'New games appear here the moment they are published. Sign in to keep your library and stats in sync.'}
+                  </p>
+                </>
               )}
             </div>
             {spotlight && (
@@ -163,7 +161,7 @@ export const StoreScreen: React.FC = () => {
         </div>
 
         <StatsCard
-          title="Your statistic"
+          title="Your stats"
           totalLabel="Total play time"
           total={`${owned.reduce((h, g) => h + g.playHours, 0).toLocaleString()}h`}
           fill={owned.length ? installedCount / owned.length : 0}
@@ -191,7 +189,7 @@ export const StoreScreen: React.FC = () => {
               </button>
             )}
           </div>
-          <CategoryCarousel items={categoryItems} selectedId={categoryId} onSelect={(id) => setCategoryId(id === categoryId ? 'all' : id)} />
+          <CategoryCarousel items={categoryItems} selectedId={categoryId} onSelect={setCategoryId} />
         </section>
       )}
 
@@ -229,21 +227,13 @@ export const StoreScreen: React.FC = () => {
       )}
 
       {/* Featured shelf */}
+      {games.length > 0 && (
       <section className="space-y-5">
-        <div className="flex flex-wrap items-center justify-between gap-4">
-          <div>
-            <h2 className="font-display text-2xl text-cream">{category ? `${category.label} games` : mood.id === 'all' ? 'New games' : `${mood.label} picks`}</h2>
-            <p className="text-xs text-slate-400 mt-0.5">
-              {moodFallback ? `Nothing tagged ${mood.label.toLowerCase()} yet, showing everything` : MOODS[moodIndex].hint}
-            </p>
-          </div>
-          <div role="tablist" aria-label="Mood" className="flex flex-wrap gap-2">
-            {MOODS.map((m, i) => (
-              <Pill key={m.id} role="tab" active={i === moodIndex} onClick={() => setMoodIndex(i)}>
-                {m.label}
-              </Pill>
-            ))}
-          </div>
+        <div>
+          <h2 className="font-display text-2xl text-cream">{category ? `${category.label} games` : 'New games'}</h2>
+          <p className="text-xs text-slate-400 mt-0.5">
+            {shelfGames.length === 0 ? (searchQuery ? 'No games match your search.' : 'No games in this category yet.') : `${shelfGames.length} ${shelfGames.length === 1 ? 'game' : 'games'}${category ? '' : ' in the catalog'}`}
+          </p>
         </div>
         <FocusCarousel
           games={shelfGames}
@@ -265,6 +255,7 @@ export const StoreScreen: React.FC = () => {
           }}
         />
       </section>
+      )}
     </div>
   );
 };

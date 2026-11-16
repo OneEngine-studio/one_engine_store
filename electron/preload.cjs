@@ -16,6 +16,9 @@ contextBridge.exposeInMainWorld('electronAPI', {
     info: () => ipcRenderer.invoke('app-info'),
     openExternal: (url) => ipcRenderer.invoke('open-external', url),
   },
+  payments: {
+    request: (payload) => ipcRenderer.invoke('payments-request', payload),
+  },
   platform: {
     request: (payload) => ipcRenderer.invoke('platform-request', payload),
     restore: () => ipcRenderer.invoke('platform-restore'),

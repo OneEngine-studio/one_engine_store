@@ -27,7 +27,7 @@ export const NotificationPopover: React.FC<NotificationPopoverProps> = ({ isOpen
         </div>
         <button
           onClick={markAllNotificationsRead}
-          className="text-[11px] text-slate-400 hover:text-white flex items-center gap-1 transition-colors cursor-default"
+          className="text-xs text-slate-400 hover:text-white flex items-center gap-1 transition-colors cursor-default"
         >
           <Check className="w-3 h-3" /> Mark all read
         </button>
@@ -57,9 +57,9 @@ export const NotificationPopover: React.FC<NotificationPopoverProps> = ({ isOpen
                     {item.title}
                   </span>
                 </div>
-                <span className="text-[10px] text-slate-500 tabular-nums">{item.time}</span>
+                <span className="text-xs text-slate-500 tabular-nums">{item.time}</span>
               </div>
-              <p className="text-[11px] text-slate-400 leading-normal pl-5">
+              <p className="text-xs text-slate-400 leading-normal pl-5">
                 {item.description}
               </p>
             </div>

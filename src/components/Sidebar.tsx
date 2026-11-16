@@ -8,6 +8,7 @@ import {
   Users,
   Settings,
   Image as ImageIcon,
+  Coins,
 } from 'lucide-react';
 import { NavigationTab, Game } from '../types/store';
 
@@ -69,6 +70,7 @@ export const Sidebar: React.FC = () => {
     games,
     currentUser,
     openAuthModal,
+    paymentsEnabled,
   } = useStore();
 
   const [imageErrors, setImageErrors] = useState<Record<string, boolean>>({});
@@ -86,6 +88,7 @@ export const Sidebar: React.FC = () => {
       badge: activeDownloadCount > 0 ? activeDownloadCount : undefined,
     },
     { id: 'activity' as NavigationTab, label: 'Activity', icon: BarChart3 },
+    ...(paymentsEnabled ? [{ id: 'wallet' as NavigationTab, label: 'Coins', icon: Coins }] : []),
     { id: 'community' as NavigationTab, label: 'Community (coming soon)', icon: Users },
   ];
 

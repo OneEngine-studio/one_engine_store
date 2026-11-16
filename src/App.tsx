@@ -13,6 +13,7 @@ import { SettingsScreen } from './screens/SettingsScreen';
 import { ActivityScreen } from './screens/ActivityScreen';
 import { CommunityScreen } from './screens/CommunityScreen';
 import { BottomDock } from './components/BottomDock';
+import { WalletScreen } from './screens/WalletScreen';
 import { GAME_AMBIENT_COLORS, DEFAULT_AMBIENT } from './lib/ambientColor';
 
 const MainViewport: React.FC = () => {
@@ -27,6 +28,12 @@ const MainViewport: React.FC = () => {
   } = useStore();
 
   const scrollContainerRef = useRef<HTMLDivElement>(null);
+  // Only the first screen of the session gets the staggered entrance; once the player navigates, screens just fade.
+  const screenKey = activeTab + (activeTab === 'game-detail' ? `-${selectedGameId}` : '');
+  const firstScreenKeyRef = useRef(screenKey);
+  const navigatedRef = useRef(false);
+  if (screenKey !== firstScreenKeyRef.current) navigatedRef.current = true;
+  const firstScreen = !navigatedRef.current;
   const scrollMapRef = useRef<Record<string, number>>({});
 
   // Dynamic ambient tint extraction based on active screen & selected game art
@@ -84,6 +91,8 @@ const MainViewport: React.FC = () => {
         return <LibraryScreen />;
       case 'downloads':
         return <DownloadsScreen />;
+      case 'wallet':
+        return <WalletScreen />;
       case 'community':
         return <CommunityScreen />;
       case 'activity':
@@ -125,7 +134,7 @@ const MainViewport: React.FC = () => {
             onScroll={handleScroll}
             className="flex-1 flex flex-col overflow-y-auto overflow-x-hidden relative z-10 custom-scroll min-h-0"
           >
-            <div key={activeTab + (activeTab === 'game-detail' ? `-${selectedGameId}` : '')} className="flex-1 flex flex-col min-h-full animate-screen-in">
+            <div key={screenKey} className={`flex-1 flex flex-col min-h-full animate-screen-in${firstScreen ? ' stagger-blocks' : ''}`}>
               {renderActiveScreen()}
             </div>
           </div>

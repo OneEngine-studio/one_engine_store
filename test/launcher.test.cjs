@@ -126,3 +126,35 @@ test('the window is created with the hardened settings', () => {
   }
   assert.ok(main.includes('setWindowOpenHandler') && main.includes('will-navigate'));
 });
+
+// ---- payments client ----
+const payments = require('../electron/payments.cjs');
+
+test('payments: only the listed routes are reachable', () => {
+  assert.ok(payments.findRoute('GET', '/api/v1/coin-bundles'));
+  assert.ok(payments.findRoute('GET', '/api/v1/wallet/me'));
+  assert.ok(payments.findRoute('POST', '/api/v1/payments/checkout-sessions'));
+  assert.ok(payments.findRoute('GET', '/api/v1/payments/orders/ord_123-abc'));
+  assert.equal(payments.findRoute('POST', '/api/v1/payments/mock-complete/ord_1'), undefined);
+  assert.equal(payments.findRoute('POST', '/api/v1/auth/mock-token'), undefined);
+  assert.equal(payments.findRoute('GET', '/api/v1/admin/orders'), undefined);
+  assert.equal(payments.findRoute('POST', '/api/v1/payments/webhooks/stripe'), undefined);
+  assert.equal(payments.findRoute('GET', '/api/v1/payments/orders/../admin'), undefined);
+});
+
+test('payments: request bodies are rebuilt from known fields only', () => {
+  assert.deepEqual(payments.cleanBody('/api/v1/payments/checkout-sessions', { bundleSku: 'coins_500', provider: 'mock', amount: 1 }), {
+    bundleSku: 'coins_500',
+    provider: 'stripe',
+  });
+  assert.equal(payments.cleanBody('/api/v1/payments/checkout-sessions', { bundleSku: '../x' }), null);
+  assert.equal(payments.cleanBody('/api/v1/payments/checkout-sessions', {}), null);
+  assert.deepEqual(payments.cleanBody('/api/v1/shop/purchases', { itemSku: 'skin_01', price: 0 }), { itemSku: 'skin_01' });
+});
+
+test('payments: only Stripe\'s hosted checkout page is ever opened', () => {
+  assert.ok(payments.stripeCheckoutUrl('https://checkout.stripe.com/c/pay/cs_test_abc'));
+  for (const bad of ['http://checkout.stripe.com/x', 'https://checkout.stripe.com.evil.example/x', 'https://evil.example/checkout.stripe.com', 'https://u:p@checkout.stripe.com/x', 'file:///c:/x', '', 'nope']) {
+    assert.equal(payments.stripeCheckoutUrl(bad), '', bad);
+  }
+});

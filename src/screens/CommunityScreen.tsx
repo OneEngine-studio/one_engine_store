@@ -7,7 +7,7 @@ export const CommunityScreen: React.FC = () => (
       <h1 className="font-display text-4xl font-extrabold tracking-tight text-cream">Community</h1>
       <p className="text-xs text-slate-400 mt-1">News, friends and discussion</p>
     </div>
-    <ComingSoon title="Community is coming">
+    <ComingSoon title="Community is coming" icon="user">
       Friends, news and discussion are not part of this version. For now you can follow OneEngine updates on the website.
     </ComingSoon>
   </div>

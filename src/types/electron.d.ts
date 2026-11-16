@@ -12,8 +12,16 @@ export interface ElectronAPI {
   maximizeWindow: () => void;
   closeWindow: () => void;
   app: {
-    info: () => Promise<{ version: string; serviceConfigured: boolean; serviceUrl: string; gamesEnabled: boolean }>;
+    info: () => Promise<{ version: string; serviceConfigured: boolean; serviceUrl: string; paymentsEnabled?: boolean; gamesEnabled: boolean }>;
     openExternal: (url: string) => Promise<boolean>;
+  };
+  payments: {
+    request: (payload: {
+      path: string;
+      method?: string;
+      body?: unknown;
+      idempotencyKey?: string;
+    }) => Promise<{ status: number; data: Record<string, unknown> }>;
   };
   platform: {
     request: (payload: {

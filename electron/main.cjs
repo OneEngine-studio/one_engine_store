@@ -4,6 +4,7 @@ const fs = require('fs');
 const appConfig = require('./config.cjs');
 const { isAppUrl, isTrustedSender, DEV_ORIGIN } = require('./security.cjs');
 const { registerPlatformIpc } = require('./platform.cjs');
+const { registerPaymentsIpc } = require('./payments.cjs');
 const { registerInstallerIpc, stopEverything } = require('./installer.cjs');
 
 let mainWindow = null;
@@ -123,7 +124,7 @@ function registerAppIpc() {
 
   ipcMain.handle('app-info', fromApp(() => {
     const cfg = appConfig.get();
-    return { version: cfg.version, serviceConfigured: !!cfg.platformApiUrl, serviceUrl: cfg.platformApiUrl, gamesEnabled: cfg.gamesEnabled };
+    return { version: cfg.version, serviceConfigured: !!cfg.platformApiUrl, serviceUrl: cfg.platformApiUrl, paymentsEnabled: !!cfg.paymentsApiUrl, gamesEnabled: cfg.gamesEnabled };
   }));
   ipcMain.handle('open-external', fromApp((url) => openExternal(url)));
 }
@@ -132,6 +133,7 @@ app.whenReady().then(() => {
   lockDownSession();
   registerAppIpc();
   registerPlatformIpc();
+  registerPaymentsIpc();
   const cfg = appConfig.get();
   if (cfg.gamesEnabled) {
     registerInstallerIpc(() => mainWindow, { isTrustedSender, downloadOrigin: cfg.platformApiUrl });

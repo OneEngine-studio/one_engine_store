@@ -9,6 +9,10 @@ import { FocusCarousel } from '../components/ui/FocusCarousel';
 const MB = 1024 * 1024;
 const GB = 1024 * MB;
 
+// Storage legend: brand reds from strongest to softest.
+const SEGMENT_COLORS = ['#BB3B3B', '#E27A78', '#7A2A2E', '#D9A5A5'];
+const segmentColor = (i: number) => SEGMENT_COLORS[i % SEGMENT_COLORS.length];
+
 const formatSize = (bytes: number) => (bytes >= GB ? `${(bytes / GB).toFixed(2)} GB` : `${(bytes / MB).toFixed(0)} MB`);
 
 const formatEta = (seconds: number) => {
@@ -95,13 +99,22 @@ export const DownloadsScreen: React.FC = () => {
     setShowThrottleModal(false);
   };
 
-  return (
-    <div className="p-8 space-y-8 max-w-7xl mx-auto w-full">
-      {!gamesEnabled && (
-        <ComingSoon title="Downloads arrive in a later update">
+  if (!gamesEnabled) {
+    return (
+      <div className="p-8 space-y-8 max-w-7xl mx-auto w-full">
+        <div>
+          <h1 className="font-display text-4xl text-cream">Downloads</h1>
+          <p className="text-xs text-slate-400 mt-1">Installs, updates and storage</p>
+        </div>
+        <ComingSoon title="Downloads arrive in a later update" icon="bolt">
           Game downloads and installs are not part of this version yet. Nothing is being downloaded.
         </ComingSoon>
-      )}
+      </div>
+    );
+  }
+
+  return (
+    <div className="p-8 space-y-8 max-w-7xl mx-auto w-full">
       {/* Throttle bandwidth modal */}
       {showThrottleModal && (
         <div
@@ -229,16 +242,16 @@ export const DownloadsScreen: React.FC = () => {
                 <svg viewBox={`0 0 ${svgWidth} ${svgHeight}`} className="w-full h-full" preserveAspectRatio="none">
                   <defs>
                     <linearGradient id="downloadSpeedGrad" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="#FFFFFF" stopOpacity="0.28" />
-                      <stop offset="100%" stopColor="#FFFFFF" stopOpacity="0.0" />
+                      <stop offset="0%" stopColor="#E25A5A" stopOpacity="0.35" />
+                      <stop offset="100%" stopColor="#BB3B3B" stopOpacity="0.0" />
                     </linearGradient>
                   </defs>
                   <path d={pathD} fill="url(#downloadSpeedGrad)" />
-                  <path d={lineD} fill="none" stroke="#FFFFFF" strokeWidth="2" />
+                  <path d={lineD} fill="none" stroke="#E25A5A" strokeWidth="2" />
                 </svg>
               </div>
 
-              <div className="flex justify-between text-[11px] text-slate-500 tabular-nums px-1">
+              <div className="flex justify-between text-xs text-slate-500 tabular-nums px-1">
                 <span>Earlier</span>
                 <span>Peak {peakSpeed.toFixed(1)} MB/s</span>
                 <span>Now {currentSpeed.toFixed(1)} MB/s</span>
@@ -258,13 +271,13 @@ export const DownloadsScreen: React.FC = () => {
 
           <div className="grid grid-cols-2 gap-3 pt-3 border-t border-white/[0.06] text-center text-xs tabular-nums">
             <div className="p-4 rounded-2xl bg-white/[0.03] text-left space-y-1">
-              <span className="text-[11px] text-slate-400 block">Download speed</span>
+              <span className="text-xs text-slate-400 block">Download speed</span>
               <span className="font-display text-xl font-light whitespace-nowrap text-cream">
                 <NumberTicker value={currentSpeed} decimalPlaces={1} suffix=" MB/s" />
               </span>
             </div>
             <div className="p-4 rounded-2xl bg-white/[0.03] text-left space-y-1">
-              <span className="text-[11px] text-slate-400 block">Fastest this session</span>
+              <span className="text-xs text-slate-400 block">Fastest this session</span>
               <span className="font-display text-xl font-light whitespace-nowrap text-cream">
                 <NumberTicker value={peakSpeed} decimalPlaces={1} suffix=" MB/s" />
               </span>
@@ -282,7 +295,7 @@ export const DownloadsScreen: React.FC = () => {
 
             <div className="space-y-3">
               <div>
-                <span className="text-[11px] text-slate-400 block truncate" title={settings.downloadDirectory}>
+                <span className="text-xs text-slate-400 block truncate" title={settings.downloadDirectory}>
                   {settings.downloadDirectory || 'Not chosen yet'}
                 </span>
                 <span className="mt-1 flex items-baseline gap-1.5">
@@ -300,20 +313,20 @@ export const DownloadsScreen: React.FC = () => {
                     className="h-full rounded-full"
                     style={{
                       width: `${(g.installSizeGb / Math.max(installedGb, 0.01)) * 100}%`,
-                      background: i === 0 ? '#FFFFFF' : i === 1 ? '#A3A3A3' : '#525252',
+                      background: segmentColor(i),
                     }}
                     title={`${g.title}: ${g.installSizeGb} GB`}
                   />
                 ))}
               </div>
 
-              <ul className="space-y-1.5 pt-1 text-[11px] text-slate-400">
+              <ul className="space-y-1.5 pt-1 text-xs text-slate-400">
                 {installedGames.length === 0 && <li>Nothing installed yet</li>}
                 {installedGames.map((g, i) => (
                   <li key={g.id} className="flex items-center gap-2">
                     <span
                       className="w-2.5 h-2.5 rounded-full shrink-0"
-                      style={{ background: i === 0 ? '#FFFFFF' : i === 1 ? '#A3A3A3' : '#525252' }}
+                      style={{ background: segmentColor(i) }}
                     />
                     <span className="truncate">{g.title}</span>
                     <span className="ml-auto tabular-nums text-slate-300">{g.installSizeGb} GB</span>
@@ -366,7 +379,7 @@ export const DownloadsScreen: React.FC = () => {
                       >
                         {item.title}
                       </h3>
-                      <div className="flex items-center gap-2 text-[11px] text-slate-400 mt-0.5 tabular-nums">
+                      <div className="flex items-center gap-2 text-xs text-slate-400 mt-0.5 tabular-nums">
                         <span className={`font-semibold ${statusColor(item)}`}>{statusLabel(item)}</span>
                         <span>·</span>
                         <span>
@@ -378,7 +391,7 @@ export const DownloadsScreen: React.FC = () => {
 
                   <div className="flex-1 max-w-md space-y-1.5">
                     {isFailed ? (
-                      <p className="text-[11px] text-danger flex items-start gap-1.5 leading-snug">
+                      <p className="text-xs text-danger flex items-start gap-1.5 leading-snug">
                         <AlertTriangle className="w-3.5 h-3.5 shrink-0 mt-px" />
                         <span>{item.message || 'The install failed.'}</span>
                       </p>
@@ -387,7 +400,7 @@ export const DownloadsScreen: React.FC = () => {
                         <div className="flex items-center justify-between text-xs tabular-nums">
                           <span className="text-white font-semibold">{Math.round(item.progress)}%</span>
                           {item.status === 'DOWNLOADING' && item.etaSeconds > 0 && (
-                            <span className="text-slate-400 flex items-center gap-1 text-[11px]">
+                            <span className="text-slate-400 flex items-center gap-1 text-xs">
                               <Clock className="w-3 h-3 text-slate-400" /> {formatEta(item.etaSeconds)}
                             </span>
                           )}
@@ -462,7 +475,7 @@ export const DownloadsScreen: React.FC = () => {
                     >
                       {item.title}
                     </h4>
-                    <div className="flex items-center gap-2 text-[11px] text-slate-400 mt-0.5 tabular-nums">
+                    <div className="flex items-center gap-2 text-xs text-slate-400 mt-0.5 tabular-nums">
                       {item.version && (
                         <>
                           <span>{item.version}</span>

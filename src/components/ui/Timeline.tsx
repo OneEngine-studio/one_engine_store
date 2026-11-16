@@ -25,7 +25,7 @@ const Chip: React.FC<{ item: TimelineItem }> = ({ item }) => (
     </span>
     <span className="min-w-0 text-left">
       <span className="block text-sm font-medium text-cream truncate">{item.title}</span>
-      <span className="block text-[11px] text-slate-400 truncate">{item.meta}</span>
+      <span className="block text-xs text-slate-400 truncate">{item.meta}</span>
     </span>
   </button>
 );

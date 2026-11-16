@@ -1,5 +1,4 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Play, Check } from 'lucide-react';
 import { Icon3D, Icon3DKind, ICON3D_TINT } from './Icon3D';
 
 const FOCUS_W = 340;
@@ -33,13 +32,18 @@ const GLOW_RGB: Record<Icon3DKind, string> = {
 };
 const glowOf = (kind: Icon3DKind): [string, string] => [`rgba(${GLOW_RGB[kind]}, 0.26)`, `rgba(${GLOW_RGB[kind]}, 0.09)`];
 
-/** Colourful category cards with a glossy 3D icon. The focused one widens; choosing it filters the games below. */
+/** Category cards with a glossy 3D icon. The chosen category is the wide card, and it filters the games below. */
 export const CategoryCarousel: React.FC<CategoryCarouselProps> = ({ items, selectedId, onSelect }) => {
-  const [focus, setFocus] = useState(0);
   const [width, setWidth] = useState(0);
   const wrapRef = useRef<HTMLDivElement>(null);
   const n = items.length;
-  const f = Math.min(focus, Math.max(n - 1, 0));
+  const f = Math.max(0, items.findIndex((it) => it.id === selectedId));
+  const choose = (i: number) => {
+    const next = Math.max(0, Math.min(n - 1, i));
+    onSelect(items[next].id);
+    // keep keyboard focus on the card that is now chosen
+    requestAnimationFrame(() => wrapRef.current?.querySelectorAll<HTMLButtonElement>('[data-card]')[next]?.focus());
+  };
 
   useEffect(() => {
     const el = wrapRef.current;
@@ -72,18 +76,18 @@ export const CategoryCarousel: React.FC<CategoryCarouselProps> = ({ items, selec
   return (
     <div
       ref={wrapRef}
-      tabIndex={0}
+      role="radiogroup"
       aria-label="Categories"
       onKeyDown={(e) => {
         if (e.key === 'ArrowRight') {
           e.preventDefault();
-          setFocus((x) => Math.min(n - 1, x + 1));
+          choose(f + 1);
         } else if (e.key === 'ArrowLeft') {
           e.preventDefault();
-          setFocus((x) => Math.max(0, x - 1));
+          choose(f - 1);
         }
       }}
-      className="overflow-hidden rounded-[28px] -mx-1 px-1 py-3 -my-3 outline-none"
+      className="overflow-hidden rounded-[28px] -mx-1 px-1 py-3 -my-3"
     >
       <div className="flex" style={{ gap: GAP, transform: `translateX(${-offset}px)`, transition: 'transform 620ms cubic-bezier(0.23, 1, 0.32, 1)' }}>
         {items.map((it, i) => {
@@ -105,10 +109,13 @@ export const CategoryCarousel: React.FC<CategoryCarouselProps> = ({ items, selec
               }}
             >
               <button
-                onClick={() => (active ? onSelect(it.id) : setFocus(i))}
-                aria-label={active ? `Show ${it.label} games` : `Focus ${it.label}`}
-                aria-pressed={selected}
-                className="absolute inset-0 z-10 cursor-default"
+                data-card
+                role="radio"
+                aria-checked={selected}
+                tabIndex={selected ? 0 : -1}
+                onClick={() => choose(i)}
+                aria-label={`${it.label}, ${it.count} ${it.count === 1 ? 'game' : 'games'}`}
+                className="absolute inset-0 z-10 cursor-default rounded-[26px] focus-visible:outline-offset-[-3px]"
               />
               <div className="absolute inset-0 bg-[radial-gradient(80%_80%_at_85%_10%,rgba(226,90,90,0.30),transparent_65%)] pointer-events-none" />
 
@@ -133,22 +140,11 @@ export const CategoryCarousel: React.FC<CategoryCarouselProps> = ({ items, selec
                 >
                   {it.label}
                 </span>
-                <span className="text-[11px] text-white/80 tabular-nums">
+                <span className="text-xs text-white/80 tabular-nums">
                   {it.count} {it.count === 1 ? 'game' : 'games'}
                 </span>
               </div>
 
-              <span
-                className="absolute left-4 top-4 inline-flex h-10 w-10 items-center justify-center rounded-full bg-white shadow-lg pointer-events-none"
-                style={{
-                  color: '#BB3B3B',
-                  opacity: active ? 1 : 0,
-                  transform: active ? 'scale(1)' : 'scale(0.85)',
-                  transition: `opacity 300ms ease ${active ? 200 : 0}ms, transform 420ms cubic-bezier(0.23, 1, 0.32, 1) ${active ? 200 : 0}ms`,
-                }}
-              >
-                {selected ? <Check className="h-5 w-5" strokeWidth={3} /> : <Play className="h-4 w-4 fill-current ml-0.5" />}
-              </span>
             </div>
           );
         })}
