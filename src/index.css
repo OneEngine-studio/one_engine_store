@@ -258,6 +258,18 @@
 .auth-form > *:nth-child(5) { animation-delay: 240ms; }
 .auth-form > *:nth-child(n+6) { animation-delay: 280ms; }
 
+/* ── Loading placeholders: a soft light sweeping across maroon ── */
+@keyframes skeletonSweep {
+  from { background-position: 150% 0; }
+  to { background-position: -50% 0; }
+}
+.skeleton {
+  background-color: #2E1214;
+  background-image: linear-gradient(100deg, transparent 30%, rgba(255, 255, 255, 0.05) 50%, transparent 70%);
+  background-size: 200% 100%;
+  animation: skeletonSweep 1.4s linear infinite;
+}
+
 /* ── Reduced motion compliance ─────────────────────────── */
 @media (prefers-reduced-motion: reduce) {
   *,

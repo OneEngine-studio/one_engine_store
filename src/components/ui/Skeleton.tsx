@@ -1,14 +1,6 @@
 import React from 'react';
 
-interface SkeletonProps extends React.HTMLAttributes<HTMLDivElement> {
-  className?: string;
-}
-
-export const Skeleton: React.FC<SkeletonProps> = ({ className = '', ...props }) => {
-  return (
-    <div
-      className={`animate-pulse bg-tech-elevated/70 rounded-md border border-white/5 ${className}`}
-      {...props}
-    />
-  );
-};
+/** A placeholder block that shimmers while real content loads. Decorative; the page announces loading itself. */
+export const Skeleton: React.FC<{ className?: string; style?: React.CSSProperties }> = ({ className = '', style }) => (
+  <div aria-hidden="true" className={`skeleton rounded-[22px] ${className}`} style={style} />
+);
