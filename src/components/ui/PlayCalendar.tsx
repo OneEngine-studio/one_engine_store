@@ -54,7 +54,7 @@ export const PlayCalendar: React.FC<PlayCalendarProps> = ({ playedDays }) => {
         </button>
       </div>
 
-      <div className="grid grid-cols-7 gap-y-1 text-center text-[11px]">
+      <div className="grid grid-cols-7 gap-y-1 text-center text-xs">
         {DAY_LABELS.map((d, i) => (
           <span key={i} className="text-slate-500 py-1">
             {d}
@@ -82,7 +82,7 @@ export const PlayCalendar: React.FC<PlayCalendarProps> = ({ playedDays }) => {
         })}
       </div>
 
-      <p className="mt-3 text-[11px] text-slate-500">
+      <p className="mt-3 text-xs text-slate-400">
         {playedThisMonth
           ? `${playedThisMonth} ${playedThisMonth === 1 ? 'day' : 'days'} played this month`
           : 'Days you play will light up here'}

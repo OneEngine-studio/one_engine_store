@@ -54,7 +54,7 @@ const Tip: React.FC<{ label: string; detail?: string; children: React.ReactNode 
           }}
         >
           {label}
-          {detail && <span className="ml-2 text-[11px] text-slate-400">{detail}</span>}
+          {detail && <span className="ml-2 text-xs text-slate-400">{detail}</span>}
         </span>
       )}
     </span>
