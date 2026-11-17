@@ -15,7 +15,7 @@ export const ProgressTile: React.FC<ProgressTileProps> = ({ label, value, sub, p
     <div className="rounded-[28px] bg-bg-card border border-white/[0.06] p-7">
       <span className="text-xs text-slate-400">{label}</span>
       <div className="mt-1 flex items-baseline gap-3">
-        <span className="font-display text-4xl text-cream tabular-nums">{value}</span>
+        <span className="font-display text-5xl text-cream tabular-nums">{value}</span>
         {sub && <span className="text-xs text-slate-500">{sub}</span>}
       </div>
       <div
