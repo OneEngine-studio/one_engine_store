@@ -47,8 +47,8 @@ export default {
         'tactical-danger': '#E5484D',
       },
       fontFamily: {
-        display: ['Grobold', '"Titan One"', 'Poppins', 'sans-serif'],
-        sans: ['Poppins', '-apple-system', 'BlinkMacSystemFont', '"Segoe UI"', 'Roboto', 'sans-serif'],
+        display: ['"Barlow Condensed"', 'Barlow', '"Segoe UI"', 'sans-serif'],
+        sans: ['Barlow', '-apple-system', 'BlinkMacSystemFont', '"Segoe UI"', 'Roboto', 'sans-serif'],
         mono: ['"JetBrains Mono"', 'Menlo', 'Consolas', 'monospace'],
       },
       fontSize: {
