@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.1.0 (2026-11-17)
 
 ### Added
 - Railbound 1.0.0 published as a free download (sign in, Add to library, Install).
