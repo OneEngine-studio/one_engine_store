@@ -51,8 +51,8 @@ Configured in `tailwind.config.js` and `src/index.css`.
 
 ### Typography
 
-- **Font family:** Poppins (self-hosted via `@fontsource/poppins`, weights 400/500/600/700), falling back to Segoe UI.
-- **Display face:** chunky rounded `font-display` for page headings, game titles, section heads and big numbers: Grobold if it is installed (licence needed for commercial use, not bundled), otherwise Titan One (SIL Open Font Licence, self-hosted via `@fontsource/titan-one`). One weight only, `font-synthesis: none` so it is never faux-bolded.
+- **Font family:** Barlow (self-hosted via `@fontsource/barlow`, weights 400/500/600/700) for reading text, falling back to Segoe UI.
+- **Display face:** Barlow Condensed 700 (`font-display`), upper case, 0.02em tracking, tight leading: page headings, section heads, game titles and big numbers. It is the voice of a battle-royale menu: tactical, compact, readable. `btn-caps` puts primary buttons in the same face; `label-caps` sets small spaced capitals for labels above values ("PRICE", "TOTAL PLAY TIME").
 - **Numbers:** `tabular-nums` on all prices, file sizes, download speeds, percentages, and timestamps.
 - **Casing:** Sentence case everywhere. Never uppercase for game titles or section headers.
 
@@ -172,7 +172,7 @@ Shadows are applied strictly to floating layers, never to flat in-panel cards:
 - **Radii:** panel 32px, modal 28px, card 22px, tile 20px, buttons and chips full pills, nav items 14px squares.
 - **Navigation rail:** dark maroon pill-shaped rail; the active item is a red rounded square with a white icon and a red glow that slides between items.
 - **Store:** spotlight banner (cover art fading into maroon, white "Popular" chip, title, description, red "View game" button, tag chips; a 3D icon on lit maroon when there is no art) beside a "Your stats" card (red ring around total play time, empty at zero, three red icon buttons). Below, the **Categories** row (`CategoryCarousel`: the chosen category is the wide card and filters the games; arrow keys move between cards) and **New games** (`FocusCarousel`: the focused game is the wide card; the strip only moves when the player asks). Skeleton rows stand in while the catalog loads.
-- **Game page:** full-width hero (key art with a dark left and top scrim, or a 3D icon on lit maroon), title in the display face at 56px, tag chips, then "About this game" and a "Details" grid. The price card floats up over the hero on wide windows.
+- **Game page:** full-width hero (key art with a dark left and top scrim, or a 3D icon on lit maroon), title in the display face at 64px, tag chips, then "About this game" and a "Details" grid. The price card floats up over the hero on wide windows.
 - **3D icons** (`components/ui/Icon3D.tsx`): glossy SVG rocket, target, puzzle, gear, avatar, controller, trophy and bolt in reds, maroons and white only. Used for categories, empty states and art fallbacks; never in bright off-brand colours.
 - **Empty states** (`ComingSoon`): lit maroon card, 3D icon, display-face title, one sentence and at most one action. A screen with nothing to show gets exactly one of these, not empty widgets.
 - **Game card** (`components/ui/Cartridge.tsx`): 4:5 cover on a maroon card fading to maroon at the bottom, red border glow on hover, red Play / Install pill rising in on hover or focus, red progress bar.
