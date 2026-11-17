@@ -18,7 +18,7 @@ export const ComingSoon: React.FC<{ title: string; children: React.ReactNode; ic
     <Icon3D kind={icon} className="relative w-28 h-auto shrink-0" />
     <div className="relative space-y-2 text-center sm:text-left">
       {badge && <span className="inline-flex h-6 px-2.5 items-center rounded-full bg-white text-[#361518] text-xs font-semibold">{badge}</span>}
-      <h2 className="font-display text-2xl text-cream">{title}</h2>
+      <h2 className="font-display text-3xl text-cream">{title}</h2>
       <p className="text-sm text-slate-300 leading-relaxed max-w-xl">{children}</p>
       {action && <div className="pt-2">{action}</div>}
     </div>
