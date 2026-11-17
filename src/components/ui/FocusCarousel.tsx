@@ -10,12 +10,12 @@ const HEIGHT = 270;
 
 // Light cast behind the panel for each focused card: [spot, tint]. The cards themselves stay maroon.
 const GLOWS: Array<[string, string]> = [
-  ['rgba(187, 59, 59, 0.28)', 'rgba(187, 59, 59, 0.10)'],
-  ['rgba(208, 96, 76, 0.26)', 'rgba(208, 96, 76, 0.09)'],
-  ['rgba(176, 52, 76, 0.28)', 'rgba(176, 52, 76, 0.10)'],
-  ['rgba(190, 88, 100, 0.26)', 'rgba(190, 88, 100, 0.09)'],
-  ['rgba(198, 62, 98, 0.26)', 'rgba(198, 62, 98, 0.09)'],
-  ['rgba(200, 72, 72, 0.28)', 'rgba(200, 72, 72, 0.10)'],
+  ['rgba(255, 106, 19, 0.28)', 'rgba(255, 106, 19, 0.10)'],
+  ['rgba(255, 150, 40, 0.26)', 'rgba(255, 150, 40, 0.09)'],
+  ['rgba(230, 90, 30, 0.28)', 'rgba(230, 90, 30, 0.10)'],
+  ['rgba(255, 178, 36, 0.26)', 'rgba(255, 178, 36, 0.09)'],
+  ['rgba(255, 128, 60, 0.26)', 'rgba(255, 128, 60, 0.09)'],
+  ['rgba(255, 106, 19, 0.28)', 'rgba(255, 106, 19, 0.10)'],
 ];
 
 interface FocusCarouselProps {
@@ -114,7 +114,7 @@ export const FocusCarousel: React.FC<FocusCarouselProps> = ({ games, running, ca
                   height: HEIGHT,
                   animationDelay: `${Math.min(i, 8) * 45}ms`,
                   transition: 'width 620ms cubic-bezier(0.23, 1, 0.32, 1), border-color 300ms, box-shadow 400ms',
-                  boxShadow: active ? '0 22px 44px rgba(0,0,0,0.5), 0 0 40px rgba(187,59,59,0.22)' : undefined,
+                  boxShadow: active ? '0 22px 44px rgba(0,0,0,0.5), 0 0 40px rgba(255,106,19,0.22)' : undefined,
                 }}
               >
                 <button
@@ -133,12 +133,12 @@ export const FocusCarousel: React.FC<FocusCarouselProps> = ({ games, running, ca
                     style={{ transform: active ? 'scale(1)' : 'scale(1.12)', transition: 'transform 800ms cubic-bezier(0.23, 1, 0.32, 1)' }}
                   />
                 ) : (
-                  <div className="absolute inset-0 bg-[radial-gradient(90%_80%_at_80%_0%,rgba(226,90,90,0.34),#4A1B1F_55%,#2A1113)] flex items-center justify-center">
+                  <div className="absolute inset-0 bg-[radial-gradient(90%_80%_at_80%_0%,rgba(255,138,61,0.34),#232A33_55%,#181D24)] flex items-center justify-center">
                     <Icon3D kind="controller" className="w-20 h-auto opacity-70" />
                   </div>
                 )}
-                <div className="absolute inset-0 bg-gradient-to-t from-[#361518] via-[#361518]/45 to-transparent pointer-events-none" />
-                {active && <div className="absolute inset-0 bg-gradient-to-r from-[#361518]/80 via-transparent to-transparent pointer-events-none" />}
+                <div className="absolute inset-0 bg-gradient-to-t from-[#1B2028] via-[#1B2028]/45 to-transparent pointer-events-none" />
+                {active && <div className="absolute inset-0 bg-gradient-to-r from-[#1B2028]/80 via-transparent to-transparent pointer-events-none" />}
 
                 {/* tile: title only */}
                 <div
