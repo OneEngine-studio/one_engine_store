@@ -12,8 +12,8 @@ const b64url = (buffer) => buffer.toString('base64url');
 const page = (title, message) =>
   `<!doctype html><html lang="en"><head><meta charset="utf-8"><title>${title}</title>` +
   `<meta name="viewport" content="width=device-width,initial-scale=1"><style>` +
-  `body{margin:0;min-height:100vh;display:grid;place-items:center;background:#24100F;color:#ffffff;font:16px/1.5 system-ui,sans-serif}` +
-  `main{max-width:26rem;padding:2rem;text-align:center}h1{font-size:1.25rem;margin:0 0 .5rem}p{margin:0;color:#d1b4b5}</style></head>` +
+  `body{margin:0;min-height:100vh;display:grid;place-items:center;background:#13171D;color:#ffffff;font:16px/1.5 system-ui,sans-serif}` +
+  `main{max-width:26rem;padding:2rem;text-align:center}h1{font-size:1.25rem;margin:0 0 .5rem}p{margin:0;color:#B9C1CC}</style></head>` +
   `<body><main><h1>${title}</h1><p>${message}</p></main></body></html>`;
 
 let active = null;
