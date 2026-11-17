@@ -10,7 +10,7 @@ const MB = 1024 * 1024;
 const GB = 1024 * MB;
 
 // Storage legend: brand reds from strongest to softest.
-const SEGMENT_COLORS = ['#BB3B3B', '#E27A78', '#7A2A2E', '#D9A5A5'];
+const SEGMENT_COLORS = ['#FF6A13', '#FF9A55', '#2B333E', '#FFB224'];
 const segmentColor = (i: number) => SEGMENT_COLORS[i % SEGMENT_COLORS.length];
 
 const formatSize = (bytes: number) => (bytes >= GB ? `${(bytes / GB).toFixed(2)} GB` : `${(bytes / MB).toFixed(0)} MB`);
@@ -162,7 +162,7 @@ export const DownloadsScreen: React.FC = () => {
             <div className="flex items-center gap-3 pt-2">
               <button
                 onClick={applyThrottle}
-                className="flex-1 py-2.5 rounded-full bg-accent hover:bg-accent-hover text-white font-bold text-xs transition-surface cursor-default"
+                className="flex-1 py-2.5 rounded-full bg-accent hover:bg-accent-hover text-on-accent font-bold text-xs transition-surface cursor-default"
               >
                 Save limit
               </button>
@@ -242,12 +242,12 @@ export const DownloadsScreen: React.FC = () => {
                 <svg viewBox={`0 0 ${svgWidth} ${svgHeight}`} className="w-full h-full" preserveAspectRatio="none">
                   <defs>
                     <linearGradient id="downloadSpeedGrad" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="#E25A5A" stopOpacity="0.35" />
-                      <stop offset="100%" stopColor="#BB3B3B" stopOpacity="0.0" />
+                      <stop offset="0%" stopColor="#FF8A3D" stopOpacity="0.35" />
+                      <stop offset="100%" stopColor="#FF6A13" stopOpacity="0.0" />
                     </linearGradient>
                   </defs>
                   <path d={pathD} fill="url(#downloadSpeedGrad)" />
-                  <path d={lineD} fill="none" stroke="#E25A5A" strokeWidth="2" />
+                  <path d={lineD} fill="none" stroke="#FF8A3D" strokeWidth="2" />
                 </svg>
               </div>
 
@@ -489,7 +489,7 @@ export const DownloadsScreen: React.FC = () => {
 
                 <button
                   onClick={() => launchGame(item.gameId)}
-                  className="px-4 py-1.5 rounded-full bg-accent hover:bg-accent-hover text-white font-bold text-xs flex items-center gap-1.5 transition-surface cursor-default"
+                  className="px-4 py-1.5 rounded-full bg-accent hover:bg-accent-hover text-on-accent font-bold text-xs flex items-center gap-1.5 transition-surface cursor-default"
                 >
                   <Play className="w-3.5 h-3.5 fill-current" />
                   <span>Play</span>

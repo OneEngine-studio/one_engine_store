@@ -166,7 +166,7 @@ export const WalletScreen: React.FC = () => {
       {!signedIn && (
         <div className="p-4 rounded-xl bg-white/[0.04] border border-white/[0.08] text-xs text-slate-300 flex items-center justify-between gap-4">
           <span>Sign in with your OneEngine account to buy coins.</span>
-          <button onClick={openAuthModal} className="px-4 h-9 rounded-full bg-accent hover:bg-accent-hover text-white font-semibold cursor-default active:scale-[0.97] transition-[background-color,transform]">
+          <button onClick={openAuthModal} className="px-4 h-9 rounded-full bg-accent hover:bg-accent-hover text-on-accent font-semibold cursor-default active:scale-[0.97] transition-[background-color,transform]">
             Sign in
           </button>
         </div>
@@ -186,12 +186,12 @@ export const WalletScreen: React.FC = () => {
                 className="relative overflow-hidden rounded-[26px] border border-white/[0.08] p-5 flex flex-col gap-4 animate-soft-enter"
                 style={{
                   animationDelay: `${Math.min(i, 8) * 45}ms`,
-                  background: 'linear-gradient(150deg, #5A1C20, #2A1113 78%)',
+                  background: 'linear-gradient(150deg, #2A313B, #181D24 78%)',
                 }}
               >
-                <div className="absolute inset-0 bg-[radial-gradient(80%_80%_at_85%_0%,rgba(226,90,90,0.28),transparent_65%)] pointer-events-none" />
+                <div className="absolute inset-0 bg-[radial-gradient(80%_80%_at_85%_0%,rgba(255,138,61,0.28),transparent_65%)] pointer-events-none" />
                 {b.badgeText && (
-                  <span className="absolute top-4 left-4 h-6 px-2.5 inline-flex items-center rounded-full bg-white text-[#361518] text-xs font-semibold">{b.badgeText}</span>
+                  <span className="absolute top-4 left-4 h-6 px-2.5 inline-flex items-center rounded-full bg-amber text-on-accent text-xs font-semibold">{b.badgeText}</span>
                 )}
                 <Icon3D kind={KINDS[i % KINDS.length]} className="relative w-20 h-auto self-end" />
                 <div className="relative">
@@ -203,7 +203,7 @@ export const WalletScreen: React.FC = () => {
                 <button
                   onClick={() => void buy(b)}
                   disabled={buying !== null || !!waitingFor}
-                  className="btn-caps relative h-11 rounded-xl bg-gradient-to-b from-[#CC4545] to-accent hover:from-[#D45050] hover:to-[#B13636] text-white shadow-glow cursor-default active:scale-[0.98] transition-[filter,transform] disabled:opacity-60 flex items-center justify-center gap-2"
+                  className="btn-caps relative h-11 rounded-xl bg-gradient-to-b from-[#FF8A3D] to-accent hover:from-[#FF9A55] hover:to-[#F2600E] text-on-accent shadow-glow cursor-default active:scale-[0.98] transition-[filter,transform] disabled:opacity-60 flex items-center justify-center gap-2"
                 >
                   {buying === b.sku && <Loader2 className="w-4 h-4 animate-spin" />}
                   {formatMoney(b.fiatAmountMinor, b.currency)}

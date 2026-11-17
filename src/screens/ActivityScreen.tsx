@@ -37,7 +37,7 @@ export const ActivityScreen: React.FC = () => {
             action={
               <button
                 onClick={() => navigate('store')}
-                className="h-10 px-5 rounded-full bg-accent hover:bg-accent-hover text-white text-sm font-semibold shadow-glow cursor-default active:scale-[0.97] transition-[background-color,transform]"
+                className="h-10 px-5 rounded-full bg-accent hover:bg-accent-hover text-on-accent text-sm font-semibold shadow-glow cursor-default active:scale-[0.97] transition-[background-color,transform]"
               >
                 Browse the store
               </button>
