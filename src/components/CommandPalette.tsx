@@ -91,7 +91,7 @@ export const CommandPalette: React.FC = () => {
                     className="w-full text-left px-3.5 py-2.5 rounded-2xl hover:bg-white/[0.08] focus-visible:bg-white/[0.08] flex items-center justify-between cursor-default border border-transparent hover:border-white/[0.12] transition-surface duration-150 group"
                   >
                     <div className="flex items-center gap-3.5">
-                      <span className="w-12 h-8 rounded-xl overflow-hidden bg-[#4A1B1F] border border-white/10 shrink-0 flex items-center justify-center">
+                      <span className="w-12 h-8 rounded-xl overflow-hidden bg-[#232A33] border border-white/10 shrink-0 flex items-center justify-center">
                         {game.coverImage ? (
                           <img src={game.coverImage} alt="" className="w-full h-full object-cover" />
                         ) : (

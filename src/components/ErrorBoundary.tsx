@@ -23,9 +23,9 @@ export class ErrorBoundary extends React.Component<{ children: React.ReactNode }
       <div className="h-screen w-screen bg-bg-app text-slate-100 flex items-center justify-center p-8 select-text">
         <div
           className="relative overflow-hidden max-w-md w-full rounded-[28px] border border-white/[0.08] p-8 text-center shadow-modal"
-          style={{ background: 'linear-gradient(150deg, #4A1B1F, #1A0A0B 75%)' }}
+          style={{ background: 'linear-gradient(150deg, #232A33, #0F1216 75%)' }}
         >
-          <div className="absolute inset-0 bg-[radial-gradient(70%_60%_at_50%_0%,rgba(226,90,90,0.25),transparent_65%)] pointer-events-none" />
+          <div className="absolute inset-0 bg-[radial-gradient(70%_60%_at_50%_0%,rgba(255,138,61,0.25),transparent_65%)] pointer-events-none" />
           <Icon3D kind="bolt" className="relative w-20 h-auto mx-auto" />
           <h1 className="relative mt-4 font-display text-3xl text-cream">Something went wrong</h1>
           <p className="relative mt-2 text-sm text-slate-300">The launcher hit an unexpected problem. Your account and data are safe.</p>
@@ -35,7 +35,7 @@ export class ErrorBoundary extends React.Component<{ children: React.ReactNode }
           </details>
           <button
             onClick={() => window.location.reload()}
-            className="relative mt-6 h-11 px-7 rounded-full bg-accent hover:bg-accent-hover text-sm font-semibold text-white shadow-glow cursor-default active:scale-[0.97] transition-[background-color,transform]"
+            className="relative mt-6 h-11 px-7 rounded-full bg-accent hover:bg-accent-hover text-sm font-semibold text-on-accent shadow-glow cursor-default active:scale-[0.97] transition-[background-color,transform]"
           >
             Reload the launcher
           </button>
