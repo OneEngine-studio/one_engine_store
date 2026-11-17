@@ -103,7 +103,7 @@ export const DownloadsScreen: React.FC = () => {
     return (
       <div className="p-8 space-y-8 max-w-7xl mx-auto w-full">
         <div>
-          <h1 className="font-display text-4xl text-cream">Downloads</h1>
+          <h1 className="font-display text-5xl text-cream">Downloads</h1>
           <p className="text-xs text-slate-400 mt-1">Installs, updates and storage</p>
         </div>
         <ComingSoon title="Downloads arrive in a later update" icon="bolt">
@@ -180,7 +180,7 @@ export const DownloadsScreen: React.FC = () => {
       {/* Top Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="font-display text-4xl text-cream">Downloads</h1>
+          <h1 className="font-display text-5xl text-cream">Downloads</h1>
           <p className="text-xs text-slate-400 mt-1">
             {isTransferring
               ? `Downloading at ${currentSpeed.toFixed(1)} MB/s`
@@ -205,7 +205,7 @@ export const DownloadsScreen: React.FC = () => {
       {/* Installed games */}
       {installedGames.length > 0 && (
         <section className="space-y-4">
-          <h2 className="font-display text-2xl text-cream">Installed games</h2>
+          <h2 className="font-display text-3xl text-cream">Installed games</h2>
           <FocusCarousel
             games={installedGames.slice(0, 8)}
             running={runningGameId}
@@ -299,7 +299,7 @@ export const DownloadsScreen: React.FC = () => {
                   {settings.downloadDirectory || 'Not chosen yet'}
                 </span>
                 <span className="mt-1 flex items-baseline gap-1.5">
-                  <span className="font-display text-4xl text-cream tabular-nums">
+                  <span className="font-display text-5xl text-cream tabular-nums">
                     {Math.round(installedGb * 10) / 10}
                   </span>
                   <span className="text-sm text-slate-400">GB installed</span>
