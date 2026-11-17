@@ -1,7 +1,7 @@
 // Ambient glow behind the main panel: the same soft brand-red light for every game and view.
 const NEUTRAL = {
-  spot: 'rgba(187, 59, 59, 0.16)',
-  tint: 'rgba(187, 59, 59, 0.06)',
+  spot: 'rgba(255, 106, 19, 0.16)',
+  tint: 'rgba(255, 106, 19, 0.06)',
 };
 
 export const GAME_AMBIENT_COLORS: Record<string, { spot: string; tint: string }> = {
