@@ -136,7 +136,7 @@ export const CategoryCarousel: React.FC<CategoryCarouselProps> = ({ items, selec
               <div className="absolute inset-x-0 bottom-0 p-4 pointer-events-none">
                 <span
                   className="block font-display text-white leading-tight truncate"
-                  style={{ fontSize: active ? 22 : 15, transition: 'font-size 400ms cubic-bezier(0.23, 1, 0.32, 1)' }}
+                  style={{ fontSize: active ? 30 : 19, transition: 'font-size 400ms cubic-bezier(0.23, 1, 0.32, 1)' }}
                 >
                   {it.label}
                 </span>
