@@ -144,7 +144,7 @@ export const Sidebar: React.FC = () => {
                     aria-label={item.label}
                     aria-current={isActive ? 'page' : undefined}
                     className={`relative z-10 flex items-center justify-center rounded-[14px] cursor-default active:scale-[0.94] ${
-                      isActive ? 'text-white' : 'text-slate-400 hover:text-cream hover:bg-white/[0.06]'
+                      isActive ? 'text-on-accent' : 'text-slate-400 hover:text-cream hover:bg-white/[0.06]'
                     }`}
                     style={{
                       width: ITEM,
@@ -156,7 +156,7 @@ export const Sidebar: React.FC = () => {
                     {item.badge !== undefined && (
                       <span
                         className={`absolute top-1 right-1 min-w-[16px] h-4 px-1 flex items-center justify-center text-[9px] font-bold rounded-full tabular-nums ${
-                          isActive ? 'bg-white text-accent' : 'bg-accent text-white'
+                          isActive ? 'bg-white text-accent' : 'bg-accent text-on-accent'
                         }`}
                       >
                         {item.badge}
@@ -230,7 +230,7 @@ export const Sidebar: React.FC = () => {
               aria-label="Settings"
               aria-current={settingsActive ? 'page' : undefined}
               className={`flex items-center justify-center rounded-[14px] cursor-default active:scale-[0.94] ${
-                settingsActive ? 'bg-accent text-white' : 'text-slate-400 hover:text-cream hover:bg-white/[0.06]'
+                settingsActive ? 'bg-accent text-on-accent' : 'text-slate-400 hover:text-cream hover:bg-white/[0.06]'
               }`}
               style={{
                 width: ITEM,
