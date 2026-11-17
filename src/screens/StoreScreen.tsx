@@ -60,7 +60,9 @@ export const StoreScreen: React.FC = () => {
   const activeDownload = downloads.find((d) => d.status === 'DOWNLOADING');
   const onBench = owned.filter((g) => g.installed).slice(0, 5);
   const spotlight = shelfGames[0];
-  const installedCount = owned.filter((g) => g.installed).length;
+  // The ring fills toward the next play-time milestone, so it always means hours played.
+  const totalHours = +owned.reduce((h, g) => h + g.playHours, 0).toFixed(1);
+  const nextMilestone = [10, 25, 50, 100, 250, 500, 1000].find((m) => m > totalHours) ?? Math.ceil((totalHours + 1) / 1000) * 1000;
   const timeline = owned.filter((g) => g.playHours > 0).sort((x, y) => y.playHours - x.playHours).slice(0, 4);
 
   const cartProps = (g: (typeof games)[number]) => ({
@@ -129,12 +131,12 @@ export const StoreScreen: React.FC = () => {
                   <span className="mt-5 inline-flex items-center gap-1.5 h-7 px-3 rounded-full bg-white text-[#361518] text-xs font-semibold">
                     <Flame className="w-3.5 h-3.5 text-accent" /> Popular
                   </span>
-                  <h1 className="mt-3 font-display text-[40px] text-cream leading-[1.05]">{spotlight.title}</h1>
+                  <h1 className="mt-3 font-display text-[56px] text-cream leading-[1.05]">{spotlight.title}</h1>
                   <p className="mt-2 text-sm text-slate-300 leading-relaxed line-clamp-3">{spotlight.description || spotlight.tagline}</p>
                 </>
               ) : (
                 <>
-                  <h1 className="mt-4 font-display text-[40px] text-cream leading-[1.05]">Welcome to OneEngine</h1>
+                  <h1 className="mt-4 font-display text-[56px] text-cream leading-[1.05]">Welcome to OneEngine</h1>
                   <p className="mt-2 text-sm text-slate-300 leading-relaxed max-w-sm">
                     {catalogStatus === 'error'
                       ? "We can't reach the store right now. Your account and settings still work."
@@ -147,7 +149,7 @@ export const StoreScreen: React.FC = () => {
               <div className="flex flex-wrap items-center gap-3">
                 <button
                   onClick={() => navigate('game-detail', spotlight.id)}
-                  className="h-11 px-7 rounded-full bg-accent hover:bg-accent-hover text-white text-sm font-semibold shadow-glow cursor-default active:scale-[0.97] transition-[background-color,transform] duration-200"
+                  className="btn-caps h-11 px-7 rounded-full bg-accent hover:bg-accent-hover text-white shadow-glow cursor-default active:scale-[0.97] transition-[background-color,transform] duration-200"
                 >
                   View game
                 </button>
@@ -164,8 +166,9 @@ export const StoreScreen: React.FC = () => {
         <StatsCard
           title="Your stats"
           totalLabel="Total play time"
-          total={`${owned.reduce((h, g) => h + g.playHours, 0).toLocaleString()}h`}
-          fill={owned.length ? installedCount / owned.length : 0}
+          total={`${totalHours.toLocaleString()} HRS`}
+          fill={totalHours / nextMilestone}
+          caption={`Next: ${nextMilestone} hrs`}
           items={[
             { label: 'Library', value: String(owned.length), icon: <Gamepad2 className="w-4 h-4" />, onClick: () => navigate('library') },
             {
@@ -203,7 +206,7 @@ export const StoreScreen: React.FC = () => {
       {games.length > 0 && (
         <section className="space-y-5">
           <div className="flex items-center justify-between">
-            <h2 className="font-display text-2xl text-cream">Categories</h2>
+            <h2 className="font-display text-3xl text-cream">Categories</h2>
             {categoryId !== 'all' && (
               <button onClick={() => setCategoryId('all')} className="text-xs text-accent hover:underline cursor-default font-medium">
                 Clear category
@@ -217,7 +220,7 @@ export const StoreScreen: React.FC = () => {
       {/* Play timeline */}
       {timeline.length > 0 && (
         <section className="space-y-6">
-          <h2 className="font-display text-2xl text-cream text-center">Your play timeline</h2>
+          <h2 className="font-display text-3xl text-cream text-center">Your play timeline</h2>
           <Timeline
             head={<Clock className="w-5 h-5" />}
             headLabel="Most played"
@@ -236,7 +239,7 @@ export const StoreScreen: React.FC = () => {
       {onBench.length > 0 && (
         <section className="space-y-5">
           <div className="flex items-center justify-between">
-            <h2 className="font-display text-2xl text-cream">On the bench</h2>
+            <h2 className="font-display text-3xl text-cream">On the bench</h2>
             <button onClick={() => navigate('library')} className="text-xs text-slate-400 hover:text-white flex items-center gap-1 cursor-default">
               Open library <ChevronRight className="w-4 h-4" />
             </button>
@@ -251,7 +254,7 @@ export const StoreScreen: React.FC = () => {
       {games.length > 0 && (
       <section className="space-y-5">
         <div>
-          <h2 className="font-display text-2xl text-cream">{category ? `${category.label} games` : 'New games'}</h2>
+          <h2 className="font-display text-3xl text-cream">{category ? `${category.label} games` : 'New games'}</h2>
           <p className="text-xs text-slate-400 mt-0.5">
             {shelfGames.length === 0 ? (searchQuery ? 'No games match your search.' : 'No games in this category yet.') : `${shelfGames.length} ${shelfGames.length === 1 ? 'game' : 'games'}${category ? '' : ' in the catalog'}`}
           </p>
