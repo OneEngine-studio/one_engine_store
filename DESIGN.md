@@ -6,11 +6,11 @@
 
 ## 1. Principles
 
-**Maroon and red on black, rounded, warm, modern.**
+**Graphite steel and signal orange: tactical, rounded, modern.**
 
 1. **Floating surfaces & calm depth:** The window background sits as the deepest layer (`#0B0405`). The primary content lives inside an inset, floating panel (`#24100F`) with generous 24px rounded corners and a 1px specular inner border (`rgba(255,255,255,0.06)`).
 2. **Radius hierarchy over monotony:** Never apply one universal radius. Outer containers dictate inner container radii (`R_inner = R_outer - padding`).
-3. **Restrained color & functional ambient tint:** Brand palette: white `#FFFFFF`, red `#BB3B3B`, maroon `#361518`, black `#000000`. Red is the accent for primary actions, the active nav item, selected chips, progress and stat rings; it carries a soft red glow (`shadow-glow`). Cards are maroon on a darker panel. Status colours stay functional (green online/running, amber warning). The ambient glow behind the panel is a soft red wash.
+3. **Restrained color & functional ambient tint:** "Signal" palette, taken from the Railbound key art (steel trains in dusk mountains under a burning sky): graphite steel surfaces, one action colour, **signal orange** `#FF6A13` with dark text `#14100C` on it, **hazard amber** `#FFB224` only for badges and discounts, cool steel greys for text and a warm off-white `#F5F2EC` for headings. It deliberately avoids the genre's owned colours (Apex red, PUBG yellow, Fortnite blue and purple, Warzone green). The ambient glow behind the panel is a soft orange wash.
 4. **Sentence case & human copy:** All headings, labels, tags, and settings use natural sentence case. Game titles are shown as published—never forced into uppercase blocks.
 
 ---
@@ -34,7 +34,7 @@ Configured in `tailwind.config.js` and `src/index.css`.
 |---|---|---|
 | Window Base (darkest) | `bg-app` (`#0B0405`) | Shell window background visible around inset panel |
 | Floating Main Panel | `bg-panel` (`#24100F`) | Inset floating surface with 24px radius and 1px inner border |
-| Card & Tile Layer | `bg-card` (`#361518`) | Flat content cards, separated by tone rather than harsh borders |
+| Card & Tile Layer | `bg-card` (`#1B2028`) | Flat content cards, separated by tone rather than harsh borders |
 | Card Elevated / Hover | `tech-elevated` (`#45201F`) | Hover state for interactive cards and list rows |
 | Generic Hover Surface | `bg-hover` (`rgba(255,255,255,0.06)`) | Button hover, icon hover, subtle list hover |
 | Pressed / Active Surface | `bg-pressed` (`rgba(255,255,255,0.10)`) | Active button press, selected segmented tab |
@@ -166,18 +166,18 @@ Shadows are applied strictly to floating layers, never to flat in-panel cards:
 
 ---
 
-## 7. Maroon system
+## 7. Signal system
 
-- **Palette:** `bg-app` #0B0405, `bg-sidebar` #1A0A0B, `bg-panel` #24100F, `bg-dock` #2A1113, `bg-card` #361518, elevated #45201F. Text ramp `slate` is rose-tinted grey (300 #DEC6C7, 400 #C7A7A8, 500 #A98586, all at least 4.5:1 on cards); `cream` is white. Accent `#BB3B3B` (hover `#A53232`) with white text.
+- **Palette:** `bg-app` #0A0C10, `bg-sidebar` #0F1216, `bg-panel` #13171D, `bg-dock` #181D24, `bg-card` #1B2028, elevated #252C36. Text ramp `slate` is cool steel (300 #BCC4CE, 400 #A3ACB8, 500 #8892A0, all at least 4.5:1 on cards); `cream` is #F5F2EC. Accent `#FF6A13` (hover #FF7F33, gradient top #FF8A3D) always carries `text-on-accent` #14100C (about 6.6:1); white text never sits on orange. `amber` #FFB224 for badges. Status: success #3DDC97, warning #FFB224, danger #FF4D4F.
 - **Radii:** panel 32px, modal 28px, card 22px, tile 20px, buttons and chips full pills, nav items 14px squares.
-- **Navigation rail:** dark maroon pill-shaped rail; the active item is a red rounded square with a white icon and a red glow that slides between items.
-- **Store:** spotlight banner (cover art fading into maroon, white "Popular" chip, title, description, red "View game" button, tag chips; a 3D icon on lit maroon when there is no art) beside a "Your stats" card (red ring around total play time, empty at zero, three red icon buttons). Below, the **Categories** row (`CategoryCarousel`: the chosen category is the wide card and filters the games; arrow keys move between cards) and **New games** (`FocusCarousel`: the focused game is the wide card; the strip only moves when the player asks). Skeleton rows stand in while the catalog loads.
-- **Game page:** full-width hero (key art with a dark left and top scrim, or a 3D icon on lit maroon), title in the display face at 64px, tag chips, then "About this game" and a "Details" grid. The price card floats up over the hero on wide windows.
-- **3D icons** (`components/ui/Icon3D.tsx`): glossy SVG rocket, target, puzzle, gear, avatar, controller, trophy and bolt in reds, maroons and white only. Used for categories, empty states and art fallbacks; never in bright off-brand colours.
-- **Empty states** (`ComingSoon`): lit maroon card, 3D icon, display-face title, one sentence and at most one action. A screen with nothing to show gets exactly one of these, not empty widgets.
-- **Game card** (`components/ui/Cartridge.tsx`): 4:5 cover on a maroon card fading to maroon at the bottom, red border glow on hover, red Play / Install pill rising in on hover or focus, red progress bar.
+- **Navigation rail:** graphite pill-shaped rail; the active item is a signal-orange rounded square with a dark icon and an orange glow that slides between items.
+- **Store:** spotlight banner (cover art fading into graphite, amber "Popular" chip, title, description, orange "View game" button, tag chips; a 3D icon on lit graphite when there is no art) beside a "Your stats" card (orange ring filling toward the next play-time milestone, three orange icon buttons). Below, the **Categories** row (`CategoryCarousel`: the chosen category is the wide card and filters the games; arrow keys move between cards) and **New games** (`FocusCarousel`: the focused game is the wide card; the strip only moves when the player asks). Skeleton rows stand in while the catalog loads.
+- **Game page:** full-width hero (key art with a dark left and top scrim, or a 3D icon on lit graphite), title in the display face at 64px, tag chips, then "About this game" and a "Details" grid. The price card floats up over the hero on wide windows.
+- **3D icons** (`components/ui/Icon3D.tsx`): glossy SVG rocket, target, puzzle, gear, avatar, controller, trophy and bolt in signal orange, steel greys and white only. Used for categories, empty states and art fallbacks; never in bright off-brand colours.
+- **Empty states** (`ComingSoon`): lit graphite card, 3D icon, display-face title, one sentence and at most one action. A screen with nothing to show gets exactly one of these, not empty widgets.
+- **Game card** (`components/ui/Cartridge.tsx`): 4:5 cover on a graphite card fading to graphite at the bottom, orange border glow on hover, orange Play / Install pill rising in on hover or focus, orange progress bar.
 - **Motion:** one easing, `cubic-bezier(0.23, 1, 0.32, 1)`. The first screen of a session rises in block by block; later tab switches only fade (140ms) because they happen constantly. The command palette opens with no animation (keyboard). Cards ease in 30ms apart, the nav indicator slides over 320ms, the stat ring fills over 900ms, press feedback `scale(0.97)`. Off under `prefers-reduced-motion`.
 - **Type floor:** nothing smaller than 12px except keyboard-shortcut caps and the calendar grid.
-- **Toasts:** bottom-right maroon cards (`#1A0A0B`, 16px radius) with a status-coloured edge and icon; announced politely to screen readers.
-- **Crash screen:** lit maroon card with a 3D bolt, one sentence, "Technical details" collapsed, and a single Reload button.
+- **Toasts:** bottom-right graphite cards (`#0F1216`, 16px radius) with a status-coloured edge and icon; announced politely to screen readers.
+- **Crash screen:** lit graphite card with a 3D bolt, one sentence, "Technical details" collapsed, and a single Reload button.
 - **Loading:** `Skeleton` blocks with a soft light sweep, shaped like the content that is coming.
