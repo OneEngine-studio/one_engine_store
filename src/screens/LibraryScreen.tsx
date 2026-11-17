@@ -56,7 +56,7 @@ export const LibraryScreen: React.FC = () => {
     return (
       <div className="p-8 space-y-8 max-w-7xl mx-auto w-full">
         <div>
-          <h1 className="font-display text-4xl text-cream">Library</h1>
+          <h1 className="font-display text-5xl text-cream">Library</h1>
           <p className="text-xs text-slate-400 mt-1">Your games, installs and favourites</p>
         </div>
         <ComingSoon title="Game library arrives in a later update" icon="controller">
@@ -71,11 +71,11 @@ export const LibraryScreen: React.FC = () => {
       {/* Page Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="font-display text-4xl text-cream">
+          <h1 className="font-display text-5xl text-cream">
             Library
           </h1>
           <p className="text-xs text-slate-400 mt-1">
-            {ownedGames.length} games in your account · {ownedGames.filter((g) => g.installed).length} installed
+            {ownedGames.length} {ownedGames.length === 1 ? 'game' : 'games'} in your account · {ownedGames.filter((g) => g.installed).length} installed
           </p>
         </div>
 
@@ -186,7 +186,7 @@ export const LibraryScreen: React.FC = () => {
       {/* Pick up where you left off */}
       {sortedGames.length > 1 && (
         <section className="space-y-4">
-          <h2 className="font-display text-2xl text-cream">Pick up where you left off</h2>
+          <h2 className="font-display text-3xl text-cream">Pick up where you left off</h2>
           <FocusCarousel
             games={sortedGames.slice(0, 8)}
             running={runningGameId}
