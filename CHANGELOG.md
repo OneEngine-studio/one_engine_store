@@ -3,7 +3,7 @@
 ## 1.1.0 (2026-11-17)
 
 ### Added
-- Railbound 1.0.0 published as a free download (sign in, Add to library, Install).
+- Railbound 1.0.1 published as a free download (sign in, Add to library, Install).
 - Coins screen with Stripe Checkout through the payments service.
 - Category cards and a focus carousel on the Store; a full-width game page with a floating price card.
 - Glossy 3D icon set, loading skeletons, empty states for Activity, Library, Downloads and notifications.
