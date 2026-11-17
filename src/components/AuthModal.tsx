@@ -8,9 +8,9 @@ type View = 'signin' | 'register' | 'forgot' | 'reset';
 type ServerStatus = 'CHECKING' | 'ONLINE' | 'OFFLINE';
 
 const inputClass =
-  'w-full px-3.5 py-3 rounded-xl bg-white/[0.05] border border-white/[0.08] hover:border-white/[0.16] focus:border-accent focus:bg-white/[0.07] focus:shadow-[0_0_0_3px_rgba(187,59,59,0.22)] text-sm text-cream placeholder-slate-500 outline-none transition-surface select-text';
+  'w-full px-3.5 py-3 rounded-xl bg-white/[0.05] border border-white/[0.08] hover:border-white/[0.16] focus:border-accent focus:bg-white/[0.07] focus:shadow-[0_0_0_3px_rgba(255,106,19,0.22)] text-sm text-cream placeholder-slate-500 outline-none transition-surface select-text';
 const primaryButton =
-  'btn-caps w-full h-12 rounded-xl bg-gradient-to-b from-[#CC4545] to-accent hover:from-[#D45050] hover:to-[#B13636] text-white shadow-glow transition-[filter,transform] active:scale-[0.98] flex items-center justify-center gap-2 disabled:opacity-60 cursor-default';
+  'btn-caps w-full h-12 rounded-xl bg-gradient-to-b from-[#FF8A3D] to-accent hover:from-[#FF9A55] hover:to-[#F2600E] text-on-accent shadow-glow transition-[filter,transform] active:scale-[0.98] flex items-center justify-center gap-2 disabled:opacity-60 cursor-default';
 const linkButton = 'text-slate-400 hover:text-cream cursor-default transition-colors';
 
 const SPARKS: Array<[number, number, number, number]> = [
@@ -38,38 +38,38 @@ const HeroArt: React.FC = () => {
   };
   return (
     <div ref={ref} onMouseMove={onMove} onMouseLeave={onLeave} className="absolute inset-0 overflow-hidden" aria-hidden="true">
-      <div className="absolute inset-0 bg-[radial-gradient(120%_80%_at_50%_30%,#5A1C20_0%,#2A1012_55%,#0B0405_100%)]" />
+      <div className="absolute inset-0 bg-[radial-gradient(120%_80%_at_50%_30%,#2A313B_0%,#2A1012_55%,#0A0C10_100%)]" />
       <div className="auth-parallax absolute inset-0">
         <svg viewBox="0 0 400 560" preserveAspectRatio="xMidYMid slice" className="w-full h-full">
           <defs>
             <radialGradient id="auth-orb" cx="50%" cy="50%" r="50%">
-              <stop offset="0" stopColor="#E25A5A" stopOpacity="0.85" />
-              <stop offset="0.45" stopColor="#BB3B3B" stopOpacity="0.35" />
-              <stop offset="1" stopColor="#BB3B3B" stopOpacity="0" />
+              <stop offset="0" stopColor="#FF8A3D" stopOpacity="0.85" />
+              <stop offset="0.45" stopColor="#FF6A13" stopOpacity="0.35" />
+              <stop offset="1" stopColor="#FF6A13" stopOpacity="0" />
             </radialGradient>
             <linearGradient id="auth-gem-a" x1="0" y1="0" x2="1" y2="1">
-              <stop offset="0" stopColor="#FF8A8A" />
-              <stop offset="1" stopColor="#BB3B3B" />
+              <stop offset="0" stopColor="#FFB27A" />
+              <stop offset="1" stopColor="#FF6A13" />
             </linearGradient>
             <linearGradient id="auth-gem-b" x1="0" y1="0" x2="1" y2="1">
-              <stop offset="0" stopColor="#9C2B31" />
-              <stop offset="1" stopColor="#4A1217" />
+              <stop offset="0" stopColor="#8A3A12" />
+              <stop offset="1" stopColor="#2A3038" />
             </linearGradient>
           </defs>
           <circle className="auth-glow" cx="200" cy="230" r="190" fill="url(#auth-orb)" />
           <g className="auth-float-slow" opacity="0.9">
             <polygon points="70,250 98,196 120,262" fill="url(#auth-gem-b)" />
-            <polygon points="98,196 120,262 112,228" fill="#E25A5A" opacity="0.55" />
+            <polygon points="98,196 120,262 112,228" fill="#FF8A3D" opacity="0.55" />
             <polygon points="318,330 346,268 362,344" fill="url(#auth-gem-b)" />
-            <polygon points="346,268 362,344 352,300" fill="#E25A5A" opacity="0.5" />
+            <polygon points="346,268 362,344 352,300" fill="#FF8A3D" opacity="0.5" />
           </g>
           <g className="auth-float">
-            <polygon points="120,170 200,110 200,200" fill="#7A1F25" />
+            <polygon points="120,170 200,110 200,200" fill="#8A3A12" />
             <polygon points="200,110 280,170 200,200" fill="url(#auth-gem-a)" />
-            <polygon points="120,170 200,200 138,290" fill="#5A141A" />
-            <polygon points="280,170 262,290 200,200" fill="#BB3B3B" />
-            <polygon points="138,290 200,200 200,350" fill="#8E2A30" />
-            <polygon points="262,290 200,350 200,200" fill="#A53232" />
+            <polygon points="120,170 200,200 138,290" fill="#5A2810" />
+            <polygon points="280,170 262,290 200,200" fill="#FF6A13" />
+            <polygon points="138,290 200,200 200,350" fill="#B24A12" />
+            <polygon points="262,290 200,350 200,200" fill="#E2550A" />
             <path d="M120 170 200 110 280 170 262 290 200 350 138 290Z M200 110v90M120 170l80 30 80-30M138 290l62-90 62 90" fill="none" stroke="#fff" strokeOpacity="0.28" strokeWidth="1.2" strokeLinejoin="round" />
             <polygon points="200,110 232,134 200,152 168,134" fill="#fff" opacity="0.22" />
           </g>
@@ -84,7 +84,7 @@ const HeroArt: React.FC = () => {
           ))}
         </svg>
       </div>
-      <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-[#0B0405] via-[#0B0405]/60 to-transparent" />
+      <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-[#0A0C10] via-[#0A0C10]/60 to-transparent" />
     </div>
   );
 };
@@ -94,28 +94,28 @@ const PopOuts: React.FC = () => (
   <>
     <svg
       viewBox="0 0 170 230"
-      className="hidden md:block absolute -left-[58px] top-[14%] w-[140px] h-auto z-20 pointer-events-none auth-shard-pop drop-shadow-[0_12px_24px_rgba(187,59,59,0.35)]"
+      className="hidden md:block absolute -left-[58px] top-[14%] w-[140px] h-auto z-20 pointer-events-none auth-shard-pop drop-shadow-[0_12px_24px_rgba(255,106,19,0.35)]"
       aria-hidden="true"
     >
       <defs>
         <linearGradient id="auth-shard-a" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0" stopColor="#FF8A8A" />
-          <stop offset="1" stopColor="#BB3B3B" />
+          <stop offset="0" stopColor="#FFB27A" />
+          <stop offset="1" stopColor="#FF6A13" />
         </linearGradient>
         <linearGradient id="auth-shard-b" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0" stopColor="#D24A4A" />
-          <stop offset="1" stopColor="#5A141A" />
+          <stop offset="0" stopColor="#F27A2E" />
+          <stop offset="1" stopColor="#5A2810" />
         </linearGradient>
       </defs>
       <g className="auth-float">
         <polygon points="4,96 112,18 150,120 70,148" fill="url(#auth-shard-b)" />
         <polygon points="112,18 150,120 70,148" fill="url(#auth-shard-a)" opacity="0.8" />
-        <polygon points="4,96 70,148 30,176" fill="#7A1F25" />
+        <polygon points="4,96 70,148 30,176" fill="#8A3A12" />
         <path d="M4 96 112 18M70 148 150 120" stroke="#fff" strokeOpacity="0.3" strokeWidth="1.2" />
       </g>
       <g className="auth-float-slow">
         <polygon points="40,176 96,150 112,212 60,226" fill="url(#auth-shard-b)" />
-        <polygon points="96,150 112,212 78,196" fill="#E25A5A" opacity="0.7" />
+        <polygon points="96,150 112,212 78,196" fill="#FF8A3D" opacity="0.7" />
       </g>
     </svg>
     <svg
@@ -125,7 +125,7 @@ const PopOuts: React.FC = () => (
     >
       <path
         d="M30 120c-20-30 6-70 40-68 14-26 58-30 80-8 28-4 56 22 46 52 12 24-6 52-38 50-20 18-62 18-82-2-24 6-44-6-46-24z"
-        fill="#BB3B3B"
+        fill="#FF6A13"
         opacity="0.55"
       />
     </svg>
@@ -495,7 +495,7 @@ export const AuthModal: React.FC = () => {
 
   return (
     <div
-      className="auth-backdrop fixed inset-0 z-50 flex items-center justify-center bg-[radial-gradient(70%_60%_at_50%_45%,rgba(120,28,34,0.45),rgba(0,0,0,0.82))] backdrop-blur-[3px] p-4 select-none"
+      className="auth-backdrop fixed inset-0 z-50 flex items-center justify-center bg-[radial-gradient(70%_60%_at_50%_45%,rgba(40,48,60,0.45),rgba(0,0,0,0.82))] backdrop-blur-[3px] p-4 select-none"
       onClick={closeAuthModal}
     >
       {signedIn && !needsVerification ? (
@@ -508,9 +508,9 @@ export const AuthModal: React.FC = () => {
           className="relative w-full max-w-sm auth-pop"
         >
           {closeButton}
-          <div className="rounded-[28px] bg-[#1A0A0B] border border-white/[0.08] overflow-hidden shadow-modal">
+          <div className="rounded-[28px] bg-[#0F1216] border border-white/[0.08] overflow-hidden shadow-modal">
             {/* header: lit maroon band with the player's avatar overlapping it */}
-            <div className="relative h-24 bg-[radial-gradient(90%_120%_at_80%_0%,rgba(226,90,90,0.45),#4A1B1F_60%,#2A1113)]">
+            <div className="relative h-24 bg-[radial-gradient(90%_120%_at_80%_0%,rgba(255,138,61,0.45),#232A33_60%,#181D24)]">
               <Icon3D kind="controller" className="absolute right-5 top-4 w-20 h-auto opacity-80" />
             </div>
             <div className="px-6 pb-6 -mt-9 space-y-5">
@@ -518,7 +518,7 @@ export const AuthModal: React.FC = () => {
                 <img
                   src={currentUser.avatarUrl}
                   alt=""
-                  className="relative w-[72px] h-[72px] rounded-2xl object-cover bg-bg-card ring-4 ring-[#1A0A0B]"
+                  className="relative w-[72px] h-[72px] rounded-2xl object-cover bg-bg-card ring-4 ring-[#0F1216]"
                 />
                 <div className="min-w-0 pb-1">
                   <h2 id="auth-title" className="font-display text-3xl text-cream leading-tight truncate">
@@ -558,7 +558,7 @@ export const AuthModal: React.FC = () => {
                 </button>
                 <button
                   onClick={closeAuthModal}
-                  className="px-7 h-10 rounded-full bg-accent hover:bg-accent-hover text-sm font-bold text-white shadow-glow cursor-default active:scale-[0.97] transition-[background-color,transform]"
+                  className="px-7 h-10 rounded-full bg-accent hover:bg-accent-hover text-sm font-bold text-on-accent shadow-glow cursor-default active:scale-[0.97] transition-[background-color,transform]"
                 >
                   Done
                 </button>
@@ -576,7 +576,7 @@ export const AuthModal: React.FC = () => {
           className="relative w-full max-w-[880px] auth-pop"
         >
           <PopOuts />
-          <div className="relative z-10 grid md:grid-cols-[1fr_1fr] rounded-[28px] overflow-hidden bg-[#1A0A0B] border border-white/[0.08] shadow-modal">
+          <div className="relative z-10 grid md:grid-cols-[1fr_1fr] rounded-[28px] overflow-hidden bg-[#0F1216] border border-white/[0.08] shadow-modal">
           {closeButton}
           <aside className="hidden md:block relative min-h-[520px] border-r border-white/[0.06]">
             <HeroArt />
