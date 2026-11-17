@@ -103,7 +103,7 @@ export const Cartridge: React.FC<CartridgeProps> = ({
             {game.title}
           </span>
           {game.installSizeGb > 0 && (
-            <span className="font-mono text-xs text-slate-500 shrink-0 tabular-nums">
+            <span className="text-xs text-slate-400 shrink-0 tabular-nums">
               {game.installSizeGb < 10 ? game.installSizeGb.toFixed(1) : Math.round(game.installSizeGb)} GB
             </span>
           )}
