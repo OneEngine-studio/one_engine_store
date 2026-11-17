@@ -10,7 +10,7 @@ type ServerStatus = 'CHECKING' | 'ONLINE' | 'OFFLINE';
 const inputClass =
   'w-full px-3.5 py-3 rounded-xl bg-white/[0.05] border border-white/[0.08] hover:border-white/[0.16] focus:border-accent focus:bg-white/[0.07] focus:shadow-[0_0_0_3px_rgba(187,59,59,0.22)] text-sm text-cream placeholder-slate-500 outline-none transition-surface select-text';
 const primaryButton =
-  'w-full h-12 rounded-xl bg-gradient-to-b from-[#CC4545] to-accent hover:from-[#D45050] hover:to-[#B13636] text-white text-sm font-bold tracking-wide shadow-glow transition-[filter,transform] active:scale-[0.98] flex items-center justify-center gap-2 disabled:opacity-60 cursor-default';
+  'btn-caps w-full h-12 rounded-xl bg-gradient-to-b from-[#CC4545] to-accent hover:from-[#D45050] hover:to-[#B13636] text-white shadow-glow transition-[filter,transform] active:scale-[0.98] flex items-center justify-center gap-2 disabled:opacity-60 cursor-default';
 const linkButton = 'text-slate-400 hover:text-cream cursor-default transition-colors';
 
 const SPARKS: Array<[number, number, number, number]> = [
@@ -521,7 +521,7 @@ export const AuthModal: React.FC = () => {
                   className="relative w-[72px] h-[72px] rounded-2xl object-cover bg-bg-card ring-4 ring-[#1A0A0B]"
                 />
                 <div className="min-w-0 pb-1">
-                  <h2 id="auth-title" className="font-display text-2xl text-cream leading-tight truncate">
+                  <h2 id="auth-title" className="font-display text-3xl text-cream leading-tight truncate">
                     {currentUser.callsign}
                   </h2>
                   <p className="text-xs text-slate-400 truncate">{currentUser.email}</p>
@@ -581,7 +581,7 @@ export const AuthModal: React.FC = () => {
           <aside className="hidden md:block relative min-h-[520px] border-r border-white/[0.06]">
             <HeroArt />
             <div className="absolute inset-x-0 bottom-0 p-8">
-              <p className="font-display text-[34px] text-white leading-[1.05]">{heroTitle}</p>
+              <p className="font-display text-[46px] text-white leading-[0.95]">{heroTitle}</p>
               <p className="text-sm text-slate-300 mt-2 leading-relaxed max-w-[260px]">{heroText}</p>
             </div>
           </aside>
