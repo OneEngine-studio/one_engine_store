@@ -135,7 +135,7 @@ export const WalletScreen: React.FC = () => {
     <div className="p-8 space-y-8 max-w-7xl mx-auto w-full">
       <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
         <div>
-          <h1 className="font-display text-4xl text-cream">Coins</h1>
+          <h1 className="font-display text-5xl text-cream">Coins</h1>
           <p className="text-xs text-slate-400 mt-1">Top up with a card in Stripe's secure checkout. Coins are added once the payment is confirmed.</p>
         </div>
         <div className="rounded-[22px] bg-bg-card border border-white/[0.06] px-6 py-4 min-w-[200px]">
@@ -173,7 +173,7 @@ export const WalletScreen: React.FC = () => {
       )}
 
       <section className="space-y-5">
-        <h2 className="font-display text-2xl text-cream">Coin bundles</h2>
+        <h2 className="font-display text-3xl text-cream">Coin bundles</h2>
         {loading ? (
           <p className="text-xs text-slate-400">Loading bundles…</p>
         ) : bundles.length === 0 ? (
@@ -203,7 +203,7 @@ export const WalletScreen: React.FC = () => {
                 <button
                   onClick={() => void buy(b)}
                   disabled={buying !== null || !!waitingFor}
-                  className="relative h-11 rounded-xl bg-gradient-to-b from-[#CC4545] to-accent hover:from-[#D45050] hover:to-[#B13636] text-white text-sm font-bold shadow-glow cursor-default active:scale-[0.98] transition-[filter,transform] disabled:opacity-60 flex items-center justify-center gap-2"
+                  className="btn-caps relative h-11 rounded-xl bg-gradient-to-b from-[#CC4545] to-accent hover:from-[#D45050] hover:to-[#B13636] text-white shadow-glow cursor-default active:scale-[0.98] transition-[filter,transform] disabled:opacity-60 flex items-center justify-center gap-2"
                 >
                   {buying === b.sku && <Loader2 className="w-4 h-4 animate-spin" />}
                   {formatMoney(b.fiatAmountMinor, b.currency)}
@@ -216,7 +216,7 @@ export const WalletScreen: React.FC = () => {
 
       {signedIn && orders.length > 0 && (
         <section className="space-y-4">
-          <h2 className="font-display text-2xl text-cream flex items-center gap-2">
+          <h2 className="font-display text-3xl text-cream flex items-center gap-2">
             <Receipt className="w-5 h-5 text-accent" /> Recent purchases
           </h2>
           <ul className="space-y-2">
