@@ -14,10 +14,12 @@ interface StatsCardProps {
   /** 0–1: how much of the ring is filled. */
   fill: number;
   items: StatsCardItem[];
+  /** Small line under the number, e.g. the next milestone. */
+  caption?: string;
 }
 
 /** "Your statistic" panel: a red ring around the headline number, three small figures beneath. */
-export const StatsCard: React.FC<StatsCardProps> = ({ title, total, totalLabel, fill, items }) => {
+export const StatsCard: React.FC<StatsCardProps> = ({ title, total, totalLabel, fill, items, caption }) => {
   const r = 70;
   const c = 2 * Math.PI * r;
   // Empty means empty: no sliver of progress that does not exist.
@@ -50,8 +52,9 @@ export const StatsCard: React.FC<StatsCardProps> = ({ title, total, totalLabel, 
           )}
         </svg>
         <div className="absolute inset-[26px] rounded-full bg-[#2A1113] flex flex-col items-center justify-center text-center">
-          <span className="text-xs text-slate-400">{totalLabel}</span>
+          <span className="label-caps text-slate-400">{totalLabel}</span>
           <span className="font-display text-3xl text-cream tabular-nums">{total}</span>
+          {caption && <span className="mt-0.5 text-xs text-slate-400">{caption}</span>}
         </div>
       </div>
       <div className="grid grid-cols-3 gap-2 mt-auto">
@@ -64,7 +67,7 @@ export const StatsCard: React.FC<StatsCardProps> = ({ title, total, totalLabel, 
           >
             <span className="w-9 h-9 rounded-full bg-accent text-white flex items-center justify-center shadow-glow">{it.icon}</span>
             <span className="text-sm font-semibold text-cream tabular-nums">{it.value}</span>
-            <span className="text-xs text-slate-400">{it.label}</span>
+            <span className="label-caps text-slate-400">{it.label}</span>
           </button>
         ))}
       </div>
