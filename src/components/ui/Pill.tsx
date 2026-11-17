@@ -19,7 +19,7 @@ export const Pill: React.FC<PillProps> = ({ active, icon, onClick, children, rol
     onClick={onClick}
     className={`inline-flex items-center gap-2 h-9 px-4 rounded-full text-xs font-medium cursor-default transition-surface active:scale-[0.97] ${
       active
-        ? 'bg-accent text-white shadow-glow'
+        ? 'bg-accent text-on-accent shadow-glow'
         : 'bg-white/[0.06] text-slate-200 hover:bg-white/[0.12] hover:text-cream'
     }`}
   >

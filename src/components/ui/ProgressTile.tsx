@@ -28,7 +28,7 @@ export const ProgressTile: React.FC<ProgressTileProps> = ({ label, value, sub, p
       >
         {pct > 0 ? (
           <div
-            className="h-full rounded-2xl bg-accent text-white flex items-center px-5 font-display text-lg tabular-nums origin-left"
+            className="h-full rounded-2xl bg-accent text-on-accent flex items-center px-5 font-display text-lg tabular-nums origin-left"
             style={{ width: `${Math.max(pct, 12)}%`, transition: 'width 500ms cubic-bezier(0.23,1,0.32,1)' }}
           >
             {Math.round(pct)}%

@@ -34,7 +34,7 @@ const Chip: React.FC<{ item: TimelineItem }> = ({ item }) => (
 export const Timeline: React.FC<TimelineProps> = ({ head, headLabel, items }) => (
   <div className="flex flex-col items-center">
     <div className="flex flex-col items-center gap-2">
-      <span className="w-11 h-11 rounded-full bg-accent text-white flex items-center justify-center ring-8 ring-accent/15">
+      <span className="w-11 h-11 rounded-full bg-accent text-on-accent flex items-center justify-center ring-8 ring-accent/15">
         {head}
       </span>
       <span className="text-xs text-slate-400">{headLabel}</span>

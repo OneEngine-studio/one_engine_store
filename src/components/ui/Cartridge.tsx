@@ -40,7 +40,7 @@ export const Cartridge: React.FC<CartridgeProps> = ({
   return (
     <div className="group flex flex-col" style={{ width: WIDTHS[size] }}>
       <div
-        className="relative w-full overflow-hidden rounded-card bg-bg-card border border-white/[0.06] shadow-card transition-[transform,border-color,box-shadow] duration-300 ease-[cubic-bezier(0.23,1,0.32,1)] group-hover:-translate-y-1 group-hover:border-accent/60 group-hover:shadow-[0_18px_36px_rgba(0,0,0,0.5),0_0_0_1px_rgba(187,59,59,0.35)] group-focus-within:-translate-y-1 group-focus-within:border-accent/60"
+        className="relative w-full overflow-hidden rounded-card bg-bg-card border border-white/[0.06] shadow-card transition-[transform,border-color,box-shadow] duration-300 ease-[cubic-bezier(0.23,1,0.32,1)] group-hover:-translate-y-1 group-hover:border-accent/60 group-hover:shadow-[0_18px_36px_rgba(0,0,0,0.5),0_0_0_1px_rgba(255,106,19,0.35)] group-focus-within:-translate-y-1 group-focus-within:border-accent/60"
         style={{ aspectRatio: '4 / 5' }}
       >
         {/* keyboard + screen-reader entry point */}
@@ -54,11 +54,11 @@ export const Cartridge: React.FC<CartridgeProps> = ({
             className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 ease-[cubic-bezier(0.23,1,0.32,1)] group-hover:scale-[1.04]"
           />
         ) : (
-          <div className="absolute inset-0 bg-[radial-gradient(90%_80%_at_80%_0%,rgba(226,90,90,0.30),#4A1B1F_55%,#2A1113)] flex items-center justify-center">
+          <div className="absolute inset-0 bg-[radial-gradient(90%_80%_at_80%_0%,rgba(255,138,61,0.30),#232A33_55%,#181D24)] flex items-center justify-center">
             <Icon3D kind="controller" className="w-16 h-auto opacity-70" />
           </div>
         )}
-        <div className="absolute inset-0 bg-gradient-to-t from-[#361518] via-[#361518]/20 to-transparent pointer-events-none" />
+        <div className="absolute inset-0 bg-gradient-to-t from-[#1B2028] via-[#1B2028]/20 to-transparent pointer-events-none" />
 
         {/* state */}
         {(running || game.installed) && (
@@ -83,7 +83,7 @@ export const Cartridge: React.FC<CartridgeProps> = ({
               else onInstall?.();
             }}
             className={`absolute z-20 left-3 right-3 bottom-3 h-9 rounded-full flex items-center justify-center gap-1.5 text-xs font-semibold cursor-default opacity-0 translate-y-1.5 group-hover:opacity-100 group-hover:translate-y-0 group-focus-within:opacity-100 group-focus-within:translate-y-0 transition-[opacity,transform,background-color] duration-200 ease-[cubic-bezier(0.23,1,0.32,1)] active:scale-[0.97] ${
-              action === 'stop' ? 'bg-danger text-white hover:bg-danger/90' : 'bg-accent text-white hover:bg-accent-hover shadow-glow'
+              action === 'stop' ? 'bg-danger text-on-accent hover:bg-danger/90' : 'bg-accent text-on-accent hover:bg-accent-hover shadow-glow'
             }`}
           >
             {action === 'play' && <Play className="w-3.5 h-3.5 fill-current" />}

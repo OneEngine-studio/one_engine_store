@@ -31,8 +31,8 @@ export const StatsCard: React.FC<StatsCardProps> = ({ title, total, totalLabel, 
         <svg viewBox="0 0 180 180" className="w-full h-full -rotate-90" aria-hidden="true">
           <defs>
             <linearGradient id="stat-ring" x1="0" y1="0" x2="1" y2="1">
-              <stop offset="0" stopColor="#E25A5A" />
-              <stop offset="1" stopColor="#BB3B3B" />
+              <stop offset="0" stopColor="#FF8A3D" />
+              <stop offset="1" stopColor="#FF6A13" />
             </linearGradient>
           </defs>
           <circle cx="90" cy="90" r={r} fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth="14" />
@@ -51,7 +51,7 @@ export const StatsCard: React.FC<StatsCardProps> = ({ title, total, totalLabel, 
             />
           )}
         </svg>
-        <div className="absolute inset-[26px] rounded-full bg-[#2A1113] flex flex-col items-center justify-center text-center">
+        <div className="absolute inset-[26px] rounded-full bg-[#181D24] flex flex-col items-center justify-center text-center">
           <span className="label-caps text-slate-400">{totalLabel}</span>
           <span className="font-display text-3xl text-cream tabular-nums">{total}</span>
           {caption && <span className="mt-0.5 text-xs text-slate-400">{caption}</span>}
@@ -65,7 +65,7 @@ export const StatsCard: React.FC<StatsCardProps> = ({ title, total, totalLabel, 
             onClick={it.onClick}
             className="flex flex-col items-center gap-1.5 py-2 rounded-2xl hover:bg-white/[0.05] cursor-default transition-surface active:scale-[0.97]"
           >
-            <span className="w-9 h-9 rounded-full bg-accent text-white flex items-center justify-center shadow-glow">{it.icon}</span>
+            <span className="w-9 h-9 rounded-full bg-accent text-on-accent flex items-center justify-center shadow-glow">{it.icon}</span>
             <span className="text-sm font-semibold text-cream tabular-nums">{it.value}</span>
             <span className="label-caps text-slate-400">{it.label}</span>
           </button>
