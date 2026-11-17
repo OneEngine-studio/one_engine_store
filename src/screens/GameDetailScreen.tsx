@@ -158,7 +158,7 @@ export const GameDetailScreen: React.FC = () => {
         return (
           <button
             onClick={() => launchGame(game.id)}
-            className="btn-caps w-full h-12 flex items-center justify-center gap-2 rounded-xl bg-gradient-to-b from-[#CC4545] to-accent hover:from-[#D45050] hover:to-[#B13636] text-white shadow-glow transition-[filter,transform] active:scale-[0.98] cursor-default"
+            className="btn-caps w-full h-12 flex items-center justify-center gap-2 rounded-xl bg-gradient-to-b from-[#FF8A3D] to-accent hover:from-[#FF9A55] hover:to-[#F2600E] text-on-accent shadow-glow transition-[filter,transform] active:scale-[0.98] cursor-default"
           >
             <Play className="w-4 h-4 fill-current" />
             <span>Play</span>
@@ -168,7 +168,7 @@ export const GameDetailScreen: React.FC = () => {
       return (
         <button
           onClick={() => startDownload(game.id)}
-          className="btn-caps w-full h-12 flex items-center justify-center gap-2 rounded-xl bg-gradient-to-b from-[#CC4545] to-accent hover:from-[#D45050] hover:to-[#B13636] text-white shadow-glow transition-[filter,transform] active:scale-[0.98] cursor-default"
+          className="btn-caps w-full h-12 flex items-center justify-center gap-2 rounded-xl bg-gradient-to-b from-[#FF8A3D] to-accent hover:from-[#FF9A55] hover:to-[#F2600E] text-on-accent shadow-glow transition-[filter,transform] active:scale-[0.98] cursor-default"
         >
           <Download className="w-4 h-4" strokeWidth={2} />
           <span>{isInstalled ? 'Update' : currentDownload?.status === 'PAUSED' ? 'Resume install' : 'Install'}</span>
@@ -179,7 +179,7 @@ export const GameDetailScreen: React.FC = () => {
     return (
       <button
         onClick={() => purchaseGame(game.id)}
-        className="btn-caps w-full h-12 flex items-center justify-center gap-2 rounded-xl bg-gradient-to-b from-[#CC4545] to-accent hover:from-[#D45050] hover:to-[#B13636] text-white shadow-glow transition-[filter,transform] active:scale-[0.98] cursor-default"
+        className="btn-caps w-full h-12 flex items-center justify-center gap-2 rounded-xl bg-gradient-to-b from-[#FF8A3D] to-accent hover:from-[#FF9A55] hover:to-[#F2600E] text-on-accent shadow-glow transition-[filter,transform] active:scale-[0.98] cursor-default"
       >
         <ShoppingCart className="w-4 h-4" strokeWidth={2} />
         <span>{typeof effectivePrice === 'number' ? `Buy for $${effectivePrice.toFixed(2)}` : 'Add to library'}</span>
@@ -206,13 +206,13 @@ export const GameDetailScreen: React.FC = () => {
         {hasBanner ? (
           <img src={bannerSrc} alt="" onError={() => setBannerFailed(true)} className="absolute inset-0 w-full h-full object-cover object-[70%_center]" />
         ) : (
-          <div className="absolute inset-0 bg-[radial-gradient(70%_90%_at_75%_30%,rgba(226,90,90,0.35),#4A1B1F_55%,#24100F)]">
+          <div className="absolute inset-0 bg-[radial-gradient(70%_90%_at_75%_30%,rgba(255,138,61,0.35),#232A33_55%,#13171D)]">
             <Icon3D kind={art} className="absolute right-[36%] top-[42%] -translate-y-1/2 w-48 h-auto opacity-95" />
           </div>
         )}
-        <div className="absolute inset-0 bg-gradient-to-t from-[#24100F] via-[#24100F]/55 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-t from-[#13171D] via-[#13171D]/55 to-transparent" />
         {/* Key art often carries its own logo or text on the left; keep that side dark so the title reads cleanly. */}
-        <div className="absolute inset-0 bg-gradient-to-r from-[#24100F] via-[#24100F]/75 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-r from-[#13171D] via-[#13171D]/75 to-transparent" />
         <div className="absolute inset-x-0 top-0 h-28 bg-gradient-to-b from-black/45 to-transparent" />
 
         <div className="relative max-w-7xl mx-auto h-full px-8 pt-6 flex flex-col">
@@ -230,7 +230,7 @@ export const GameDetailScreen: React.FC = () => {
                 onClick={() => toggleFavorite(game.id)}
                 aria-pressed={!!game.isFavorite}
                 className={`w-10 h-10 rounded-full flex items-center justify-center backdrop-blur transition-surface cursor-default ${
-                  game.isFavorite ? 'bg-accent text-white shadow-glow' : 'bg-black/35 text-white hover:bg-black/50'
+                  game.isFavorite ? 'bg-accent text-on-accent shadow-glow' : 'bg-black/35 text-on-accent hover:bg-black/50'
                 }`}
                 title={game.isFavorite ? 'Remove from wishlist' : 'Add to wishlist'}
               >
@@ -253,7 +253,7 @@ export const GameDetailScreen: React.FC = () => {
 
           <div className="mt-auto pb-10 max-w-2xl">
             {game.discountPercent ? (
-              <span className="inline-flex h-7 px-3 items-center rounded-full bg-accent text-white text-xs font-bold shadow-glow">
+              <span className="inline-flex h-7 px-3 items-center rounded-full bg-accent text-on-accent text-xs font-bold shadow-glow">
                 -{game.discountPercent}% this week
               </span>
             ) : null}
@@ -304,7 +304,7 @@ export const GameDetailScreen: React.FC = () => {
         </div>
 
         {/* Purchase card: floats up over the hero */}
-        <aside className="w-full lg:w-[360px] shrink-0 lg:-mt-24 lg:sticky lg:top-4 rounded-[26px] bg-[#1A0A0B] border border-white/[0.08] shadow-modal p-6 space-y-5">
+        <aside className="w-full lg:w-[360px] shrink-0 lg:-mt-24 lg:sticky lg:top-4 rounded-[26px] bg-[#0F1216] border border-white/[0.08] shadow-modal p-6 space-y-5">
           <div className="flex items-baseline justify-between">
             <span className="label-caps text-slate-400">{isOwned ? 'In your account' : 'Price'}</span>
             {isOwned ? (

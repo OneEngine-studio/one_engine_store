@@ -114,10 +114,10 @@ export const StoreScreen: React.FC = () => {
           {spotlight?.coverImage && (
             <img src={spotlight.coverImage} alt="" draggable={false} className="absolute inset-0 w-full h-full object-cover" />
           )}
-          <div className="absolute inset-0 bg-gradient-to-r from-[#361518] via-[#361518]/85 to-[#361518]/10" />
+          <div className="absolute inset-0 bg-gradient-to-r from-[#1B2028] via-[#1B2028]/85 to-[#1B2028]/10" />
           {!spotlight?.coverImage && (
             <>
-              <div className="absolute inset-0 bg-[radial-gradient(60%_90%_at_85%_40%,rgba(226,90,90,0.28),transparent_70%)] pointer-events-none" />
+              <div className="absolute inset-0 bg-[radial-gradient(60%_90%_at_85%_40%,rgba(255,138,61,0.28),transparent_70%)] pointer-events-none" />
               <Icon3D kind={spotlight ? 'controller' : 'rocket'} className="hidden md:block absolute right-12 top-1/2 -translate-y-1/2 w-44 h-auto pointer-events-none" />
             </>
           )}
@@ -128,7 +128,7 @@ export const StoreScreen: React.FC = () => {
               </p>
               {spotlight ? (
                 <>
-                  <span className="mt-5 inline-flex items-center gap-1.5 h-7 px-3 rounded-full bg-white text-[#361518] text-xs font-semibold">
+                  <span className="mt-5 inline-flex items-center gap-1.5 h-7 px-3 rounded-full bg-amber text-on-accent text-xs font-semibold">
                     <Flame className="w-3.5 h-3.5 text-accent" /> Popular
                   </span>
                   <h1 className="mt-3 font-display text-[56px] text-cream leading-[1.05]">{spotlight.title}</h1>
@@ -149,7 +149,7 @@ export const StoreScreen: React.FC = () => {
               <div className="flex flex-wrap items-center gap-3">
                 <button
                   onClick={() => navigate('game-detail', spotlight.id)}
-                  className="btn-caps h-11 px-7 rounded-full bg-accent hover:bg-accent-hover text-white shadow-glow cursor-default active:scale-[0.97] transition-[background-color,transform] duration-200"
+                  className="btn-caps h-11 px-7 rounded-full bg-accent hover:bg-accent-hover text-on-accent shadow-glow cursor-default active:scale-[0.97] transition-[background-color,transform] duration-200"
                 >
                   View game
                 </button>
