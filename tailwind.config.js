@@ -9,42 +9,45 @@ export default {
   theme: {
     extend: {
       colors: {
-        // Maroon layers on black: depth comes from tone
-        'bg-app':      '#0B0405', // Root window background
-        'bg-panel':    '#24100F', // Floating main content panel
-        'bg-sidebar':  '#1A0A0B', // Left navigation rail
-        'bg-card':     '#361518', // Cards, tiles, panels (brand maroon)
+        // Graphite steel layers: depth comes from tone, colour is saved for action
+        'bg-app':      '#0A0C10', // Root window background
+        'bg-panel':    '#13171D', // Floating main content panel
+        'bg-sidebar':  '#0F1216', // Left navigation rail
+        'bg-card':     '#1B2028', // Cards, tiles, panels (brand maroon)
         'bg-hover':    'rgba(255, 255, 255, 0.06)', // 6% white interaction hover
         'bg-pressed':  'rgba(255, 255, 255, 0.10)',
-        'bg-dock':     '#2A1113', // Floating bottom dock
+        'bg-dock':     '#181D24', // Floating bottom dock
 
         // Backward-compat aliases
-        'void-black':    '#0B0405',
-        'gunmetal-slate':'#1A0A0B',
-        'tech-surface':  '#361518',
-        'tech-elevated': '#45201F',
+        'void-black':    '#0A0C10',
+        'gunmetal-slate':'#0F1216',
+        'tech-surface':  '#1B2028',
+        'tech-elevated': '#252C36',
         'border-stroke': 'rgba(255, 255, 255, 0.08)',
 
-        // Rose-tinted greys for text on maroon, white for headings and light fills
+        // Cool steel greys for text on graphite (400 and 500 stay above 4.5:1 on cards); warm off-white for headings
         slate: {
-          50: '#FBF4F4', 100: '#F3E6E6', 200: '#E6D2D2', 300: '#DEC6C7', 400: '#C7A7A8',
-          500: '#A98586', 600: '#86605F', 700: '#523A3B', 800: '#3C2829', 900: '#271718', 950: '#180D0E',
+          50: '#F5F7FA', 100: '#E9EDF2', 200: '#D3D9E1', 300: '#BCC4CE', 400: '#A3ACB8',
+          500: '#8892A0', 600: '#5F6875', 700: '#3D444E', 800: '#2A3038', 900: '#1C2027', 950: '#12151A',
         },
-        cream:  '#FFFFFF',
-        brass:  '#D9A5A5',
+        cream:  '#F5F2EC',
+        // Hazard amber: badges, discounts, highlights (never a second button colour)
+        brass:  '#FFB224',
+        amber:  '#FFB224',
 
-        // Brand red: primary actions, active state, progress
-        'accent':       '#BB3B3B',
-        'accent-hover': '#A53232',
-        'accent-muted': 'rgba(187, 59, 59, 0.18)',
-        'primary-accent': '#BB3B3B',
+        // Signal orange: the one action colour (primary buttons, active nav, progress). Dark text sits on it.
+        'accent':       '#FF6A13',
+        'accent-hover': '#FF7F33',
+        'accent-muted': 'rgba(255, 106, 19, 0.16)',
+        'primary-accent': '#FF6A13',
+        'on-accent':    '#14100C',
 
-        // Semantic status tokens (the only colour in the interface)
-        'success': '#10B981',
-        'warning': '#F59E0B',
-        'danger':  '#E5484D',
-        'tactical-green':  '#10B981',
-        'tactical-danger': '#E5484D',
+        // Status colours
+        'success': '#3DDC97',
+        'warning': '#FFB224',
+        'danger':  '#FF4D4F',
+        'tactical-green':  '#3DDC97',
+        'tactical-danger': '#FF4D4F',
       },
       fontFamily: {
         display: ['"Barlow Condensed"', 'Barlow', '"Segoe UI"', 'sans-serif'],
@@ -79,7 +82,7 @@ export default {
         'modal':   '0 24px 60px rgba(0, 0, 0, 0.75), 0 0 0 1px rgba(255, 255, 255, 0.1)',
         'popover': '0 16px 36px rgba(0, 0, 0, 0.55), 0 0 0 1px rgba(255, 255, 255, 0.08)',
         'card':    '0 12px 28px rgba(0, 0, 0, 0.35)',
-        'glow':    '0 10px 26px rgba(187, 59, 59, 0.45)',
+        'glow':    '0 10px 28px rgba(255, 106, 19, 0.35)',
       },
       transitionProperty: {
         'surface': 'background-color, color, border-color, opacity',
