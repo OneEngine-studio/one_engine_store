@@ -158,7 +158,7 @@ export const GameDetailScreen: React.FC = () => {
         return (
           <button
             onClick={() => launchGame(game.id)}
-            className="w-full h-12 flex items-center justify-center gap-2 rounded-xl bg-gradient-to-b from-[#CC4545] to-accent hover:from-[#D45050] hover:to-[#B13636] text-white font-bold text-sm shadow-glow transition-[filter,transform] active:scale-[0.98] cursor-default"
+            className="btn-caps w-full h-12 flex items-center justify-center gap-2 rounded-xl bg-gradient-to-b from-[#CC4545] to-accent hover:from-[#D45050] hover:to-[#B13636] text-white shadow-glow transition-[filter,transform] active:scale-[0.98] cursor-default"
           >
             <Play className="w-4 h-4 fill-current" />
             <span>Play</span>
@@ -168,7 +168,7 @@ export const GameDetailScreen: React.FC = () => {
       return (
         <button
           onClick={() => startDownload(game.id)}
-          className="w-full h-12 flex items-center justify-center gap-2 rounded-xl bg-gradient-to-b from-[#CC4545] to-accent hover:from-[#D45050] hover:to-[#B13636] text-white font-bold text-sm shadow-glow transition-[filter,transform] active:scale-[0.98] cursor-default"
+          className="btn-caps w-full h-12 flex items-center justify-center gap-2 rounded-xl bg-gradient-to-b from-[#CC4545] to-accent hover:from-[#D45050] hover:to-[#B13636] text-white shadow-glow transition-[filter,transform] active:scale-[0.98] cursor-default"
         >
           <Download className="w-4 h-4" strokeWidth={2} />
           <span>{isInstalled ? 'Update' : currentDownload?.status === 'PAUSED' ? 'Resume install' : 'Install'}</span>
@@ -179,7 +179,7 @@ export const GameDetailScreen: React.FC = () => {
     return (
       <button
         onClick={() => purchaseGame(game.id)}
-        className="w-full h-12 flex items-center justify-center gap-2 rounded-xl bg-gradient-to-b from-[#CC4545] to-accent hover:from-[#D45050] hover:to-[#B13636] text-white font-bold text-sm shadow-glow transition-[filter,transform] active:scale-[0.98] cursor-default"
+        className="btn-caps w-full h-12 flex items-center justify-center gap-2 rounded-xl bg-gradient-to-b from-[#CC4545] to-accent hover:from-[#D45050] hover:to-[#B13636] text-white shadow-glow transition-[filter,transform] active:scale-[0.98] cursor-default"
       >
         <ShoppingCart className="w-4 h-4" strokeWidth={2} />
         <span>{typeof effectivePrice === 'number' ? `Buy for $${effectivePrice.toFixed(2)}` : 'Add to library'}</span>
@@ -257,7 +257,7 @@ export const GameDetailScreen: React.FC = () => {
                 -{game.discountPercent}% this week
               </span>
             ) : null}
-            <h1 className="mt-3 font-display text-[56px] leading-[1.02] text-white drop-shadow-[0_4px_18px_rgba(0,0,0,0.45)] line-clamp-2">{game.title}</h1>
+            <h1 className="mt-3 font-display text-[64px] leading-[0.92] text-white drop-shadow-[0_4px_18px_rgba(0,0,0,0.45)] line-clamp-2">{game.title}</h1>
             {/* the subtitle is skipped when it would only repeat the About text */}
             {game.tagline && game.tagline.trim() !== (game.description || '').trim() && (
               <p className="mt-2 text-sm text-slate-200 leading-relaxed line-clamp-2">{game.tagline}</p>
@@ -279,7 +279,7 @@ export const GameDetailScreen: React.FC = () => {
         {/* About and details */}
         <div className="flex-1 min-w-0 w-full space-y-8 pt-6">
           <section className="space-y-3">
-            <h2 className="font-display text-2xl text-cream">About this game</h2>
+            <h2 className="font-display text-3xl text-cream">About this game</h2>
             <p className="text-sm text-slate-300 leading-relaxed max-w-3xl">
               {game.description || 'No description has been published for this game yet.'}
             </p>
@@ -287,11 +287,11 @@ export const GameDetailScreen: React.FC = () => {
 
           {facts.length > 0 && (
             <section className="space-y-3">
-              <h2 className="font-display text-2xl text-cream">Details</h2>
+              <h2 className="font-display text-3xl text-cream">Details</h2>
               <dl className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                 {facts.map(([label, value]) => (
                   <div key={label} className="rounded-[18px] bg-bg-card border border-white/[0.06] p-4">
-                    <dt className="text-xs text-slate-400">{label}</dt>
+                    <dt className="label-caps text-slate-400">{label}</dt>
                     <dd className="mt-1 text-sm font-semibold text-cream tabular-nums flex items-center gap-1.5">
                       {label === 'Size on disk' && <HardDrive className="w-3.5 h-3.5 text-slate-400" />}
                       {value}
@@ -306,7 +306,7 @@ export const GameDetailScreen: React.FC = () => {
         {/* Purchase card: floats up over the hero */}
         <aside className="w-full lg:w-[360px] shrink-0 lg:-mt-24 lg:sticky lg:top-4 rounded-[26px] bg-[#1A0A0B] border border-white/[0.08] shadow-modal p-6 space-y-5">
           <div className="flex items-baseline justify-between">
-            <span className="text-xs text-slate-400">{isOwned ? 'In your account' : 'Price'}</span>
+            <span className="label-caps text-slate-400">{isOwned ? 'In your account' : 'Price'}</span>
             {isOwned ? (
               <span className="text-sm font-semibold text-success flex items-center gap-1.5">
                 <Check className="w-4 h-4" /> In library
