@@ -145,7 +145,7 @@ export const FocusCarousel: React.FC<FocusCarouselProps> = ({ games, running, ca
                   className="absolute inset-x-0 bottom-0 p-3.5 pointer-events-none"
                   style={{ opacity: active ? 0 : 1, transition: `opacity ${active ? 150 : 350}ms ease ${active ? 0 : 250}ms` }}
                 >
-                  <span className="block font-display text-sm text-cream leading-tight line-clamp-2">{g.title}</span>
+                  <span className="block font-display text-lg text-cream leading-none line-clamp-2">{g.title}</span>
                 </div>
 
                 {/* focused: details */}
@@ -174,7 +174,7 @@ export const FocusCarousel: React.FC<FocusCarouselProps> = ({ games, running, ca
                     )}
                   </div>
                   <div>
-                    <h3 className="font-display text-[26px] text-white leading-[1.05] line-clamp-2">{g.title}</h3>
+                    <h3 className="font-display text-[34px] text-white leading-[0.95] line-clamp-2">{g.title}</h3>
                     <p className="mt-1 text-xs text-slate-300 truncate">{captionFor(g)}</p>
                     {!actionsDisabled && (
                       <button
@@ -183,7 +183,7 @@ export const FocusCarousel: React.FC<FocusCarouselProps> = ({ games, running, ca
                           onAction(g);
                         }}
                         tabIndex={active ? 0 : -1}
-                        className={`pointer-events-auto relative z-20 mt-4 inline-flex h-10 items-center gap-2 rounded-full px-5 text-xs font-semibold text-white cursor-default active:scale-[0.97] transition-[background-color,transform] duration-200 ${
+                        className={`pointer-events-auto relative z-20 btn-caps mt-4 inline-flex h-10 items-center gap-2 rounded-full px-5 text-white cursor-default active:scale-[0.97] transition-[background-color,transform] duration-200 ${
                           label === 'Stop' ? 'bg-danger hover:bg-danger/90' : 'bg-accent hover:bg-accent-hover shadow-glow'
                         }`}
                       >
