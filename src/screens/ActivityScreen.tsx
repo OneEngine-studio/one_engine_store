@@ -20,7 +20,7 @@ export const ActivityScreen: React.FC = () => {
   return (
     <div className="p-8 space-y-8 max-w-7xl mx-auto w-full">
       <div>
-        <h1 className="font-display text-4xl text-cream">Activity</h1>
+        <h1 className="font-display text-5xl text-cream">Activity</h1>
         <p className="text-xs text-slate-400 mt-1">
           {owned.length === 0
             ? 'Your play time, streaks and history'
