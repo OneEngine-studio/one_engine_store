@@ -10,6 +10,7 @@ import {
   Bell,
 } from 'lucide-react';
 import { NotificationPopover } from './NotificationPopover';
+import { UpdateButton } from './UpdateButton';
 import { Kbd } from './ui/Kbd';
 
 export const WindowFrame: React.FC = () => {
@@ -112,6 +113,9 @@ export const WindowFrame: React.FC = () => {
             <span className="text-slate-400 text-xs">({formatTimer(sessionElapsedSeconds)})</span>
           </div>
         )}
+
+        {/* A newer launcher is out: one click opens its installer */}
+        <UpdateButton />
 
         {/* Notification bell */}
         <div className="relative">
