@@ -11,6 +11,7 @@ import { accountValidationError, displayNameSchema, registerAccountRoutes } from
 import { makeMailer, type Mailer } from './mailer.js';
 import type { GoogleExchange } from './google.js';
 import { RateLimiter, TicketStore } from './tickets.js';
+import { registerPublisherRoutes } from './publisher.js';
 
 declare module 'fastify' {
   interface FastifyRequest {
@@ -401,6 +402,8 @@ export function buildServer({ cfg, db, tickets, verify, mailer, now = Date.now, 
     if (cfg.requireVerifiedEmail && !account.email_verified) return fail(reply, 403, 'email_not_verified', 'Email not confirmed.');
     return { userId: payload.userId, displayName: payload.displayName, productId: payload.productId, entitled: true };
   });
+
+  registerPublisherRoutes(app, { cfg, db, requireUser, requireVerified });
 
   registerAccountRoutes(app, {
     cfg,
