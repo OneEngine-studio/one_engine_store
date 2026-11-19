@@ -92,6 +92,26 @@ export function openDb(path: string): DatabaseSync {
       attempts INTEGER NOT NULL DEFAULT 0,
       used_at INTEGER
     );
+    -- Accounts allowed to publish builds: one row per product, or product_id '*' for every product.
+    CREATE TABLE IF NOT EXISTS publishers (
+      user_id TEXT NOT NULL REFERENCES accounts(user_id),
+      product_id TEXT NOT NULL,
+      granted_at TEXT NOT NULL DEFAULT (datetime('now')),
+      PRIMARY KEY (user_id, product_id)
+    );
+    -- Every published or removed build, with who did it.
+    CREATE TABLE IF NOT EXISTS build_audit (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id TEXT NOT NULL,
+      product_id TEXT NOT NULL,
+      platform TEXT NOT NULL,
+      build_id TEXT NOT NULL,
+      version TEXT NOT NULL,
+      size INTEGER NOT NULL,
+      sha256 TEXT NOT NULL,
+      action TEXT NOT NULL,
+      at TEXT NOT NULL DEFAULT (datetime('now'))
+    );
     CREATE TABLE IF NOT EXISTS ticket_audit (
       ticket_hash TEXT PRIMARY KEY,
       user_id TEXT NOT NULL,
