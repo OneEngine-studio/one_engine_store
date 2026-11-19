@@ -16,6 +16,17 @@ contextBridge.exposeInMainWorld('electronAPI', {
     info: () => ipcRenderer.invoke('app-info'),
     openExternal: (url) => ipcRenderer.invoke('open-external', url),
   },
+  updates: {
+    check: (payload) => ipcRenderer.invoke('update-check', payload),
+    open: () => ipcRenderer.invoke('update-open'),
+  },
+  publisher: {
+    products: () => ipcRenderer.invoke('publisher-products'),
+    pickZip: () => ipcRenderer.invoke('publisher-pick-zip'),
+    upload: (payload) => ipcRenderer.invoke('publisher-upload', payload),
+    cancel: () => ipcRenderer.invoke('publisher-cancel'),
+    onProgress: (callback) => subscribe('publisher-progress', callback),
+  },
   payments: {
     request: (payload) => ipcRenderer.invoke('payments-request', payload),
   },
