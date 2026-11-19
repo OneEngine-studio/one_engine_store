@@ -57,7 +57,7 @@ export interface UserProfile {
   hasPassword?: boolean;
 }
 
-export type NavigationTab = 'store' | 'game-detail' | 'library' | 'downloads' | 'activity' | 'community' | 'wallet' | 'settings';
+export type NavigationTab = 'store' | 'game-detail' | 'library' | 'downloads' | 'activity' | 'community' | 'wallet' | 'publish' | 'settings';
 
 export interface AppSettings {
   downloadDirectory: string;
