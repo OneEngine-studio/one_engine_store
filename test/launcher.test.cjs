@@ -173,3 +173,38 @@ test('the page loads no fonts from the internet (they are bundled)', () => {
   const html = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
   assert.doesNotMatch(html, /fonts\.googleapis\.com|fonts\.gstatic\.com/);
 });
+
+// ---- publisher ----
+test('publisher: suggests the game exe at the top or inside one folder, never the crash handler', () => {
+  const { exeCandidates } = require('../electron/publisher.cjs');
+  assert.deepEqual(
+    exeCandidates(['Railbound-Client/Railbound.exe', 'Railbound-Client/UnityCrashHandler64.exe', 'Railbound-Client/Railbound_Data/x.exe']),
+    ['Railbound.exe']
+  );
+  assert.deepEqual(exeCandidates(['Game.exe', 'Game_Data/level0']), ['Game.exe']);
+  assert.deepEqual(exeCandidates(['A/Game.exe', 'B/Other.exe']), []);
+});
+
+// ---- launcher updates ----
+test('updates: version comparison is numeric, not alphabetical', () => {
+  const { compareVersions } = require('../electron/updates.cjs');
+  assert.equal(compareVersions('1.10.0', '1.9.3'), 1);
+  assert.equal(compareVersions('v1.2.0', '1.2.0'), 0);
+  assert.equal(compareVersions('1.1.0', '1.2.0'), -1);
+});
+
+test('updates: only offers installers from the official releases repo', () => {
+  const { summarize } = require('../electron/updates.cjs');
+  const release = (url) => ({
+    tag_name: 'v9.0.0',
+    html_url: 'https://github.com/oneenginedev/oneengine/releases/tag/v9.0.0',
+    assets: [{ name: 'OneEngine-Store-Setup-9.0.0.exe', size: 1, browser_download_url: url }],
+  });
+  const ok = summarize(release('https://github.com/oneenginedev/oneengine/releases/download/v9.0.0/OneEngine-Store-Setup-9.0.0.exe'), '1.2.0');
+  assert.equal(ok.available, true);
+  assert.match(ok.downloadUrl, /^https:\/\/github\.com\/oneenginedev\/oneengine\/releases\//);
+  const evil = summarize(release('https://evil.example/OneEngine-Store-Setup.exe'), '1.2.0');
+  assert.equal(evil.downloadUrl, '');
+  assert.equal(summarize({ ...release(''), tag_name: 'v1.0.0' }, '1.2.0').available, false);
+  assert.equal(summarize({ ...release(''), prerelease: true }, '1.2.0').available, false);
+});
