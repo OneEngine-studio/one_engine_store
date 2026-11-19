@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.2.0 (2026-11-20)
+
+### Added
+- Publish a build: approved accounts upload a game zip from the launcher; the server checks it, makes it live and removes the old build.
+- Update button in the title bar when a newer launcher is released.
+- Adding a password to an account made with Google now works (the service supports it).
+
 ## 1.1.0 (2026-11-17)
 
 ### Added
