@@ -5,6 +5,8 @@ const appConfig = require('./config.cjs');
 const { isAppUrl, isTrustedSender, DEV_ORIGIN } = require('./security.cjs');
 const { registerPlatformIpc } = require('./platform.cjs');
 const { registerPaymentsIpc } = require('./payments.cjs');
+const { registerPublisherIpc } = require('./publisher.cjs');
+const { registerUpdateIpc } = require('./updates.cjs');
 const { registerInstallerIpc, stopEverything } = require('./installer.cjs');
 
 let mainWindow = null;
@@ -134,6 +136,8 @@ app.whenReady().then(() => {
   registerAppIpc();
   registerPlatformIpc();
   registerPaymentsIpc();
+  registerPublisherIpc();
+  registerUpdateIpc();
   const cfg = appConfig.get();
   if (cfg.gamesEnabled) {
     registerInstallerIpc(() => mainWindow, { isTrustedSender, downloadOrigin: cfg.platformApiUrl });
