@@ -77,7 +77,9 @@ Until then, the release notes and download page say so.
 
 ## Updates
 
-The launcher does **not** update itself. Players download the newer installer from the download page. Automatic
+From 1.2.0 the launcher checks the public releases page and shows an orange **Update** button in the title bar when a
+newer version is out; it opens the official installer download in the browser. It still does **not** install anything
+by itself. Automatic
 updates were left out on purpose: without a signed installer, an update feed fetched from GitHub would have no
 publisher check, so whoever got hold of the releases token could push code to every player's PC. Add
 `electron-updater` after the installer is code-signed.
