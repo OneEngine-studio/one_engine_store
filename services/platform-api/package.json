@@ -11,7 +11,8 @@
     "start": "tsx src/index.ts",
     "test": "vitest run --config vitest.config.ts",
     "typecheck": "tsc --noEmit",
-    "publish-build": "tsx scripts/publish-build.ts"
+    "publish-build": "tsx scripts/publish-build.ts",
+    "grant-publisher": "tsx scripts/grant-publisher.ts"
   },
   "dependencies": {
     "@fastify/cors": "^10.0.1",
