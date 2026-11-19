@@ -14,6 +14,7 @@ import { ActivityScreen } from './screens/ActivityScreen';
 import { CommunityScreen } from './screens/CommunityScreen';
 import { BottomDock } from './components/BottomDock';
 import { WalletScreen } from './screens/WalletScreen';
+import { PublishScreen } from './screens/PublishScreen';
 import { GAME_AMBIENT_COLORS, DEFAULT_AMBIENT } from './lib/ambientColor';
 
 const MainViewport: React.FC = () => {
@@ -101,6 +102,8 @@ const MainViewport: React.FC = () => {
         return <LibraryScreen />;
       case 'downloads':
         return <DownloadsScreen />;
+      case 'publish':
+        return <PublishScreen />;
       case 'wallet':
         return <WalletScreen />;
       case 'community':
