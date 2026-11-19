@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useStore } from '../store/useStore';
 import {
   ShoppingBag,
@@ -9,8 +9,10 @@ import {
   Settings,
   Image as ImageIcon,
   Coins,
+  UploadCloud,
 } from 'lucide-react';
 import { NavigationTab, Game } from '../types/store';
+import { publisherApi } from '../lib/publisherApi';
 
 const EASE = 'cubic-bezier(0.23, 1, 0.32, 1)';
 const ITEM = 44; // button size in px
@@ -74,6 +76,19 @@ export const Sidebar: React.FC = () => {
   } = useStore();
 
   const [imageErrors, setImageErrors] = useState<Record<string, boolean>>({});
+  // The Publish item appears only for accounts the service lists as publishers.
+  const [canPublish, setCanPublish] = useState(false);
+  useEffect(() => {
+    let live = true;
+    if (!currentUser.id) {
+      setCanPublish(false);
+      return;
+    }
+    void publisherApi.products().then((items) => live && setCanPublish(items.length > 0));
+    return () => {
+      live = false;
+    };
+  }, [currentUser.id]);
 
   const activeDownloadCount = downloads.filter((d) => d.status === 'DOWNLOADING').length;
   const ownedGames = games.filter((g) => currentUser.ownedGameIds.includes(g.id));
@@ -89,6 +104,7 @@ export const Sidebar: React.FC = () => {
     },
     { id: 'activity' as NavigationTab, label: 'Activity', icon: BarChart3 },
     ...(paymentsEnabled ? [{ id: 'wallet' as NavigationTab, label: 'Coins', icon: Coins }] : []),
+    ...(canPublish ? [{ id: 'publish' as NavigationTab, label: 'Publish a build', icon: UploadCloud }] : []),
     { id: 'community' as NavigationTab, label: 'Community (coming soon)', icon: Users },
   ];
 
