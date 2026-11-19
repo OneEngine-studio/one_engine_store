@@ -1,6 +1,38 @@
 # Publishing a game build
 
-How a game build gets from a Unity export to "Install" in the launcher. Railbound 1.0.0 was published this way.
+## From the launcher (recommended)
+
+Approved accounts see **Publish a build** in the navigation rail.
+
+1. Choose the game, then the build zip. The launcher reads the zip and suggests the `.exe`.
+2. Type a new version (the next patch number is filled in) and press **Publish**.
+3. The zip streams to the Platform API, which checks it again (the `.exe` is there, no Unity DoNotShip folders,
+   no unsafe paths, a new version), makes it the latest build and **deletes the previous build** from the server.
+   Players see Update.
+
+Every publish and removal is recorded in the `build_audit` table with the account that did it.
+
+### Giving someone publish rights
+
+They sign up in the launcher first. Then, on the server in `services/platform-api`:
+
+```bash
+set -a; . ./.env.production; set +a
+npm run -s grant-publisher -- person@example.com railbound      # one game ('*' for every game)
+npm run -s grant-publisher -- person@example.com railbound --revoke
+npm run -s grant-publisher -- --list
+```
+
+Nobody needs SSH or the server key to publish.
+
+### Server limits for big uploads
+
+Apache 2.4.54 and later refuse request bodies over 1 GiB by default. The API's virtual host needs
+`LimitRequestBody 0` (or a value above your largest build) so multi-GB zips get through. The API itself accepts up to 8 GiB.
+
+## By hand over SSH
+
+How a game build gets from a Unity export to "Install" without the launcher. Railbound 1.0.0 was first published this way.
 
 ## 1. Make the zip
 
